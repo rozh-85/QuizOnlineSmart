@@ -1,5 +1,6 @@
+import { useState, useEffect } from 'react';
 import { Link, useSearchParams, Navigate } from 'react-router-dom';
-import { Play, BookOpen, ArrowLeft } from 'lucide-react';
+import { Play, BookOpen, ArrowLeft, ArrowUp } from 'lucide-react';
 import { Button, Card } from '../../components/ui';
 import MaterialsView from '../../components/MaterialsView';
 import { useQuiz } from '../../context/QuizContext';
@@ -9,6 +10,21 @@ const QuizStart = () => {
   const lectureId = searchParams.get('lectureId');
   const sectionName = searchParams.get('section');
   const { getQuestionsByLecture, getLecture, getMaterialsByLecture } = useQuiz();
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // Track scroll position for mobile scroll-to-top button
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Redirect if no lecture selected
   if (!lectureId) {
@@ -25,8 +41,29 @@ const QuizStart = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 pt-8 pb-12 sm:pt-12 sm:pb-20 animate-fade-in">
-      <div className="flex flex-col gap-8">
+    <div className="max-w-6xl mx-auto px-4 pt-4 pb-12 sm:pt-6 sm:pb-20 animate-fade-in">
+      <div className="flex flex-col gap-6">
+        {/* Top Navigation Row */}
+        <div className="flex items-center justify-between px-1">
+          {sectionName ? (
+            <Link to={`/quiz?lectureId=${lectureId}`}>
+              <Button variant="ghost" size="sm" className="h-11 w-11 p-0 rounded-full text-slate-900 hover:text-primary-600 hover:bg-primary-50 transition-all group border border-slate-200 shadow-sm bg-white">
+                <ArrowLeft size={22} className="group-hover:-translate-x-0.5 transition-transform" />
+              </Button>
+            </Link>
+          ) : (
+            <Link to="/">
+              <Button variant="ghost" size="sm" className="h-11 w-11 p-0 rounded-full text-slate-900 hover:text-primary-600 hover:bg-primary-50 transition-all group border border-slate-200 shadow-sm bg-white">
+                <ArrowLeft size={22} className="group-hover:-translate-x-0.5 transition-transform" />
+              </Button>
+            </Link>
+          )}
+          
+          <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300">
+            {sectionName ? 'Topic Module' : 'Chapter Overview'}
+          </div>
+        </div>
+
         {/* Main Header Card - Simple & Clean */}
         <Card className="border border-slate-200 shadow-sm overflow-hidden rounded-2xl bg-white">
           <div className="p-6 sm:p-8 flex flex-col lg:flex-row items-center justify-between gap-8">
@@ -83,7 +120,6 @@ const QuizStart = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between px-2">
               <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Available Sections</h2>
-              <Link to="/" className="text-[11px] font-bold text-primary-600 hover:underline">Return to Library</Link>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -117,19 +153,6 @@ const QuizStart = () => {
           </div>
         )}
 
-        {/* Back Link if in section */}
-        {sectionName && (
-          <div className="text-center pt-4">
-            <Link 
-              to={`/quiz?lectureId=${lectureId}`} 
-              className="inline-flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-primary-600 transition-colors"
-            >
-              <ArrowLeft size={14} />
-              View Full Chapter Modules
-            </Link>
-          </div>
-        )}
-
         {/* Learning Materials Section */}
         <MaterialsView materials={materials} />
 
@@ -137,15 +160,20 @@ const QuizStart = () => {
         {questions.length === 0 && !sectionName && (
           <div className="p-12 text-center rounded-[2rem] border-2 border-dashed border-slate-100">
             <p className="text-slate-400 font-bold mb-4">No questions found for this module.</p>
-            <Link to="/">
-              <Button variant="ghost" size="sm" className="text-slate-500 font-bold uppercase tracking-widest">
-                <ArrowLeft size={16} className="mr-2" />
-                Return Home
-              </Button>
-            </Link>
           </div>
         )}
       </div>
+
+      {/* Floating Scroll to Top Button - Mobile Only */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="md:hidden fixed bottom-6 right-6 h-12 w-12 rounded-full bg-primary-600 text-white shadow-lg hover:bg-primary-700 transition-all duration-300 flex items-center justify-center z-50 animate-fade-in"
+          aria-label="Scroll to top"
+        >
+          <ArrowUp size={20} />
+        </button>
+      )}
     </div>
   );
 };

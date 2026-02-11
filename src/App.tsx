@@ -47,7 +47,7 @@ function App() {
         />
         <Routes>
           {/* Student Routes with Student Layout */}
-          <Route path="/" element={<Layout><Home /></Layout>} />
+          <Route path="/" element={<Layout showFooter={true}><Home /></Layout>} />
           <Route path="/quiz" element={<Layout><QuizStart /></Layout>} />
           <Route path="/quiz/question" element={<Layout><QuizQuestion /></Layout>} />
           <Route path="/quiz/results" element={<Layout><QuizResults /></Layout>} />
