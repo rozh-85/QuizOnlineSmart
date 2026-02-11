@@ -9,6 +9,7 @@ import QuestionEditor from './pages/teacher/QuestionEditor';
 import AIGenerator from './pages/teacher/AIGenerator';
 import LectureManager from './pages/teacher/LectureManager';
 import MaterialsManager from './pages/teacher/MaterialsManager';
+import QAManager from './pages/teacher/QAManager';
 import TeacherLogin from './pages/teacher/TeacherLogin';
 import QuizStart from './pages/student/QuizStart';
 import QuizQuestion from './pages/student/QuizQuestion';
@@ -79,6 +80,10 @@ function App() {
           <Route 
             path="/admin/ai-generator" 
             element={<AdminLayout><ProtectedRoute><AIGenerator /></ProtectedRoute></AdminLayout>} 
+          />
+          <Route 
+            path="/admin/qa" 
+            element={<AdminLayout><ProtectedRoute><QAManager /></ProtectedRoute></AdminLayout>} 
           />
         </Routes>
       </HashRouter>

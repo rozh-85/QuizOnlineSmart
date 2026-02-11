@@ -3,6 +3,7 @@ import { Link, useSearchParams, Navigate } from 'react-router-dom';
 import { Play, BookOpen, ArrowLeft, ArrowUp } from 'lucide-react';
 import { Button, Card } from '../../components/ui';
 import MaterialsView from '../../components/MaterialsView';
+import LectureQA from '../../components/LectureQA';
 import { useQuiz } from '../../context/QuizContext';
 
 const QuizStart = () => {
@@ -155,6 +156,9 @@ const QuizStart = () => {
 
         {/* Learning Materials Section */}
         <MaterialsView materials={materials} />
+
+        {/* Q&A Section */}
+        <LectureQA lectureId={lectureId} />
 
         {/* Empty State */}
         {questions.length === 0 && !sectionName && (

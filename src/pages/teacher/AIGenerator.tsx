@@ -240,7 +240,7 @@ const AIGenerator = () => {
   };
 
   return (
-    <div className="animate-fade-in space-y-4 max-w-6xl mx-auto px-4">
+    <div className="animate-fade-in space-y-4 w-full">
       {/* Top Header & Settings */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-3 rounded-2xl border border-slate-200 shadow-sm sticky top-0 z-30">
         <div className="flex items-center gap-3">

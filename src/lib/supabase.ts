@@ -80,3 +80,32 @@ export type LectureMaterial = {
   created_at: string;
   updated_at: string;
 };
+
+export type LectureQuestion = {
+  id: string;
+  lecture_id: string;
+  student_id: string;
+  question_text: string;
+  official_answer?: string;
+  is_published: boolean;
+  is_read: boolean;
+  created_at: string;
+  updated_at: string;
+  student?: {
+    full_name: string;
+    role: string;
+  };
+  messages?: LectureQuestionMessage[];
+};
+
+export type LectureQuestionMessage = {
+  id: string;
+  question_id: string;
+  sender_id: string;
+  message_text: string;
+  created_at: string;
+  sender?: {
+    full_name: string;
+    role: string;
+  };
+};

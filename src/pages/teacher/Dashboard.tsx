@@ -67,7 +67,7 @@ const TeacherDashboard = () => {
    };
 
   return (
-    <div className="animate-fade-in max-w-5xl mx-auto px-4">
+    <div className="animate-fade-in w-full">
       {/* Header & Search Area */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
         <div className="flex-1 max-w-xl">
