@@ -273,12 +273,12 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
      RENDER
      ═══════════════════════════════════════════════════ */
   return (
-    <div className={`space-y-6 ${compact ? 'mt-0' : 'mt-12'} pb-8`}>
+    <div className={`space-y-6 ${compact ? 'mt-0' : 'sm:mt-12 mt-6'} pb-8`}>
       {/* ─── Tabs ─── */}
-      <div className="flex p-1 bg-slate-100 rounded-xl mb-6">
+      <div className="flex p-1 bg-slate-100 rounded-xl sm:mb-6 mb-4">
         <button
           onClick={() => { setActiveTab('inbox'); setSelectedQuestionId(null); }}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold uppercase tracking-widest rounded-lg transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 sm:py-2.5 py-2 text-xs font-bold uppercase tracking-widest rounded-lg transition-all ${
             activeTab === 'inbox' 
               ? 'bg-white text-indigo-600 shadow-sm' 
               : 'text-slate-400 hover:text-slate-600'
@@ -294,7 +294,7 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
         </button>
         <button
           onClick={() => { setActiveTab('public'); setSelectedQuestionId(null); }}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs font-bold uppercase tracking-widest rounded-lg transition-all ${
+          className={`flex-1 flex items-center justify-center gap-2 sm:py-2.5 py-2 text-xs font-bold uppercase tracking-widest rounded-lg transition-all ${
             activeTab === 'public' 
               ? 'bg-white text-amber-600 shadow-sm' 
               : 'text-slate-400 hover:text-slate-600'
@@ -312,7 +312,7 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
             <div className="flex justify-center py-4">
               <Button 
                   onClick={() => setShowForm(true)}
-                  className="rounded-2xl h-14 px-10 bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-100 font-bold text-sm flex items-center gap-3 transition-all hover:scale-[1.02] active:scale-95"
+                  className="rounded-2xl sm:h-14 h-12 sm:px-10 px-8 bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-100 font-bold text-sm flex items-center gap-3 transition-all hover:scale-[1.02] active:scale-95"
               >
                   <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
                     <MessageSquare size={18} className="text-white" />
@@ -340,7 +340,7 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
                   </button>
               </div>
 
-              <Card className="p-5 sm:p-6 border-slate-200 shadow-lg bg-white rounded-2xl relative overflow-hidden group border-b-4 border-b-indigo-500">
+              <Card className="p-4 sm:p-6 border-slate-200 shadow-lg bg-white rounded-2xl relative overflow-hidden group border-b-4 border-b-indigo-500">
                   <form onSubmit={handleAsk} className="relative space-y-4">
                   <TextArea
                       value={newQuestion}
@@ -452,7 +452,7 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
 
               <div className="space-y-5">
                 {/* Chat & Controls Container */}
-                <div className="flex flex-col h-[650px] border border-slate-200 bg-white shadow-xl shadow-slate-200/50 overflow-hidden rounded-[2rem]">
+                <div className="flex flex-col h-[500px] sm:h-[650px] border border-slate-200 bg-white shadow-xl shadow-slate-200/50 overflow-hidden rounded-[1.5rem] sm:rounded-[2rem]">
                   {/* Enhanced Header with Admin Controls */}
                   <div className="px-6 py-4 border-b border-slate-100 bg-white flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -484,15 +484,15 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
 
 
                   {/* Message History */}
-                  <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/20 custom-scrollbar">
+                  <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 bg-slate-50/20 custom-scrollbar">
                     {/* The original question */}
                     <div className="flex justify-start">
-                      <div className="max-w-[85%] bg-white border border-slate-100 rounded-[1.5rem] rounded-tl-none p-5 shadow-sm">
-                        <div className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-2 flex items-center gap-2">
+                      <div className="max-w-[85%] bg-white border border-slate-100 rounded-[1.2rem] rounded-tl-none p-3 px-4 shadow-sm">
+                        <div className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1.5 flex items-center gap-2">
                           <HelpCircle size={12} /> Student Inquiry
                         </div>
-                        <p className="text-sm font-medium text-slate-800 leading-relaxed italic">"{selectedQ.question_text}"</p>
-                        <div className="text-[10px] font-bold text-slate-300 mt-3 flex items-center gap-2">
+                        <p className="text-[13px] font-medium text-slate-800 leading-relaxed italic">"{selectedQ.question_text}"</p>
+                        <div className="text-[10px] font-bold text-slate-300 mt-2 flex items-center gap-2">
                           <Calendar size={10} />
                           {fmtFullDate(selectedQ.created_at)}
                         </div>
@@ -504,7 +504,7 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
                       const senderIsMentor = m.sender?.role === 'teacher' || m.sender?.role === 'admin';
                       return (
                         <div key={m.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                          <div className={`max-w-[85%] rounded-[1.5rem] p-5 ${
+                          <div className={`max-w-[85%] rounded-[1.2rem] p-3 px-4 ${
                             isMe
                               ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 rounded-tr-none'
                               : senderIsMentor
@@ -512,12 +512,12 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
                                 : 'bg-white border border-slate-100 text-slate-800 shadow-sm rounded-tl-none'
                           }`}>
                             {!isMe && (
-                              <div className={`text-[10px] font-black uppercase tracking-widest mb-2 flex items-center gap-2 ${senderIsMentor ? 'text-indigo-200' : 'text-slate-400'}`}>
+                              <div className={`text-[10px] font-black uppercase tracking-widest mb-1.5 flex items-center gap-2 ${senderIsMentor ? 'text-indigo-200' : 'text-slate-400'}`}>
                                 {m.sender?.full_name || 'User'} {senderIsMentor && '· Mentor'}
                               </div>
                             )}
-                            <p className="text-sm font-medium leading-relaxed">{m.message_text}</p>
-                            <div className={`text-[10px] mt-3 font-bold flex items-center gap-2 ${isMe || senderIsMentor ? 'opacity-60' : 'text-slate-300'}`}>
+                            <p className="text-[13px] font-medium leading-relaxed">{m.message_text}</p>
+                            <div className={`text-[10px] mt-2 font-bold flex items-center gap-2 ${isMe || senderIsMentor ? 'opacity-60' : 'text-slate-300'}`}>
                               <Calendar size={10} />
                               {fmtFullDate(m.created_at)}
                             </div>
@@ -529,16 +529,16 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
                   </div>
 
                   {/* Input Area */}
-                  <div className="p-6 bg-white border-t border-slate-100">
+                  <div className="p-4 sm:p-6 bg-white border-t border-slate-100">
                     <form onSubmit={handleSendMsg} className="flex gap-3">
                       <input
                         type="text"
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         placeholder="Type your reply..."
-                        className="flex-1 bg-slate-50 border-none rounded-2xl px-6 py-4 text-sm font-bold focus:ring-4 focus:ring-indigo-50 outline-none transition-all placeholder:text-slate-300"
+                        className="flex-1 bg-slate-50 border-none rounded-2xl sm:px-6 px-4 sm:py-4 py-3 text-sm font-bold focus:ring-4 focus:ring-indigo-50 outline-none transition-all placeholder:text-slate-300"
                       />
-                      <Button type="submit" disabled={!newMessage.trim()} className="rounded-2xl h-[52px] w-[52px] !p-0 bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-100 disabled:opacity-20 flex-shrink-0 transition-all hover:scale-105 active:scale-95">
+                      <Button type="submit" disabled={!newMessage.trim()} className="rounded-2xl sm:h-[52px] h-[48px] sm:w-[52px] w-[48px] !p-0 bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-100 disabled:opacity-20 flex-shrink-0 transition-all hover:scale-105 active:scale-95">
                         <Send size={20} />
                       </Button>
                     </form>
@@ -588,14 +588,14 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
                       <div
                         key={q.id}
                         onClick={() => setSelectedQuestionId(q.id)}
-                        className={`p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between group ${
+                        className={`p-3 sm:p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between group ${
                           isActive
                             ? 'bg-indigo-50 border-indigo-200'
                             : 'bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50/50 shadow-sm'
                         }`}
                       >
                         <div className="flex items-center gap-3.5 flex-1 min-w-0">
-                          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-colors flex-shrink-0 ${
+                          <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-xs font-bold transition-colors flex-shrink-0 ${
                             isActive ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-600'
                           }`}>
                             {q.student?.full_name?.charAt(0) || 'S'}
@@ -652,11 +652,11 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
               <div key={q.id} className="py-8 first:pt-2">
                  <div className="space-y-4 w-full">
                     <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0 shadow-sm">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0 shadow-sm">
                         <HelpCircle size={20} />
                       </div>
                       <div className="pt-1 flex-1">
-                        <h4 className="text-lg font-bold text-slate-800 leading-snug">{q.question_text}</h4>
+                        <h4 className="text-base sm:text-lg font-bold text-slate-800 leading-snug">{q.question_text}</h4>
                         <div className="flex items-center gap-2 mt-2">
                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded-md">
                             Anonymous
@@ -669,8 +669,8 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
                     </div>
                     
                     {q.official_answer && (
-                      <div className="pl-14">
-                         <div className="bg-gradient-to-br from-indigo-50/50 to-white rounded-r-[2rem] rounded-bl-[2rem] p-6 border border-indigo-50/50 relative overflow-hidden group hover:shadow-sm transition-shadow">
+                      <div className="pl-0 sm:pl-14">
+                         <div className="bg-gradient-to-br from-indigo-50/50 to-white rounded-[1.5rem] sm:rounded-r-[2rem] sm:rounded-bl-[2rem] p-4 sm:p-6 border border-indigo-50/50 relative overflow-hidden group hover:shadow-sm transition-shadow">
                             <div className="absolute top-0 right-0 p-3 opacity-5 text-indigo-600">
                               <ShieldCheck size={64} />
                             </div>
@@ -680,7 +680,7 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
                                </div>
                                Mentor's Explanation
                             </div>
-                            <p className="text-base font-medium text-slate-700 leading-relaxed whitespace-pre-wrap relative z-10">
+                            <p className="text-sm sm:text-base font-medium text-slate-700 leading-relaxed whitespace-pre-wrap relative z-10">
                               {q.official_answer}
                             </p>
                          </div>
@@ -689,7 +689,7 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
                 </div>
                  
                  {isAdminView && (
-                   <div className="flex items-center gap-2 mt-4 pl-14 pt-2">
+                   <div className="flex flex-wrap items-center gap-2 mt-4 pl-0 sm:pl-14 pt-2">
                       <Button 
                         variant="secondary" 
                         size="sm" 
