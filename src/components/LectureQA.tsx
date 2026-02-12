@@ -135,21 +135,52 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
     
     if (selectedQuestionId) {
       const q = questions.find(q => q.id === selectedQuestionId);
-      
       const isOwner = q?.student_id === currentUser?.id;
+
       if (isMentor || isOwner) {
         loadMessages(selectedQuestionId);
-        mSub = subscribeToQuestionMessages(selectedQuestionId, () => loadMessages(selectedQuestionId));
         
-        // Mark as read if mentor selects an unread question
+        // Mark as read immediately when selecting
         if (isMentor && q && !q.is_read) {
           lectureQAService.markAsRead(selectedQuestionId).then(() => {
-            // Briefly update local state so the badge disappears
             setQuestions(prev => prev.map(item => 
               item.id === selectedQuestionId ? { ...item, is_read: true } : item
             ));
+            // Dispatch event to notify layout/manager to refresh counts
+            window.dispatchEvent(new CustomEvent('unread-count-changed'));
           }).catch(console.error);
         }
+        
+        if (!isMentor && q && !q.is_read_by_student) {
+          lectureQAService.markAsRead(selectedQuestionId, true).then(() => {
+            setQuestions(prev => prev.map(item => 
+              item.id === selectedQuestionId ? { ...item, is_read_by_student: true } : item
+            ));
+          }).catch(console.error);
+        }
+
+        // Subscribe to new messages
+        mSub = subscribeToQuestionMessages(selectedQuestionId, (payload) => {
+          loadMessages(selectedQuestionId);
+          
+          // If we receive a new message while viewing, mark it as read
+          if (payload.eventType === 'INSERT') {
+            if (isMentor) {
+              lectureQAService.markAsRead(selectedQuestionId).then(() => {
+                setQuestions(prev => prev.map(item => 
+                   item.id === selectedQuestionId ? { ...item, is_read: true } : item
+                ));
+                window.dispatchEvent(new CustomEvent('unread-count-changed'));
+              }).catch(console.error);
+            } else {
+              lectureQAService.markAsRead(selectedQuestionId, true).then(() => {
+                setQuestions(prev => prev.map(item => 
+                   item.id === selectedQuestionId ? { ...item, is_read_by_student: true } : item
+                ));
+              }).catch(console.error);
+            }
+          }
+        });
       } else {
         setMessages([]);
       }
@@ -158,7 +189,7 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
     return () => {
       if (mSub) mSub.unsubscribe();
     };
-  }, [selectedQuestionId, questions, profile, currentUser]);
+  }, [selectedQuestionId, profile, currentUser]); // Removed 'questions' dependency
 
   useEffect(() => { 
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); 
@@ -190,8 +221,9 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
     try { 
       const msgs = await lectureQAService.getMessagesByQuestion(qid);
       setMessages(msgs); 
-    } catch (e) { 
-      console.error('Error loading messages:', e); 
+    } catch (e: any) { 
+      console.error('[DEBUG] Error loading messages for question:', qid, e); 
+      toast.error('Could not load chat history.');
     } 
   };
 
@@ -220,6 +252,7 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
         await loadMessages(result.id);
       }
       loadQuestions();
+      window.dispatchEvent(new CustomEvent('unread-count-changed'));
       toast.success('Question sent to your mentor.');
     } catch (e: any) { 
       console.error('Error creating question:', e); 
@@ -299,6 +332,7 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
       clearSelectedImages();
       // Immediately reload messages so the images appear
       await loadMessages(selectedQuestionId);
+      window.dispatchEvent(new CustomEvent('unread-count-changed'));
     } catch (e) {
       console.error('Error sending message:', e);
       toast.error('Failed to send message.');
@@ -377,7 +411,8 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
       await lectureQAService.deleteQuestion(deletingId); 
       if (selectedQuestionId === deletingId) setSelectedQuestionId(null); 
       setDeletingId(null);
-      loadQuestions(); 
+      loadQuestions();
+      window.dispatchEvent(new CustomEvent('unread-count-changed'));
       toast.success('Deleted successfully');
     } catch (e) { 
       console.error('Error deleting question:', e); 
@@ -411,11 +446,6 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
         >
           <MessageSquare size={14} />
           <span>Private Inbox</span>
-          {questions.some(q => !q.is_read) && (
-            <span className="ml-1 px-1.5 py-0.5 bg-rose-500 text-white text-[8px] rounded-md">
-              {questions.filter(q => !q.is_read).length}
-            </span>
-          )}
         </button>
         <button
           onClick={() => { setActiveTab('public'); setSelectedQuestionId(null); }}
@@ -918,9 +948,6 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
               <div className="flex items-center gap-3 px-1">
                 <div className="w-9 h-9 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center relative">
                   <Bell size={18} />
-                  {questions.some(q => !q.is_read) && (
-                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-pulse" />
-                  )}
                 </div>
                 <div>
                   <h2 className="text-lg font-black text-slate-900 tracking-tight">
@@ -964,26 +991,34 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
                           </div>
                           
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-0.5">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-bold text-slate-800 truncate">
-                                  {isMentor ? q.student?.full_name : 'Mentor Response'}
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1 min-w-0 pr-4">
+                                <div className="flex items-center gap-2 mb-0.5">
+                                  <span className="text-sm font-bold text-slate-800 truncate">
+                                    {isMentor ? q.student?.full_name : 'Mentor Response'}
+                                  </span>
+                                  {q.is_published && <Star size={10} className="text-amber-500 fill-amber-500" />}
+                                </div>
+                                <p className="text-xs font-medium text-slate-500 line-clamp-1">
+                                  {getSnippet(snippet, 80)}
+                                </p>
+                              </div>
+
+                              <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                                  {fmtTime(displayTime)}
                                 </span>
                                 {isMentor && !q.is_read && (
-                                  <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-rose-500 text-[8px] text-white font-black uppercase tracking-wider animate-pulse">
+                                  <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500 text-[9px] text-white font-black uppercase tracking-widest shadow-lg shadow-rose-100 animate-in fade-in zoom-in duration-300">
+                                    <span className="relative flex h-1.5 w-1.5">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
+                                    </span>
                                     New
                                   </span>
                                 )}
-                                {q.is_published && <Star size={10} className="text-amber-500 fill-amber-500" />}
                               </div>
-                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                                {fmtTime(displayTime)}
-                              </span>
                             </div>
-                            
-                            <p className="text-xs font-medium text-slate-500 line-clamp-1">
-                              {getSnippet(snippet, 80)}
-                            </p>
                           </div>
                         </div>
                       </div>

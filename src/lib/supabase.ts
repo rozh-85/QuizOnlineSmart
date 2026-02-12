@@ -89,6 +89,7 @@ export type LectureQuestion = {
   official_answer?: string;
   is_published: boolean;
   is_read: boolean;
+  is_read_by_student: boolean;
   created_at: string;
   updated_at: string;
   student?: {

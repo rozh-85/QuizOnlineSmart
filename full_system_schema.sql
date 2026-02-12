@@ -207,3 +207,5 @@ CREATE POLICY "Public All Materials Access" ON public.lecture_materials FOR ALL 
 ALTER PUBLICATION supabase_realtime ADD TABLE public.lectures;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.questions;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.lecture_materials;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.lecture_questions;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.lecture_question_messages;

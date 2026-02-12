@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { lectureQAService, subscribeToAllQuestions } from '../services/supabaseService';
+import { supabase } from '../lib/supabase';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -28,20 +29,51 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     const fetchUnread = async () => {
       try {
         const count = await lectureQAService.getUnreadCount();
+        console.log('[DEBUG] Sidebar Updating Count:', count);
         setUnreadCount(count);
       } catch (e) {
         console.error('Error fetching unread count:', e);
       }
     };
     fetchUnread();
+    
+    // Immediate and delayed fetch for better reliability
+    const triggerFetch = () => {
+       fetchUnread();
+       setTimeout(fetchUnread, 500);
+       setTimeout(fetchUnread, 2000);
+    };
 
-    const sub = subscribeToAllQuestions(() => {
-      // Add a small delay to allow Supabase to propagate the change fully
-      setTimeout(fetchUnread, 150);
+    // Subscribe to question changes (INSERT, UPDATE, DELETE)
+    const questionsSub = subscribeToAllQuestions(() => {
+      console.log('[DEBUG] Realtime Update: Question changed');
+      triggerFetch();
     });
 
+    // Also subscribe to new messages so count updates when student sends a message
+    const messagesSub = supabase
+      .channel('admin-messages-channel')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'lecture_question_messages'
+      }, () => {
+        console.log('[DEBUG] Realtime Update: Message received');
+        triggerFetch();
+      })
+      .subscribe();
+
+    // Safety polling every 15s in case realtime misses an event
+    const interval = setInterval(fetchUnread, 15000);
+
+    // Listen for manual read events from child components (LectureQA)
+    window.addEventListener('unread-count-changed', triggerFetch);
+
     return () => {
-      sub.unsubscribe();
+      questionsSub.unsubscribe();
+      messagesSub.unsubscribe();
+      clearInterval(interval);
+      window.removeEventListener('unread-count-changed', fetchUnread);
     };
   }, []);
 
@@ -136,7 +168,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               >
                 <Menu size={24} />
                 {unreadCount > 0 && (
-                  <div className="absolute top-2 right-2 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white animate-pulse" />
+                  <div className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white animate-pulse" />
                 )}
               </button>
               <h1 className="text-lg font-black text-slate-900 tracking-tight">Admin Dashboard</h1>

@@ -10,6 +10,7 @@ import {
 import { Card } from '../../components/ui';
 import { lectureService, lectureQAService, subscribeToAllQuestions } from '../../services/supabaseService';
 import { Lecture } from '../../lib/supabase';
+import { supabase } from '../../lib/supabase';
 import LectureQA from '../../components/LectureQA';
 
 const QAManager = () => {
@@ -38,14 +39,43 @@ const QAManager = () => {
   };
 
   useEffect(() => {
-    const sub = subscribeToAllQuestions(() => {
-      // Small delay to allow DB state to settle
-      setTimeout(() => {
-        lectureQAService.getUnreadCountsByLecture().then(setUnreadCounts).catch(console.error);
-      }, 150);
+    const refreshCounts = () => {
+      lectureQAService.getUnreadCountsByLecture().then(setUnreadCounts).catch(console.error);
+    };
+    refreshCounts();
+
+    const triggerRefresh = () => {
+      refreshCounts();
+      setTimeout(refreshCounts, 500);
+      setTimeout(refreshCounts, 2000);
+    };
+
+    const questionsSub = subscribeToAllQuestions(() => {
+      triggerRefresh();
     });
+
+    // Also listen for new messages
+    const messagesSub = supabase
+      .channel('qa-manager-messages-realtime')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'lecture_question_messages'
+      }, () => {
+        triggerRefresh();
+      })
+      .subscribe();
+
+    // Safety polling
+    const interval = setInterval(refreshCounts, 15000);
+
+    window.addEventListener('unread-count-changed', refreshCounts);
+
     return () => {
-      sub.unsubscribe();
+      questionsSub.unsubscribe();
+      messagesSub.unsubscribe();
+      clearInterval(interval);
+      window.removeEventListener('unread-count-changed', refreshCounts);
     };
   }, []);
 

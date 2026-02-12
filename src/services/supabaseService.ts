@@ -379,7 +379,8 @@ export const lectureQAService = {
         question_text: text,
         is_published: isPublished,
         official_answer: officialAnswer,
-        is_read: false
+        is_read: false, // Teacher unread
+        is_read_by_student: true // Student is creator
       }])
       .select()
       .single();
@@ -436,13 +437,21 @@ export const lectureQAService = {
     if (!isMentor) {
       await supabase
         .from('lecture_questions')
-        .update({ is_read: false, updated_at: new Date().toISOString() })
+        .update({ 
+          is_read: false, 
+          is_read_by_student: true,
+          updated_at: new Date().toISOString() 
+        })
         .eq('id', questionId);
     } else {
-       // Just update the timestamp for sorting
+       // Flag for student if mentor sends a message
        await supabase
         .from('lecture_questions')
-        .update({ updated_at: new Date().toISOString() })
+        .update({ 
+          is_read: true,
+          is_read_by_student: false,
+          updated_at: new Date().toISOString() 
+        })
         .eq('id', questionId);
     }
 
@@ -503,10 +512,11 @@ export const lectureQAService = {
     if (error) throw error;
   },
 
-  async markAsRead(questionId: string): Promise<void> {
+  async markAsRead(questionId: string, forStudent = false): Promise<void> {
+    const updateData = forStudent ? { is_read_by_student: true } : { is_read: true };
     const { error } = await supabase
       .from('lecture_questions')
-      .update({ is_read: true })
+      .update(updateData)
       .eq('id', questionId);
     
     if (error) throw error;
@@ -515,9 +525,10 @@ export const lectureQAService = {
   async getUnreadCount(): Promise<number> {
     const { count, error } = await supabase
       .from('lecture_questions')
-      .select('*', { count: 'exact', head: true })
+      .select('*', { count: 'exact' })
       .eq('is_read', false);
     
+    console.log('[DEBUG] Admin Unread Count Fetch:', { count, error });
     if (error) throw error;
     return count || 0;
   },
@@ -542,7 +553,7 @@ export const lectureQAService = {
     if (error) throw error;
     
     const counts: Record<string, number> = {};
-    (data || []).forEach(q => {
+    (data || []).forEach((q: any) => {
       if (q.lecture_id) {
         counts[q.lecture_id] = (counts[q.lecture_id] || 0) + 1;
       }
