@@ -12,7 +12,10 @@ import {
   Pencil,
   UserPlus,
   Calendar,
-  Bell
+  Bell,
+  ImagePlus,
+  X,
+  MoreVertical
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Button, Card, TextArea, Input } from './ui';
@@ -72,7 +75,18 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
   const [manualData, setManualData] = useState({ id: '', question: '', answer: '', publish: true });
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'inbox' | 'public'>('inbox');
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [viewingImage, setViewingImage] = useState<string | null>(null);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState('');
+  const [deletingMsgId, setDeletingMsgId] = useState<string | null>(null);
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
+  const [editingQuestionId, setEditingQuestionId] = useState<string | null>(null);
+  const [editingQuestionText, setEditingQuestionText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Precise mentor detection: Prefer profile role, fallback to local storage only if no profile is found
   const isMentor = isAdminView || (profile 
@@ -184,18 +198,34 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
   /* ── actions ── */
   const handleAsk = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newQuestion.trim()) return;
+    if (!newQuestion.trim() && selectedImages.length === 0) return;
     
-    try { 
-      const result = await lectureQAService.createQuestion(lectureId, newQuestion); 
+    try {
+      setIsUploading(true);
+      const result = await lectureQAService.createQuestion(lectureId, newQuestion || 'Question with photo'); 
       setNewQuestion(''); 
       setShowForm(false);
-      if (result?.id) setSelectedQuestionId(result.id);
+      if (result?.id) {
+        // Upload all images and send as one message
+        if (selectedImages.length > 0) {
+          const urls: string[] = [];
+          for (const img of selectedImages) {
+            urls.push(await lectureQAService.uploadChatImage(img));
+          }
+          await lectureQAService.sendMessage(result.id, '📷 Photo', false, urls);
+        }
+        clearSelectedImages();
+        setSelectedQuestionId(result.id);
+        // Immediately load messages so the images appear
+        await loadMessages(result.id);
+      }
       loadQuestions();
       toast.success('Question sent to your mentor.');
     } catch (e: any) { 
       console.error('Error creating question:', e); 
       toast.error(`Failed to send: ${e.message || 'Unknown error'}`);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -223,15 +253,110 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
     }
   };
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const newFiles: File[] = [];
+    Array.from(files).forEach((file) => {
+      if (file.type.startsWith('image/')) {
+        newFiles.push(file);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreviews(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    setSelectedImages(prev => [...prev, ...newFiles]);
+    // Reset the input so the same files can be re-selected
+    if (e.target) e.target.value = '';
+  };
+
+  const removeImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const clearSelectedImages = () => {
+    setSelectedImages([]);
+    setImagePreviews([]);
+  };
+
   const handleSendMsg = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !selectedQuestionId) return;
-    try { 
-      await lectureQAService.sendMessage(selectedQuestionId, newMessage, isMentor); 
-      setNewMessage(''); 
-    } catch (e) { 
-      console.error('Error sending message:', e); 
+    if ((!newMessage.trim() && selectedImages.length === 0) || !selectedQuestionId) return;
+    try {
+      setIsUploading(true);
+      // Upload all images first
+      const uploadedUrls: string[] = [];
+      for (const img of selectedImages) {
+        uploadedUrls.push(await lectureQAService.uploadChatImage(img));
+      }
+      // Send as one message with text + all images
+      const text = newMessage.trim() || (uploadedUrls.length > 0 ? '📷 Photo' : '');
+      await lectureQAService.sendMessage(selectedQuestionId, text, isMentor, uploadedUrls.length > 0 ? uploadedUrls : undefined);
+      setNewMessage('');
+      clearSelectedImages();
+      // Immediately reload messages so the images appear
+      await loadMessages(selectedQuestionId);
+    } catch (e) {
+      console.error('Error sending message:', e);
+      toast.error('Failed to send message.');
+    } finally {
+      setIsUploading(false);
     }
+  };
+
+  const handleEditMessage = async (messageId: string) => {
+    if (!editingText.trim()) return;
+    try {
+      await lectureQAService.editMessage(messageId, editingText);
+      setEditingMessageId(null);
+      setEditingText('');
+      if (selectedQuestionId) await loadMessages(selectedQuestionId);
+      toast.success('Message updated.');
+    } catch (e) {
+      console.error('Error editing message:', e);
+      toast.error('Failed to edit message.');
+    }
+  };
+
+  const handleDeleteMessage = async () => {
+    if (!deletingMsgId) return;
+    try {
+      await lectureQAService.deleteMessage(deletingMsgId);
+      setDeletingMsgId(null);
+      if (selectedQuestionId) await loadMessages(selectedQuestionId);
+      toast.success('Message deleted.');
+    } catch (e) {
+      console.error('Error deleting message:', e);
+      toast.error('Failed to delete message.');
+    }
+  };
+
+  const handleEditQuestion = async (questionId: string) => {
+    if (!editingQuestionText.trim()) return;
+    try {
+      await lectureQAService.editQuestion(questionId, editingQuestionText);
+      setEditingQuestionId(null);
+      setEditingQuestionText('');
+      loadQuestions();
+      toast.success('Question updated.');
+    } catch (e) {
+      console.error('Error editing question:', e);
+      toast.error('Failed to edit question.');
+    }
+  };
+
+  // Helper to parse image_url which can be a single URL or JSON array
+  const parseImageUrls = (imageUrl: string | null | undefined): string[] => {
+    if (!imageUrl) return [];
+    try {
+      if (imageUrl.startsWith('[')) {
+        return JSON.parse(imageUrl);
+      }
+    } catch {}
+    return [imageUrl];
   };
 
   const handleTogglePublish = async (qid: string, published: boolean) => {
@@ -350,14 +475,58 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
                       autoFocus
                       className="w-full bg-slate-50/50 border-slate-100 rounded-xl focus:ring-4 focus:ring-indigo-50 text-sm font-medium placeholder:text-slate-300 transition-all min-h-[120px]"
                   />
-                  <div className="flex justify-end gap-3">
+                  {/* Image Previews */}
+                  {imagePreviews.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {imagePreviews.map((preview, idx) => (
+                        <div key={idx} className="relative">
+                          <img src={preview} alt="Preview" className="h-16 w-16 object-cover rounded-xl border-2 border-indigo-200" />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(idx)}
+                            className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center hover:bg-rose-600 transition-colors shadow-sm"
+                          >
+                            <X size={10} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between">
+                      <div>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleImageSelect}
+                          className="hidden"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-indigo-600 transition-colors"
+                        >
+                          <ImagePlus size={18} />
+                          <span>Attach Photo</span>
+                        </button>
+                      </div>
                       <Button 
                       type="submit" 
-                      disabled={!newQuestion.trim()} 
+                      disabled={(!newQuestion.trim() && selectedImages.length === 0) || isUploading} 
                       className="rounded-xl h-11 px-8 bg-indigo-600 hover:bg-indigo-700 font-bold text-xs uppercase tracking-widest flex items-center gap-2 shadow-md shadow-indigo-100"
                       >
-                      <span>Send to Teacher</span>
-                      <Send size={14} />
+                      {isUploading ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Sending...</span>
+                        </div>
+                      ) : (
+                        <>
+                          <span>Send to Teacher</span>
+                          <Send size={14} />
+                        </>
+                      )}
                       </Button>
                   </div>
                   </form>
@@ -487,11 +656,53 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
                   <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 bg-slate-50/20 custom-scrollbar">
                     {/* The original question */}
                     <div className="flex justify-start">
-                      <div className="max-w-[85%] bg-white border border-slate-100 rounded-[1.2rem] rounded-tl-none p-3 px-4 shadow-sm">
+                      <div className="max-w-[85%] bg-white border border-slate-100 rounded-[1.2rem] rounded-tl-none p-3 px-4 shadow-sm relative">
+                        {/* Edit question menu */}
+                        {(selectedQ.student_id === currentUser?.id || isMentor) && editingQuestionId !== selectedQ.id && (
+                          <div className="absolute top-2 right-2">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setMenuOpenId(menuOpenId === 'q-' + selectedQ.id ? null : 'q-' + selectedQ.id); }}
+                              className="w-6 h-6 rounded-full flex items-center justify-center hover:bg-slate-100 text-slate-300 hover:text-slate-500 transition-all active:scale-90"
+                            >
+                              <MoreVertical size={14} />
+                            </button>
+                            {menuOpenId === 'q-' + selectedQ.id && (
+                              <>
+                                <div className="fixed inset-0 z-40" onClick={() => setMenuOpenId(null)} />
+                                <div className="absolute z-50 mt-1 right-0 w-32 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden">
+                                  <button
+                                    onClick={() => { setEditingQuestionId(selectedQ.id); setEditingQuestionText(selectedQ.question_text); setMenuOpenId(null); }}
+                                    className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                                  >
+                                    <Pencil size={13} />
+                                    Edit
+                                  </button>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
                         <div className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1.5 flex items-center gap-2">
                           <HelpCircle size={12} /> Student Inquiry
                         </div>
-                        <p className="text-[13px] font-medium text-slate-800 leading-relaxed italic">"{selectedQ.question_text}"</p>
+                        {editingQuestionId === selectedQ.id ? (
+                          <div className="space-y-2 min-w-[180px]">
+                            <input
+                              type="text"
+                              value={editingQuestionText}
+                              onChange={(e) => setEditingQuestionText(e.target.value)}
+                              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[13px] font-medium text-slate-800 outline-none"
+                              autoFocus
+                              onKeyDown={(e) => { if (e.key === 'Enter') handleEditQuestion(selectedQ.id); if (e.key === 'Escape') setEditingQuestionId(null); }}
+                            />
+                            <div className="flex gap-2 justify-end">
+                              <button onClick={() => setEditingQuestionId(null)} className="px-3 py-1 rounded-lg text-[10px] font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">Cancel</button>
+                              <button onClick={() => handleEditQuestion(selectedQ.id)} className="px-3 py-1 rounded-lg text-[10px] font-bold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors">Save</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-[13px] font-medium text-slate-800 leading-relaxed italic">"{selectedQ.question_text}"</p>
+                        )}
                         <div className="text-[10px] font-bold text-slate-300 mt-2 flex items-center gap-2">
                           <Calendar size={10} />
                           {fmtFullDate(selectedQ.created_at)}
@@ -502,21 +713,136 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
                     {messages.map((m: LectureQuestionMessage) => {
                       const isMe = m.sender_id === currentUser?.id;
                       const senderIsMentor = m.sender?.role === 'teacher' || m.sender?.role === 'admin';
+                      const canEdit = isMe || isMentor;
+                      const canDelete = isMe || isMentor;
+                      const hasActions = canEdit || canDelete;
                       return (
                         <div key={m.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                          <div className={`max-w-[85%] rounded-[1.2rem] p-3 px-4 ${
+                          {/* ── Message bubble ── */}
+                          <div className={`max-w-[85%] rounded-[1.2rem] p-3 px-4 relative ${
                             isMe
                               ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 rounded-tr-none'
                               : senderIsMentor
                                 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 rounded-tl-none'
                                 : 'bg-white border border-slate-100 text-slate-800 shadow-sm rounded-tl-none'
                           }`}>
+                            {/* 3-dot menu trigger */}
+                            {hasActions && editingMessageId !== m.id && (
+                              <div className="absolute top-2 right-2">
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setMenuOpenId(menuOpenId === m.id ? null : m.id); }}
+                                  className={`w-6 h-6 rounded-full flex items-center justify-center transition-all active:scale-90 ${
+                                    isMe || senderIsMentor
+                                      ? 'hover:bg-white/20 text-white/60 hover:text-white'
+                                      : 'hover:bg-slate-100 text-slate-300 hover:text-slate-500'
+                                  }`}
+                                >
+                                  <MoreVertical size={14} />
+                                </button>
+                                {/* Dropdown */}
+                                {menuOpenId === m.id && (
+                                  <>
+                                    <div className="fixed inset-0 z-40" onClick={() => setMenuOpenId(null)} />
+                                    <div className={`absolute z-50 mt-1 w-32 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150 ${
+                                      isMe ? 'right-0' : 'left-0'
+                                    }`}>
+                                      {canEdit && (
+                                        <button
+                                          onClick={() => { setEditingMessageId(m.id); setEditingText(m.message_text === '📷 Photo' ? '' : m.message_text); setMenuOpenId(null); }}
+                                          className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                                        >
+                                          <Pencil size={13} />
+                                          Edit
+                                        </button>
+                                      )}
+                                      {canDelete && (
+                                        <button
+                                          onClick={() => { setDeletingMsgId(m.id); setMenuOpenId(null); }}
+                                          className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-rose-500 hover:bg-rose-50 transition-colors"
+                                        >
+                                          <Trash2 size={13} />
+                                          Delete
+                                        </button>
+                                      )}
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            )}
+
                             {!isMe && (
                               <div className={`text-[10px] font-black uppercase tracking-widest mb-1.5 flex items-center gap-2 ${senderIsMentor ? 'text-indigo-200' : 'text-slate-400'}`}>
                                 {m.sender?.full_name || 'User'} {senderIsMentor && '· Mentor'}
                               </div>
                             )}
-                            <p className="text-[13px] font-medium leading-relaxed">{m.message_text}</p>
+                            {m.image_url && (() => {
+                              const urls = parseImageUrls(m.image_url);
+                              if (urls.length === 1) return (
+                                <img
+                                  src={urls[0]}
+                                  alt="Attached"
+                                  onClick={() => setViewingImage(urls[0])}
+                                  className="rounded-xl max-w-full max-h-[200px] object-cover mb-2 cursor-pointer hover:opacity-90 transition-opacity border border-white/20"
+                                />
+                              );
+                              return (
+                                <div className={`grid gap-1.5 mb-2 ${urls.length === 2 ? 'grid-cols-2' : urls.length >= 3 ? 'grid-cols-2' : ''}`}>
+                                  {urls.map((url, idx) => (
+                                    <img
+                                      key={idx}
+                                      src={url}
+                                      alt={`Photo ${idx + 1}`}
+                                      onClick={() => setViewingImage(url)}
+                                      className="rounded-lg w-full h-[120px] object-cover cursor-pointer hover:opacity-90 transition-opacity border border-white/20"
+                                    />
+                                  ))}
+                                </div>
+                              );
+                            })()}
+                            {/* Editing mode */}
+                            {editingMessageId === m.id ? (
+                              <div className="space-y-2 min-w-[180px]">
+                                <input
+                                  type="text"
+                                  value={editingText}
+                                  onChange={(e) => setEditingText(e.target.value)}
+                                  className={`w-full rounded-lg px-3 py-2 text-[13px] font-medium outline-none ${
+                                    isMe || senderIsMentor
+                                      ? 'bg-white/20 border border-white/30 text-white placeholder:text-white/50'
+                                      : 'bg-slate-50 border border-slate-200 text-slate-800'
+                                  }`}
+                                  autoFocus
+                                  onKeyDown={(e) => { if (e.key === 'Enter') handleEditMessage(m.id); if (e.key === 'Escape') setEditingMessageId(null); }}
+                                />
+                                <div className="flex gap-2 justify-end">
+                                  <button 
+                                    onClick={() => setEditingMessageId(null)} 
+                                    className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-colors ${
+                                      isMe || senderIsMentor ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                                    }`}
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button 
+                                    onClick={() => handleEditMessage(m.id)} 
+                                    className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-colors ${
+                                      isMe || senderIsMentor ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                                    }`}
+                                  >
+                                    Save
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                {m.message_text && m.message_text !== '📷 Photo' && (
+                                  <p className="text-[13px] font-medium leading-relaxed">{m.message_text}</p>
+                                )}
+                                {m.message_text === '📷 Photo' && !m.image_url && (
+                                  <p className="text-[13px] font-medium leading-relaxed">{m.message_text}</p>
+                                )}
+                              </>
+                            )}
                             <div className={`text-[10px] mt-2 font-bold flex items-center gap-2 ${isMe || senderIsMentor ? 'opacity-60' : 'text-slate-300'}`}>
                               <Calendar size={10} />
                               {fmtFullDate(m.created_at)}
@@ -530,7 +856,39 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
 
                   {/* Input Area */}
                   <div className="p-4 sm:p-6 bg-white border-t border-slate-100">
-                    <form onSubmit={handleSendMsg} className="flex gap-3">
+                    {/* Image Previews */}
+                    {imagePreviews.length > 0 && (
+                      <div className="mb-3 flex flex-wrap gap-2">
+                        {imagePreviews.map((preview, idx) => (
+                          <div key={idx} className="relative">
+                            <img src={preview} alt="Preview" className="h-16 w-16 object-cover rounded-xl border-2 border-indigo-200" />
+                            <button
+                              type="button"
+                              onClick={() => removeImage(idx)}
+                              className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center hover:bg-rose-600 transition-colors shadow-sm"
+                            >
+                              <X size={10} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <form onSubmit={handleSendMsg} className="flex items-center gap-2">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleImageSelect}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="rounded-2xl sm:h-[48px] h-[44px] sm:w-[48px] w-[44px] flex-shrink-0 flex items-center justify-center bg-slate-100 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 transition-all"
+                      >
+                        <ImagePlus size={20} />
+                      </button>
                       <input
                         type="text"
                         value={newMessage}
@@ -538,8 +896,12 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
                         placeholder="Type your reply..."
                         className="flex-1 bg-slate-50 border-none rounded-2xl sm:px-6 px-4 sm:py-4 py-3 text-sm font-bold focus:ring-4 focus:ring-indigo-50 outline-none transition-all placeholder:text-slate-300"
                       />
-                      <Button type="submit" disabled={!newMessage.trim()} className="rounded-2xl sm:h-[52px] h-[48px] sm:w-[52px] w-[48px] !p-0 bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-100 disabled:opacity-20 flex-shrink-0 transition-all hover:scale-105 active:scale-95">
-                        <Send size={20} />
+                      <Button type="submit" disabled={(!newMessage.trim() && selectedImages.length === 0) || isUploading} className="rounded-2xl sm:h-[48px] h-[44px] sm:w-[48px] w-[44px] !p-0 bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-100 disabled:opacity-20 flex-shrink-0 transition-all hover:scale-105 active:scale-95">
+                        {isUploading ? (
+                          <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          <Send size={20} />
+                        )}
                       </Button>
                     </form>
                   </div>
@@ -729,6 +1091,50 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
             ))}
           </div>
         </section>
+      )}
+      {/* ── Fullscreen Image Viewer ── */}
+      {viewingImage && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm" onClick={() => setViewingImage(null)}>
+          <button
+            onClick={() => setViewingImage(null)}
+            className="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors"
+          >
+            <X size={20} />
+          </button>
+          <img src={viewingImage} alt="Full view" className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
+      {/* ── Delete Message Modal ── */}
+      {deletingMsgId && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div 
+            className="absolute inset-0 bg-slate-900/60" 
+            onClick={() => setDeletingMsgId(null)} 
+          />
+          <Card className="relative w-full max-w-[320px] bg-white border border-slate-200 shadow-xl rounded-2xl animate-in fade-in zoom-in-95 duration-100 overflow-hidden">
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-slate-900 mb-2">Delete Message</h3>
+              <p className="text-sm text-slate-500 font-medium mb-6">
+                Are you sure you want to delete this message? This cannot be undone.
+              </p>
+              <div className="flex gap-2">
+                <Button 
+                  variant="ghost"
+                  onClick={() => setDeletingMsgId(null)}
+                  className="flex-1 py-2.5 text-slate-500 font-bold uppercase tracking-widest text-[10px] hover:bg-slate-100 rounded-xl"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleDeleteMessage}
+                  className="flex-1 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-bold uppercase tracking-widest text-[10px] rounded-xl shadow-sm"
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
       )}
       {/* ── Custom Delete Modal ── */}
       {deletingId && (

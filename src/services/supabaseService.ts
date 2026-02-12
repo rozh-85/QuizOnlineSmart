@@ -388,16 +388,45 @@ export const lectureQAService = {
     return data;
   },
 
-  async sendMessage(questionId: string, text: string, isMentor = false): Promise<LectureQuestionMessage> {
+  async uploadChatImage(file: File): Promise<string> {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `chat/${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('materials')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (uploadError) {
+      console.error('Chat image upload error:', uploadError);
+      throw uploadError;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('materials')
+      .getPublicUrl(fileName);
+
+    return publicUrl;
+  },
+
+  async sendMessage(questionId: string, text: string, isMentor = false, imageUrls?: string[]): Promise<LectureQuestionMessage> {
     const user = await authService.getCurrentUser();
+
+    const insertData: any = {
+      question_id: questionId,
+      sender_id: user?.id || null,
+      message_text: text
+    };
+    if (imageUrls && imageUrls.length > 0) {
+      // Store as JSON array string for multiple images, or single URL for one image
+      insertData.image_url = imageUrls.length === 1 ? imageUrls[0] : JSON.stringify(imageUrls);
+    }
 
     const { data, error } = await supabase
       .from('lecture_question_messages')
-      .insert([{
-        question_id: questionId,
-        sender_id: user?.id || null, // Allow null if not logged in
-        message_text: text
-      }])
+      .insert([insertData])
       .select()
       .single();
     
@@ -418,6 +447,33 @@ export const lectureQAService = {
     }
 
     return data;
+  },
+
+  async editMessage(messageId: string, newText: string): Promise<void> {
+    const { error } = await supabase
+      .from('lecture_question_messages')
+      .update({ message_text: newText })
+      .eq('id', messageId);
+    
+    if (error) throw error;
+  },
+
+  async deleteMessage(messageId: string): Promise<void> {
+    const { error } = await supabase
+      .from('lecture_question_messages')
+      .delete()
+      .eq('id', messageId);
+    
+    if (error) throw error;
+  },
+
+  async editQuestion(questionId: string, newText: string): Promise<void> {
+    const { error } = await supabase
+      .from('lecture_questions')
+      .update({ question_text: newText })
+      .eq('id', questionId);
+    
+    if (error) throw error;
   },
 
   async togglePublishQuestion(questionId: string, isPublished: boolean): Promise<void> {

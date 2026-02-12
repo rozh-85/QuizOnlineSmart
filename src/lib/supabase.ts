@@ -103,6 +103,7 @@ export type LectureQuestionMessage = {
   question_id: string;
   sender_id: string;
   message_text: string;
+  image_url?: string | null;
   created_at: string;
   sender?: {
     full_name: string;
