@@ -16,7 +16,8 @@ import {
   UserMinus,
   AlertCircle,
   Loader2,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
 import { studentService, classService } from '../../services/supabaseService';
 import toast from 'react-hot-toast';
@@ -45,6 +46,8 @@ const StudentManager = () => {
   // For showing credentials immediately after creation
   const [createdStudentInfo, setCreatedStudentInfo] = useState<any>(null);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [studentToDelete, setStudentToDelete] = useState<any>(null);
 
   useEffect(() => {
     fetchData();
@@ -130,6 +133,29 @@ const StudentManager = () => {
       fetchData();
     } catch (error) {
       toast.error('Reset failed');
+    }
+  };
+
+  const handleDeleteStudent = (student: any) => {
+    setStudentToDelete(student);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!studentToDelete) return;
+    
+    try {
+      setLoading(true);
+      setIsDeleteConfirmOpen(false);
+      await studentService.deleteStudent(studentToDelete.id);
+      toast.success('Student deleted successfully');
+      setStudentToDelete(null);
+      fetchData();
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error('Failed to delete student');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -374,6 +400,13 @@ const StudentManager = () => {
                         <LinkIcon size={15} />
                       </button>
                       <button 
+                        onClick={() => handleDeleteStudent(s)}
+                        className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                        title="Delete student"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                      <button 
                         onClick={() => handleResetDevice(s.id)}
                         disabled={!s.device_lock_active}
                         className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all disabled:opacity-30 disabled:pointer-events-none"
@@ -608,6 +641,40 @@ const StudentManager = () => {
             <button onClick={() => setIsAssignModalOpen(false)} className="w-full mt-4 py-2.5 text-slate-400 hover:text-slate-900 font-bold text-sm transition-colors">
               Cancel
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteConfirmOpen && studentToDelete && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[150] p-4">
+          <div className="bg-white w-full max-w-[340px] rounded-[2rem] shadow-2xl p-8 animate-scale-in text-center">
+            <div className="w-16 h-16 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto mb-6">
+              <Trash2 size={32} />
+            </div>
+            
+            <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2">Are you sure?</h3>
+            <p className="text-xs text-slate-400 font-bold leading-relaxed mb-8 px-2">
+              You are about to delete <span className="text-slate-900 font-black">{studentToDelete.full_name}</span>. This action cannot be undone and all data will be lost.
+            </p>
+
+            <div className="grid grid-cols-1 gap-3">
+              <button
+                onClick={confirmDelete}
+                className="w-full py-4 bg-rose-600 text-white font-black rounded-2xl text-sm transition-all active:scale-95 hover:bg-rose-700 shadow-xl shadow-rose-100"
+              >
+                Yes, Delete Student
+              </button>
+              <button
+                onClick={() => {
+                  setIsDeleteConfirmOpen(false);
+                  setStudentToDelete(null);
+                }}
+                className="w-full py-3 text-slate-400 hover:text-slate-900 font-black text-sm transition-colors"
+              >
+                No, Keep it
+              </button>
+            </div>
           </div>
         </div>
       )}

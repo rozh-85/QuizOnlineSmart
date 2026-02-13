@@ -262,6 +262,14 @@ export const studentService = {
       .eq('id', studentId);
     
     if (error) throw error;
+  },
+
+  async deleteStudent(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
   }
 };
 
