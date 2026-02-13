@@ -143,39 +143,49 @@ const QAManager = () => {
             <>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="w-full bg-white border border-slate-200 rounded-[1.2rem] p-4 flex items-center justify-between shadow-sm hover:border-indigo-200 hover:shadow-md transition-all group"
+                className="w-full h-16 bg-white border border-slate-200 rounded-2xl px-5 flex items-center justify-between shadow-sm hover:border-indigo-100 hover:shadow-md transition-all group"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                    <BookOpen size={24} />
+                  <div className="w-10 h-10 rounded-xl bg-slate-50 text-indigo-600 flex items-center justify-center border border-slate-100 group-hover:bg-indigo-50 group-hover:border-indigo-100 transition-all">
+                    <BookOpen size={20} />
                   </div>
                   <div className="text-left">
-                    <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-0.5">Selected Lecture</div>
-                    <div className="text-lg font-bold text-slate-900">
+                    <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.1em] mb-0.5">Selected Module</div>
+                    <div className="text-base font-black text-slate-900 truncate max-w-[200px] sm:max-w-md">
                       {selectedLectureId ? lectures.find(l => l.id === selectedLectureId)?.title : 'Select a lecture to manage'}
                     </div>
                   </div>
                 </div>
-                <ChevronDown size={20} className={`text-slate-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                <div className="flex items-center gap-4">
+                  {selectedLectureId && unreadCounts[selectedLectureId] > 0 && (
+                    <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-rose-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-rose-100">
+                      <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                      {unreadCounts[selectedLectureId]} New
+                    </div>
+                  )}
+                  <ChevronDown size={18} className={`text-slate-300 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                </div>
               </button>
 
               {/* Dropdown Menu */}
               {isDropdownOpen && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-[1.2rem] shadow-xl p-4 animate-in fade-in zoom-in-95 duration-200">
-                  <div className="relative mb-4">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                    <input
-                      type="text"
-                      placeholder="Search lectures..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-300 outline-none transition-all font-medium text-sm"
-                      autoFocus
-                    />
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl p-2 z-[100] animate-in fade-in zoom-in-95 duration-200">
+                  <div className="p-2 border-b border-slate-50 mb-1">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                      <input
+                        type="text"
+                        placeholder="Search modules..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-none rounded-xl focus:ring-0 outline-none font-bold text-sm placeholder:text-slate-300"
+                        autoFocus
+                      />
+                    </div>
                   </div>
 
-                  <div className="space-y-2 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
+                  <div className="space-y-1 max-h-[400px] overflow-y-auto custom-scrollbar p-1">
                     {filteredLectures.map((lecture) => (
                       <button
                         key={lecture.id}
@@ -183,18 +193,27 @@ const QAManager = () => {
                           setSelectedLectureId(lecture.id);
                           setIsDropdownOpen(false);
                         }}
-                        className={`w-full text-left p-3 rounded-xl transition-all flex items-center justify-between group ${
+                        className={`w-full text-left p-2.5 rounded-xl transition-all flex items-center justify-between group ${
                           selectedLectureId === lecture.id
-                            ? 'bg-indigo-50 text-indigo-700'
+                            ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-100'
                             : 'hover:bg-slate-50 text-slate-600'
                         }`}
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                            selectedLectureId === lecture.id 
+                              ? 'bg-white/20 text-white' 
+                              : 'bg-slate-100 text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-600'
+                          }`}>
+                            <BookOpen size={14} />
+                          </div>
                           <div className="min-w-0">
-                            <div className="text-sm font-bold truncate">
+                            <div className="text-[13px] font-black truncate">
                               {lecture.title}
                             </div>
-                            <div className="text-[10px] font-bold opacity-60 uppercase tracking-widest flex items-center gap-1.5 mt-0.5">
+                            <div className={`text-[10px] font-bold opacity-60 uppercase flex items-center gap-1.5 mt-0.5 ${
+                              selectedLectureId === lecture.id ? 'text-indigo-100' : 'text-slate-400'
+                            }`}>
                               <Calendar size={10} />
                               {new Date(lecture.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                             </div>
@@ -202,11 +221,15 @@ const QAManager = () => {
                         </div>
                         <div className="flex items-center gap-3">
                           {unreadCounts[lecture.id] > 0 && (
-                            <div className="min-w-[1.25rem] h-5 px-1 bg-rose-500 rounded-full border-2 border-white text-white text-[10px] font-bold flex items-center justify-center shadow-sm animate-pulse">
+                            <div className={`min-w-[1.25rem] h-5 px-1.5 rounded-md flex items-center justify-center text-[10px] font-black ${
+                              selectedLectureId === lecture.id 
+                                ? 'bg-white text-indigo-600' 
+                                : 'bg-rose-500 text-white shadow-sm'
+                            }`}>
                               {unreadCounts[lecture.id]}
                             </div>
                           )}
-                          {selectedLectureId === lecture.id && <Check size={16} className="text-indigo-600" />}
+                          {selectedLectureId === lecture.id && <Check size={16} className="text-white" />}
                         </div>
                       </button>
                     ))}
