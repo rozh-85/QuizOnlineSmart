@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   email TEXT NOT NULL,
   full_name TEXT,
   role TEXT CHECK (role IN ('teacher', 'student', 'admin')) DEFAULT 'student',
+  pin_display TEXT, -- To allow teachers to recover forgotten PINs
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -111,13 +112,20 @@ CREATE TRIGGER update_lecture_materials_updated_at BEFORE UPDATE ON public.lectu
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, full_name, role)
+  INSERT INTO public.profiles (id, email, full_name, role, pin_display, serial_id)
   VALUES (
     new.id,
     new.email,
     new.raw_user_meta_data->>'full_name',
-    COALESCE(new.raw_user_meta_data->>'role', 'student')
-  );
+    COALESCE(new.raw_user_meta_data->>'role', 'student'),
+    new.raw_user_meta_data->>'pin', -- Save the PIN for recovery
+    new.raw_user_meta_data->>'serial_id' -- Save the Serial ID
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    full_name = EXCLUDED.full_name,
+    role = EXCLUDED.role,
+    pin_display = EXCLUDED.pin_display,
+    serial_id = EXCLUDED.serial_id;
   RETURN new;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

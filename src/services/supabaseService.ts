@@ -5,14 +5,15 @@ import { supabase, type Lecture, type Question, type Profile, type LectureQuesti
 // =====================================================
 
 export const authService = {
-  async signUp(email: string, password: string, fullName: string, role: 'teacher' | 'student' = 'student') {
+  async signUp(email: string, password: string, fullName: string, role: 'teacher' | 'student' = 'student', serialId?: string) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: fullName,
-          role
+          role,
+          serial_id: serialId || null
         }
       }
     });
@@ -20,13 +21,58 @@ export const authService = {
     return data;
   },
 
-  async signIn(email: string, password: string) {
-    const { data, error } = await supabase.auth.signInWithPassword({
+  async signIn(email: string, password: string, fingerprint?: string) {
+    console.log('[Auth] Attempting sign in with email:', email);
+    // 1. Regular Sign In
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password
     });
-    if (error) throw error;
-    return data;
+    if (authError) {
+      console.error('[Auth] Sign in failed for:', email, '| Error:', authError.message);
+      throw authError;
+    }
+    console.log('[Auth] Sign in successful for:', email);
+
+    if (!authData.user) throw new Error('Authentication failed');
+
+    // 2. Fetch Profile for Role and Device Lock Check
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', authData.user.id)
+      .single();
+
+    if (profileError) throw profileError;
+
+    // 3. Device Lock Logic for Students
+    if (profile.role === 'student' && fingerprint) {
+      if (profile.device_lock_active && profile.last_fingerprint && profile.last_fingerprint !== fingerprint) {
+        // Sign out if blocked
+        await supabase.auth.signOut();
+        throw new Error('This account is already active on another device.');
+      }
+
+      // Lock device if not already locked
+      if (!profile.device_lock_active) {
+        await supabase
+          .from('profiles')
+          .update({ 
+            device_lock_active: true, 
+            last_fingerprint: fingerprint 
+          })
+          .eq('id', profile.id);
+      }
+    }
+
+    return { ...authData, profile };
+  },
+
+  async signInWithSerial(serialId: string, pin: string, fingerprint: string) {
+    const cleanId = serialId.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    const email = `${cleanId}@kimya.com`;
+    console.log('[Auth] Student login - SerialID:', serialId, '-> Clean:', cleanId, '-> Email:', email, '| PIN length:', pin.length);
+    return this.signIn(email, pin, fingerprint);
   },
 
   async signOut() {
@@ -48,6 +94,174 @@ export const authService = {
     
     if (error) throw error;
     return data;
+  }
+};
+
+// =====================================================
+// CLASSES
+// =====================================================
+
+export const classService = {
+  async getAll(): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('classes')
+      .select(`
+        *,
+        teacher:profiles!classes_teacher_id_fkey(full_name),
+        students:class_students(count)
+      `)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  async getByTeacher(teacherId: string): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('classes')
+      .select('*')
+      .eq('teacher_id', teacherId)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  async create(name: string): Promise<any> {
+    const user = await authService.getCurrentUser();
+    const { data, error } = await supabase
+      .from('classes')
+      .insert([{ name, teacher_id: user?.id }])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async update(id: string, name: string): Promise<any> {
+    const { data, error } = await supabase
+      .from('classes')
+      .update({ name })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  async delete(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('classes')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+  },
+
+  async addStudentToClass(classId: string, studentId: string): Promise<void> {
+    const { error } = await supabase
+      .from('class_students')
+      .insert([{ class_id: classId, student_id: studentId }]);
+    if (error) throw error;
+  },
+
+  async removeStudentFromClass(classId: string, studentId: string): Promise<void> {
+    const { error } = await supabase
+      .from('class_students')
+      .delete()
+      .match({ class_id: classId, student_id: studentId });
+    if (error) throw error;
+  },
+
+  async getClassStudents(classId: string): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('class_students')
+      .select(`
+        student:profiles!class_students_student_id_fkey(*)
+      `)
+      .eq('class_id', classId);
+    
+    if (error) throw error;
+    return (data || []).map((d: any) => d.student);
+  }
+};
+
+// =====================================================
+// STUDENTS
+// =====================================================
+
+export const studentService = {
+  async getAll(): Promise<Profile[]> {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('role', 'student')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
+  },
+
+  async updateStudent(id: string, updates: { full_name?: string; pin_display?: string }): Promise<void> {
+    const { error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', id);
+    if (error) throw error;
+  },
+
+  async updateStudentPin(id: string, newPin: string): Promise<void> {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ pin_display: newPin })
+      .eq('id', id);
+    if (error) throw error;
+  },
+
+  async createStudent(fullName: string, serialId: string, pin: string) {
+    const cleanId = serialId.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+    const email = `${cleanId}@kimya.com`;
+    console.log('[Student Create] Name:', fullName, '| Email:', email, '| PIN:', pin);
+    
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password: pin,
+      options: {
+        data: {
+          full_name: fullName,
+          role: 'student',
+          serial_id: cleanId,
+          pin: pin
+        }
+      }
+    });
+
+    if (error) {
+      console.error('[Student Create] Failed:', error.message);
+      throw error;
+    }
+    
+    // Check if user was actually created or if email confirmation is pending
+    if (data.user && !data.session) {
+      console.warn('[Student Create] User created but NO SESSION - email confirmation may be required!');
+      console.warn('[Student Create] Go to Supabase Dashboard > Authentication > Providers > Email and DISABLE "Confirm email"');
+    }
+    
+    console.log('[Student Create] Success:', email, '| User ID:', data.user?.id);
+    return data;
+  },
+
+  async resetDeviceLock(studentId: string): Promise<void> {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ 
+        device_lock_active: false, 
+        last_fingerprint: null 
+      })
+      .eq('id', studentId);
+    
+    if (error) throw error;
   }
 };
 
@@ -265,6 +479,17 @@ export const materialService = {
     return data || [];
   },
 
+  async getByLecture(lectureId: string): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('lecture_materials')
+      .select('*')
+      .eq('lecture_id', lectureId)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data || [];
+  },
+
   async create(material: any): Promise<any> {
     try {
       const user = await authService.getCurrentUser();
@@ -390,26 +615,40 @@ export const lectureQAService = {
   },
 
   async uploadChatImage(file: File): Promise<string> {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `chat/${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `chat/${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('materials')
-      .upload(fileName, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('materials')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-    if (uploadError) {
-      console.error('Chat image upload error:', uploadError);
-      throw uploadError;
+      if (uploadError) {
+        console.error('[uploadChatImage] Storage upload failed:', uploadError);
+        throw new Error(`Image upload failed: ${uploadError.message || 'Unknown storage error'}`);
+      }
+
+      if (!uploadData) {
+        throw new Error('Image upload returned no data');
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('materials')
+        .getPublicUrl(fileName);
+
+      if (!publicUrl) {
+        throw new Error('Failed to get public URL for uploaded image');
+      }
+
+      console.log('[uploadChatImage] Successfully uploaded image:', fileName);
+      return publicUrl;
+    } catch (error: any) {
+      console.error('[uploadChatImage] Error uploading chat image:', error);
+      throw error;
     }
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('materials')
-      .getPublicUrl(fileName);
-
-    return publicUrl;
   },
 
   async sendMessage(questionId: string, text: string, isMentor = false, imageUrls?: string[]): Promise<LectureQuestionMessage> {
@@ -435,7 +674,7 @@ export const lectureQAService = {
 
     // Reset is_read to false if a student sends a message, so the admin gets notified
     if (!isMentor) {
-      await supabase
+      const { error: updateError } = await supabase
         .from('lecture_questions')
         .update({ 
           is_read: false, 
@@ -443,16 +682,45 @@ export const lectureQAService = {
           updated_at: new Date().toISOString() 
         })
         .eq('id', questionId);
+      
+      if (updateError) {
+        console.error('[sendMessage] Failed to update is_read for student message:', updateError);
+        throw updateError;
+      }
     } else {
-       // Flag for student if mentor sends a message
-       await supabase
+       // Flag for student if mentor sends a message - CRITICAL: ensure is_read is set to true
+       // Try updating without updated_at first, then with it if that fails
+       let updateData: any = { 
+         is_read: true,
+         is_read_by_student: false
+       };
+       
+       const { error: updateError } = await supabase
         .from('lecture_questions')
-        .update({ 
-          is_read: true,
-          is_read_by_student: false,
-          updated_at: new Date().toISOString() 
-        })
+        .update(updateData)
         .eq('id', questionId);
+      
+      if (updateError) {
+        console.error('[sendMessage] Failed to mark thread as read when teacher sent message:', updateError);
+        // Try again without updated_at in case that field doesn't exist or has issues
+        const { error: retryError } = await supabase
+          .from('lecture_questions')
+          .update({ 
+            is_read: true,
+            is_read_by_student: false
+          })
+          .eq('id', questionId);
+        
+        if (retryError) {
+          console.error('[sendMessage] Retry also failed:', retryError);
+          // Don't throw here - message was sent successfully, but read status update failed
+          // We'll retry with markAsRead below
+        } else {
+          console.log('[sendMessage] Successfully marked thread as read (retry without updated_at):', questionId);
+        }
+      } else {
+        console.log('[sendMessage] Successfully marked thread as read when teacher sent message:', questionId);
+      }
     }
 
     return data;
@@ -513,22 +781,42 @@ export const lectureQAService = {
   },
 
   async markAsRead(questionId: string, forStudent = false): Promise<void> {
-    const updateData = forStudent ? { is_read_by_student: true } : { is_read: true };
-    const { error } = await supabase
+    const updateData = forStudent 
+      ? { is_read_by_student: true } 
+      : { is_read: true };
+    
+    const { data, error } = await supabase
       .from('lecture_questions')
       .update(updateData)
-      .eq('id', questionId);
+      .eq('id', questionId)
+      .select('id, is_read, is_read_by_student');
     
-    if (error) throw error;
+    if (error) {
+      console.error('[markAsRead] Database update failed:', error);
+      throw error;
+    }
+    
+    // Verify the update actually succeeded
+    if (data && data.length > 0) {
+      const updated = data[0];
+      const expectedRead = forStudent ? updated.is_read_by_student : updated.is_read;
+      if (!expectedRead) {
+        console.warn('[markAsRead] Update returned but read flag is still false:', questionId, updated);
+      } else {
+        console.log('[markAsRead] Successfully marked as read:', questionId, forStudent ? 'student' : 'teacher');
+      }
+    } else {
+      console.warn('[markAsRead] Update returned no rows - thread may not exist:', questionId);
+    }
   },
 
   async getUnreadCount(): Promise<number> {
-    const { count, error } = await supabase
+    const { data, count, error } = await supabase
       .from('lecture_questions')
       .select('*', { count: 'exact' })
       .eq('is_read', false);
     
-    console.log('[DEBUG] Admin Unread Count Fetch:', { count, error });
+    console.log('[DEBUG] Admin Unread Count Fetch:', { count, firstFewIds: (data || []).slice(0, 3).map(d => d.id), error });
     if (error) throw error;
     return count || 0;
   },
@@ -559,5 +847,63 @@ export const lectureQAService = {
       }
     });
     return counts;
+  },
+
+  async getStudentUnreadCount(studentId: string): Promise<number> {
+    const { count, error } = await supabase
+      .from('lecture_questions')
+      .select('*', { count: 'exact' })
+      .eq('student_id', studentId)
+      .eq('is_read_by_student', false);
+    
+    if (error) throw error;
+    return count || 0;
+  },
+
+  async getStudentUnreadThreads(studentId: string): Promise<any[]> {
+    // Simple query: just get the threads with lecture title
+    const { data, error } = await supabase
+      .from('lecture_questions')
+      .select('*, lectures(id, title)')
+      .eq('student_id', studentId)
+      .eq('is_read_by_student', false)
+      .order('updated_at', { ascending: false });
+    
+    if (error) {
+      console.error('[Notif] Error fetching unread threads:', error);
+      // Fallback: query without join
+      const { data: fallback } = await supabase
+        .from('lecture_questions')
+        .select('*')
+        .eq('student_id', studentId)
+        .eq('is_read_by_student', false)
+        .order('updated_at', { ascending: false });
+      return fallback || [];
+    }
+    
+    // For each thread, fetch the latest messages with proper sender role
+    const threadsWithMessages = await Promise.all(
+      (data || []).map(async (thread: any) => {
+        const { data: msgs } = await supabase
+          .from('lecture_question_messages')
+          .select('message_text, created_at, sender_id, sender:profiles!lecture_question_messages_sender_id_fkey(role)')
+          .eq('question_id', thread.id)
+          .order('created_at', { ascending: false })
+          .limit(3);
+        
+        return {
+          ...thread,
+          lecture: thread.lectures || { id: thread.lecture_id, title: 'Lecture' },
+          messages: (msgs || []).map((m: any) => ({
+            ...m,
+            // Normalize: put role in both paths so getLastTeacherMessage can find it
+            sender: m.sender || null,
+            profiles: m.sender || null
+          }))
+        };
+      })
+    );
+    
+    return threadsWithMessages;
   }
 };

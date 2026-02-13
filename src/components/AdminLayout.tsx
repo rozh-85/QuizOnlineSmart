@@ -10,6 +10,8 @@ import {
   BookOpen, 
   Sparkles, 
   MessageSquare,
+  Users,
+  ShieldCheck
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { lectureQAService, subscribeToAllQuestions } from '../services/supabaseService';
@@ -26,31 +28,42 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
+    let pendingTimeouts: ReturnType<typeof setTimeout>[] = [];
+    const lastManualUpdate = { current: 0 };
+    const processedIds = new Set<string>();
+
     const fetchUnread = async () => {
       try {
         const count = await lectureQAService.getUnreadCount();
-        console.log('[DEBUG] Sidebar Updating Count:', count);
         setUnreadCount(count);
       } catch (e) {
         console.error('Error fetching unread count:', e);
       }
     };
     fetchUnread();
-    
-    // Immediate and delayed fetch for better reliability
-    const triggerFetch = () => {
-       fetchUnread();
-       setTimeout(fetchUnread, 500);
-       setTimeout(fetchUnread, 2000);
+
+    const clearPending = () => {
+      pendingTimeouts.forEach(clearTimeout);
+      pendingTimeouts = [];
+    };
+
+    // Schedule a fetch with an initial delay, canceling any previous pending fetches
+    const scheduleFetch = (delay: number) => {
+      // Don't fetch if we just did a manual update (prevents the "bounce" from stale DB state)
+      if (Date.now() - lastManualUpdate.current < 4000) return;
+      
+      clearPending();
+      pendingTimeouts.push(setTimeout(fetchUnread, delay));
+      // Follow-up to catch any missed updates
+      pendingTimeouts.push(setTimeout(fetchUnread, delay + 2000));
     };
 
     // Subscribe to question changes (INSERT, UPDATE, DELETE)
     const questionsSub = subscribeToAllQuestions(() => {
-      console.log('[DEBUG] Realtime Update: Question changed');
-      triggerFetch();
+      scheduleFetch(300);
     });
 
-    // Also subscribe to new messages so count updates when student sends a message
+    // Subscribe to new messages — delay so is_read update commits before we query
     const messagesSub = supabase
       .channel('admin-messages-channel')
       .on('postgres_changes', {
@@ -58,37 +71,71 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         schema: 'public',
         table: 'lecture_question_messages'
       }, () => {
-        console.log('[DEBUG] Realtime Update: Message received');
-        triggerFetch();
+        scheduleFetch(600);
       })
       .subscribe();
 
-    // Safety polling every 15s in case realtime misses an event
-    const interval = setInterval(fetchUnread, 15000);
+    // Safety polling every 15s
+    const interval = setInterval(() => {
+      // Only poll if we haven't manually changed recently
+      if (Date.now() - lastManualUpdate.current > 5000) {
+        fetchUnread();
+      }
+    }, 15000);
 
-    // Listen for manual read events from child components (LectureQA)
-    window.addEventListener('unread-count-changed', triggerFetch);
+    // Track processed IDs locally to prevent double-decrements within one session
+    const handleManualChange = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      const threadId = detail?.id;
+      const role = detail?.role;
+
+      if (role === 'teacher' && threadId && !processedIds.has(threadId)) {
+        processedIds.add(threadId);
+        setUnreadCount(prev => Math.max(0, prev - 1));
+        lastManualUpdate.current = Date.now();
+      } else if (!threadId && role === 'teacher') {
+        // Fallback for generic teacher events
+        lastManualUpdate.current = Date.now();
+        scheduleFetch(2000);
+      }
+      
+      if (threadId) scheduleFetch(3000); // Wait longer for DB consistency
+    };
+    window.addEventListener('unread-count-changed', handleManualChange);
 
     return () => {
       questionsSub.unsubscribe();
       messagesSub.unsubscribe();
       clearInterval(interval);
-      window.removeEventListener('unread-count-changed', fetchUnread);
+      clearPending();
+      window.removeEventListener('unread-count-changed', handleManualChange);
     };
   }, []);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Clear all Supabase related keys
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('sb-')) localStorage.removeItem(key);
+    });
     localStorage.removeItem('teacher_auth');
-    toast.success('Logged out successfully');
-    navigate('/admin/login');
+    try {
+      await supabase.auth.signOut();
+      toast.success('Logged out');
+      navigate('/admin/login', { replace: true });
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Failed to log out');
+    }
   };
 
   const isActive = (path: string) => location.pathname === path;
 
   const navItems = [
     { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/admin/lectures', icon: BookOpen, label: 'Lectures' },
-    { path: '/admin/materials', icon: GraduationCap, label: 'Materials' },
+    { path: '/admin/classes', icon: BookOpen, label: 'Classes' },
+    { path: '/admin/students', icon: Users, label: 'Students' },
+    { path: '/admin/lectures', icon: GraduationCap, label: 'Lectures' },
+    { path: '/admin/materials', icon: ShieldCheck, label: 'Materials' },
     { path: '/admin/qa', icon: MessageSquare, label: 'Q&A Discussions', hasUnread: unreadCount > 0 },
     { path: '/admin/new', icon: Plus, label: 'New Question' },
     { path: '/admin/ai-generator', icon: Sparkles, label: 'AI Generator' },
@@ -105,7 +152,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               <div className="w-10 h-10 rounded-xl bg-primary-600 flex items-center justify-center shadow-md">
                 <GraduationCap size={22} className="text-white" />
               </div>
-              <span className="text-lg font-bold text-slate-900 tracking-tight">EduPulse Admin</span>
+              <span className="text-lg font-black text-slate-900 tracking-tight">Smart Quiz Admin</span>
             </Link>
             <button
               onClick={() => setSidebarOpen(false)}

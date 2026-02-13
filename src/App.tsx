@@ -3,89 +3,120 @@ import { Toaster } from 'react-hot-toast';
 import { QuizProvider } from './context/QuizContext';
 import Layout from './components/Layout';
 import AdminLayout from './components/AdminLayout';
-import Home from './pages/Home';
+import Login from './pages/Login';
 import TeacherDashboard from './pages/teacher/Dashboard';
+import ClassManager from './pages/teacher/ClassManager';
+import StudentManager from './pages/teacher/StudentManager';
 import QuestionEditor from './pages/teacher/QuestionEditor';
 import AIGenerator from './pages/teacher/AIGenerator';
 import LectureManager from './pages/teacher/LectureManager';
 import MaterialsManager from './pages/teacher/MaterialsManager';
 import QAManager from './pages/teacher/QAManager';
-import TeacherLogin from './pages/teacher/TeacherLogin';
+import StudentDashboard from './pages/student/StudentDashboard';
+import LectureDetail from './pages/student/LectureDetail';
 import QuizStart from './pages/student/QuizStart';
 import QuizQuestion from './pages/student/QuizQuestion';
 import QuizResults from './pages/student/QuizResults';
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const isAuth = localStorage.getItem('teacher_auth') === 'true';
-  return isAuth ? <>{children}</> : <Navigate to="/admin/login" replace />;
+const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode, allowedRoles?: ('teacher' | 'student' | 'admin')[] }) => {
+  const hasToken = Object.keys(localStorage).some(key => key.startsWith('sb-') && key.endsWith('-auth-token'));
+  
+  if (!hasToken) {
+    const isAdminRoute = allowedRoles?.includes('teacher') || allowedRoles?.includes('admin');
+    return <Navigate to={isAdminRoute ? "/admin/login" : "/login"} replace />;
+  }
+
+  return <>{children}</>;
 };
 
 function App() {
   return (
     <QuizProvider>
       <HashRouter>
-        <Toaster 
-          position="bottom-center"
-          toastOptions={{
-            duration: 3000,
-            style: {
-              background: '#ffffff',
-              color: '#1e293b',
-              borderRadius: '16px',
-              border: '1px solid #e2e8f0',
-              fontWeight: 600,
-              fontSize: '14px',
-              padding: '12px 20px',
-              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05)',
-            },
-            success: {
-              iconTheme: {
-                primary: '#1d4ed8',
-                secondary: '#ffffff',
-              },
-            },
-          }}
-        />
-        <Routes>
-          {/* Student Routes with Student Layout */}
-          <Route path="/" element={<Layout showFooter={true}><Home /></Layout>} />
-          <Route path="/quiz" element={<Layout><QuizStart /></Layout>} />
-          <Route path="/quiz/question" element={<Layout><QuizQuestion /></Layout>} />
-          <Route path="/quiz/results" element={<Layout><QuizResults /></Layout>} />
-          
-          {/* Admin Login (No Layout) */}
-          <Route path="/admin/login" element={<Layout><TeacherLogin /></Layout>} />
-          
-          {/* Admin Routes with Admin Layout */}
-          <Route 
-            path="/admin" 
-            element={<AdminLayout><ProtectedRoute><TeacherDashboard /></ProtectedRoute></AdminLayout>} 
+        <div className="min-h-screen bg-slate-50 font-inter antialiased">
+          <Routes>
+            {/* Root - Redirect to Login */}
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            
+            {/* Auth */}
+            <Route path="/login" element={<Login mode="student" />} />
+            <Route path="/admin/login" element={<Login mode="teacher" />} />
+            
+            {/* Student Routes */}
+            <Route 
+              path="/dashboard" 
+              element={<ProtectedRoute allowedRoles={['student']}><StudentDashboard /></ProtectedRoute>} 
+            />
+            <Route 
+              path="/lecture/:id" 
+              element={<ProtectedRoute allowedRoles={['student']}><LectureDetail /></ProtectedRoute>} 
+            />
+            <Route 
+              path="/quiz" 
+              element={<ProtectedRoute allowedRoles={['student']}><QuizStart /></ProtectedRoute>} 
+            />
+            <Route 
+              path="/quiz/:lectureId" 
+              element={<ProtectedRoute allowedRoles={['student']}><QuizStart /></ProtectedRoute>} 
+            />
+            <Route 
+              path="/quiz/question" 
+              element={<ProtectedRoute allowedRoles={['student']}><Layout><QuizQuestion /></Layout></ProtectedRoute>} 
+            />
+            <Route 
+              path="/quiz/results" 
+              element={<ProtectedRoute allowedRoles={['student']}><Layout><QuizResults /></Layout></ProtectedRoute>} 
+            />
+            
+            {/* Admin Routes with Admin Layout */}
+            <Route 
+              path="/admin" 
+              element={<AdminLayout><ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherDashboard /></ProtectedRoute></AdminLayout>} 
+            />
+            <Route 
+              path="/admin/classes" 
+              element={<AdminLayout><ProtectedRoute allowedRoles={['teacher', 'admin']}><ClassManager /></ProtectedRoute></AdminLayout>} 
+            />
+            <Route 
+              path="/admin/students" 
+              element={<AdminLayout><ProtectedRoute allowedRoles={['teacher', 'admin']}><StudentManager /></ProtectedRoute></AdminLayout>} 
+            />
+            <Route 
+              path="/admin/lectures" 
+              element={<AdminLayout><ProtectedRoute allowedRoles={['teacher', 'admin']}><LectureManager /></ProtectedRoute></AdminLayout>} 
+            />
+            <Route 
+              path="/admin/materials" 
+              element={<AdminLayout><ProtectedRoute allowedRoles={['teacher', 'admin']}><MaterialsManager /></ProtectedRoute></AdminLayout>} 
+            />
+            <Route 
+              path="/admin/qa" 
+              element={<AdminLayout><ProtectedRoute allowedRoles={['teacher', 'admin']}><QAManager /></ProtectedRoute></AdminLayout>} 
+            />
+            <Route 
+              path="/admin/new" 
+              element={<AdminLayout><ProtectedRoute allowedRoles={['teacher', 'admin']}><QuestionEditor /></ProtectedRoute></AdminLayout>} 
+            />
+            <Route 
+              path="/admin/edit/:id" 
+              element={<AdminLayout><ProtectedRoute allowedRoles={['teacher', 'admin']}><QuestionEditor /></ProtectedRoute></AdminLayout>} 
+            />
+            <Route 
+              path="/admin/ai-generator" 
+              element={<AdminLayout><ProtectedRoute allowedRoles={['teacher', 'admin']}><AIGenerator /></ProtectedRoute></AdminLayout>} 
+            />
+
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+          <Toaster 
+            position="top-center"
+            toastOptions={{
+              className: 'font-bold text-sm rounded-2xl shadow-2xl border border-slate-100 p-4',
+              duration: 4000,
+            }}
           />
-          <Route 
-            path="/admin/lectures" 
-            element={<AdminLayout><ProtectedRoute><LectureManager /></ProtectedRoute></AdminLayout>} 
-          />
-          <Route 
-            path="/admin/materials" 
-            element={<AdminLayout><ProtectedRoute><MaterialsManager /></ProtectedRoute></AdminLayout>} 
-          />
-          <Route 
-            path="/admin/new" 
-            element={<AdminLayout><ProtectedRoute><QuestionEditor /></ProtectedRoute></AdminLayout>} 
-          />
-          <Route 
-            path="/admin/edit/:id" 
-            element={<AdminLayout><ProtectedRoute><QuestionEditor /></ProtectedRoute></AdminLayout>} 
-          />
-          <Route 
-            path="/admin/ai-generator" 
-            element={<AdminLayout><ProtectedRoute><AIGenerator /></ProtectedRoute></AdminLayout>} 
-          />
-          <Route 
-            path="/admin/qa" 
-            element={<AdminLayout><ProtectedRoute><QAManager /></ProtectedRoute></AdminLayout>} 
-          />
-        </Routes>
+        </div>
       </HashRouter>
     </QuizProvider>
   );

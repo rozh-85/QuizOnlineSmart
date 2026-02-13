@@ -18,7 +18,7 @@ const QuizResults = () => {
   const [quickViewItem, setQuickViewItem] = useState<{question: Question, index: number, isCorrect: boolean} | null>(null);
 
   if (!state) {
-    return <Navigate to="/quiz" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   const { score, total, answers, questions, lectureId } = state;
@@ -123,7 +123,7 @@ const QuizResults = () => {
                   Try Again
                 </Button>
               </Link>
-              <Link to="/" className="block w-full">
+              <Link to="/dashboard" className="block w-full">
                 <Button variant="secondary" fullWidth className="h-12 rounded-xl border-slate-200 bg-white">
                   <Home size={18} />
                   Dashboard
@@ -172,7 +172,7 @@ const QuizResults = () => {
 
                       <button 
                         onClick={() => setQuickViewItem({question, index, isCorrect})}
-                        className={`absolute top-4 right-4 p-2 rounded-lg transition-all active:scale-95 opacity-0 group-hover:opacity-100 z-10 ${
+                        className={`absolute top-4 right-4 p-2 rounded-lg transition-all active:scale-95 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 z-10 ${
                           isCorrect 
                             ? 'bg-primary-50 text-primary-600 hover:bg-primary-100' 
                             : 'bg-rose-50 text-rose-600 hover:bg-rose-100'

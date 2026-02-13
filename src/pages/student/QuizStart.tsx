@@ -29,7 +29,7 @@ const QuizStart = () => {
 
   // Redirect if no lecture selected
   if (!lectureId) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   const lecture = getLecture(lectureId);
@@ -38,7 +38,7 @@ const QuizStart = () => {
 
   // Redirect if lecture not found
   if (!lecture) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return (
@@ -53,7 +53,7 @@ const QuizStart = () => {
               </Button>
             </Link>
           ) : (
-            <Link to="/">
+            <Link to="/dashboard">
               <Button variant="ghost" size="sm" className="h-11 w-11 p-0 rounded-full text-slate-900 hover:text-primary-600 hover:bg-primary-50 transition-all group border border-slate-200 shadow-sm bg-white">
                 <ArrowLeft size={22} className="group-hover:-translate-x-0.5 transition-transform" />
               </Button>

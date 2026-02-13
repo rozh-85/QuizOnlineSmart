@@ -15,8 +15,24 @@ export type Profile = {
   email: string;
   full_name: string | null;
   role: 'teacher' | 'student' | 'admin';
+  serial_id: string | null;
+  last_fingerprint: string | null;
+  device_lock_active: boolean;
   created_at: string;
   updated_at: string;
+};
+
+export type Class = {
+  id: string;
+  name: string;
+  teacher_id: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ClassStudent = {
+  class_id: string;
+  student_id: string;
 };
 
 export type Lecture = {

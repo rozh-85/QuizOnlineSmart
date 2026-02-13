@@ -31,6 +31,7 @@ interface LectureQAProps {
   lectureId: string;
   compact?: boolean;
   isAdminView?: boolean;
+  initialThreadId?: string;
 }
 
 /* ─────────── Helpers ─────────── */
@@ -58,10 +59,41 @@ const getSnippet = (text: string, length = 80) => {
   return text.substring(0, length) + '...';
 };
 
+// Persist which threads a mentor has explicitly opened/read on this device.
+// This gives us a stable fallback so that after refresh, chats the teacher
+// has already viewed don't appear as "unread" again even if the backend
+// update was delayed or blocked by RLS.
+const TEACHER_READ_STORAGE_KEY = 'teacher_read_threads_v1';
+
+const getTeacherReadSet = (): Set<string> => {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const raw = window.localStorage.getItem(TEACHER_READ_STORAGE_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw) as string[];
+    return new Set(arr);
+  } catch {
+    return new Set();
+  }
+};
+
+const addTeacherReadId = (id: string) => {
+  if (typeof window === 'undefined') return;
+  try {
+    const set = getTeacherReadSet();
+    if (!set.has(id)) {
+      set.add(id);
+      window.localStorage.setItem(TEACHER_READ_STORAGE_KEY, JSON.stringify(Array.from(set)));
+    }
+  } catch {
+    // best-effort only
+  }
+};
+
 /* ═══════════════════════════════════════════════════
    MAIN COMPONENT
    ═══════════════════════════════════════════════════ */
-const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQAProps) => {
+const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThreadId }: LectureQAProps) => {
   const [questions, setQuestions] = useState<LectureQuestion[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -140,22 +172,38 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
       if (isMentor || isOwner) {
         loadMessages(selectedQuestionId);
         
-        // Mark as read immediately when selecting
         if (isMentor && q && !q.is_read) {
-          lectureQAService.markAsRead(selectedQuestionId).then(() => {
-            setQuestions(prev => prev.map(item => 
-              item.id === selectedQuestionId ? { ...item, is_read: true } : item
-            ));
-            // Dispatch event to notify layout/manager to refresh counts
-            window.dispatchEvent(new CustomEvent('unread-count-changed'));
-          }).catch(console.error);
+          // Optimistic local state update: mark as read locally and update all teacher counters immediately
+          setQuestions(prev => prev.map(item => 
+            item.id === selectedQuestionId ? { ...item, is_read: true } : item
+          ));
+          addTeacherReadId(selectedQuestionId);
+
+          // Immediately notify sidebar / lecture list to decrement unread,
+          // without waiting for the DB call to succeed
+          window.dispatchEvent(new CustomEvent('unread-count-changed', { 
+            detail: { id: selectedQuestionId, role: 'teacher' } 
+          }));
+
+          // Persist read state in the database - await and handle errors properly
+          lectureQAService.markAsRead(selectedQuestionId)
+            .then(() => {
+              console.log('[Q&A] Successfully marked thread as read:', selectedQuestionId);
+            })
+            .catch((err) => {
+              console.error('[Q&A] Failed to mark thread as read in backend:', selectedQuestionId, err);
+              // Even if backend fails, localStorage will keep it marked as read
+            });
         }
         
         if (!isMentor && q && !q.is_read_by_student) {
+          // Optimistic local state update
+          setQuestions(prev => prev.map(item => item.id === selectedQuestionId ? { ...item, is_read_by_student: true } : item));
+
           lectureQAService.markAsRead(selectedQuestionId, true).then(() => {
-            setQuestions(prev => prev.map(item => 
-              item.id === selectedQuestionId ? { ...item, is_read_by_student: true } : item
-            ));
+            window.dispatchEvent(new CustomEvent('unread-count-changed', { 
+              detail: { id: selectedQuestionId, role: 'student' } 
+            }));
           }).catch(console.error);
         }
 
@@ -165,19 +213,23 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
           
           // If we receive a new message while viewing, mark it as read
           if (payload.eventType === 'INSERT') {
+            const isMyMsg = payload.new.sender_id === currentUser?.id;
             if (isMentor) {
-              lectureQAService.markAsRead(selectedQuestionId).then(() => {
-                setQuestions(prev => prev.map(item => 
-                   item.id === selectedQuestionId ? { ...item, is_read: true } : item
-                ));
-                window.dispatchEvent(new CustomEvent('unread-count-changed'));
-              }).catch(console.error);
+              // If teacher is viewing and it's a student message (NOT my msg), mark as read
+              if (!isMyMsg) {
+                // Optimistic update
+                setQuestions(prev => prev.map(i => i.id === selectedQuestionId ? { ...i, is_read: true } : i));
+                addTeacherReadId(selectedQuestionId);
+                window.dispatchEvent(new CustomEvent('unread-count-changed', { detail: { id: selectedQuestionId, role: 'teacher' } }));
+                lectureQAService.markAsRead(selectedQuestionId).catch(console.error);
+              }
             } else {
-              lectureQAService.markAsRead(selectedQuestionId, true).then(() => {
-                setQuestions(prev => prev.map(item => 
-                   item.id === selectedQuestionId ? { ...item, is_read_by_student: true } : item
-                ));
-              }).catch(console.error);
+              // If student is viewing and it's a teacher message (NOT my msg), mark as read
+              if (!isMyMsg) {
+                setQuestions(prev => prev.map(i => i.id === selectedQuestionId ? { ...i, is_read_by_student: true } : i));
+                window.dispatchEvent(new CustomEvent('unread-count-changed', { detail: { id: selectedQuestionId, role: 'student' } }));
+                lectureQAService.markAsRead(selectedQuestionId, true).catch(console.error);
+              }
             }
           }
         });
@@ -189,7 +241,7 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
     return () => {
       if (mSub) mSub.unsubscribe();
     };
-  }, [selectedQuestionId, profile, currentUser]); // Removed 'questions' dependency
+  }, [selectedQuestionId, profile, currentUser, questions]); // Added 'questions' dependency
 
   useEffect(() => { 
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); 
@@ -208,10 +260,25 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
           : new Date(b.created_at).getTime();
         return timeB - timeA;
       });
-      setQuestions(sorted); 
-      
-      // Also check for unread messages if mentor is already in a thread
-      // (This could be expanded later for per-message notification)
+
+      // Apply local mentor read-state override so that after refresh, any
+      // thread the teacher has already opened on this device stays "read"
+      // even if the backend flag didn't update for some reason.
+      const teacherRead = getTeacherReadSet();
+      const adjusted = sorted.map(q => ({
+        ...q,
+        is_read: teacherRead.has(q.id) ? true : q.is_read
+      }));
+
+      setQuestions(adjusted);
+
+      // Auto-select thread from notification click
+      if (initialThreadId && !selectedQuestionId) {
+        const found = sorted.find(q => q.id === initialThreadId);
+        if (found) {
+          setSelectedQuestionId(initialThreadId);
+        }
+      }
     } catch (e) { 
       console.error('Error loading questions:', e); 
     } 
@@ -252,7 +319,9 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
         await loadMessages(result.id);
       }
       loadQuestions();
-      window.dispatchEvent(new CustomEvent('unread-count-changed'));
+      window.dispatchEvent(new CustomEvent('unread-count-changed', { 
+        detail: { id: result.id, role: 'student' } 
+      }));
       toast.success('Question sent to your mentor.');
     } catch (e: any) { 
       console.error('Error creating question:', e); 
@@ -322,20 +391,62 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
       setIsUploading(true);
       // Upload all images first
       const uploadedUrls: string[] = [];
-      for (const img of selectedImages) {
-        uploadedUrls.push(await lectureQAService.uploadChatImage(img));
+      if (selectedImages.length > 0) {
+        try {
+          for (const img of selectedImages) {
+            const url = await lectureQAService.uploadChatImage(img);
+            uploadedUrls.push(url);
+          }
+        } catch (uploadError: any) {
+          console.error('[Q&A] Image upload failed:', uploadError);
+          toast.error(`Failed to upload image: ${uploadError.message || 'Unknown error'}`);
+          setIsUploading(false);
+          return;
+        }
       }
+      
       // Send as one message with text + all images
       const text = newMessage.trim() || (uploadedUrls.length > 0 ? '📷 Photo' : '');
-      await lectureQAService.sendMessage(selectedQuestionId, text, isMentor, uploadedUrls.length > 0 ? uploadedUrls : undefined);
+      
+      try {
+        await lectureQAService.sendMessage(selectedQuestionId, text, isMentor, uploadedUrls.length > 0 ? uploadedUrls : undefined);
+      } catch (sendError: any) {
+        console.error('[Q&A] Failed to send message:', sendError);
+        toast.error(`Failed to send message: ${sendError.message || 'Unknown error'}`);
+        setIsUploading(false);
+        return;
+      }
+      
       setNewMessage('');
       clearSelectedImages();
+      
+      // If mentor sends a message, mark as read locally and notify counts
+      if (isMentor) {
+        setQuestions(prev => prev.map(q => 
+          q.id === selectedQuestionId ? { ...q, is_read: true, is_read_by_student: false } : q
+        ));
+        addTeacherReadId(selectedQuestionId);
+        window.dispatchEvent(new CustomEvent('unread-count-changed', { 
+          detail: { id: selectedQuestionId, role: 'teacher' } 
+        }));
+        
+        // Ensure backend is marked as read (sendMessage already does this, but double-check)
+        // This is a safety net in case sendMessage's update failed
+        lectureQAService.markAsRead(selectedQuestionId)
+          .then(() => {
+            console.log('[Q&A] Confirmed thread marked as read after sending message:', selectedQuestionId);
+          })
+          .catch((err) => {
+            console.error('[Q&A] Failed to confirm read status after sending message:', selectedQuestionId, err);
+          });
+      }
+
       // Immediately reload messages so the images appear
       await loadMessages(selectedQuestionId);
-      window.dispatchEvent(new CustomEvent('unread-count-changed'));
-    } catch (e) {
-      console.error('Error sending message:', e);
-      toast.error('Failed to send message.');
+      toast.success(uploadedUrls.length > 0 ? 'Message with images sent successfully!' : 'Message sent successfully!');
+    } catch (e: any) {
+      console.error('[Q&A] Unexpected error sending message:', e);
+      toast.error(`Failed to send message: ${e.message || 'Unknown error'}`);
     } finally {
       setIsUploading(false);
     }
@@ -412,7 +523,9 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
       if (selectedQuestionId === deletingId) setSelectedQuestionId(null); 
       setDeletingId(null);
       loadQuestions();
-      window.dispatchEvent(new CustomEvent('unread-count-changed'));
+      window.dispatchEvent(new CustomEvent('unread-count-changed', { 
+        detail: { id: deletingId, role: isMentor ? 'teacher' : 'student' } 
+      }));
       toast.success('Deleted successfully');
     } catch (e) { 
       console.error('Error deleting question:', e); 
@@ -976,7 +1089,29 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false }: LectureQ
                     return (
                       <div
                         key={q.id}
-                        onClick={() => setSelectedQuestionId(q.id)}
+                        onClick={() => {
+                          // Optimistically mark as read as soon as teacher opens the thread
+                          if (isMentor && !q.is_read) {
+                            setQuestions(prev => prev.map(item =>
+                              item.id === q.id ? { ...item, is_read: true } : item
+                            ));
+                            addTeacherReadId(q.id);
+
+                            window.dispatchEvent(new CustomEvent('unread-count-changed', { 
+                              detail: { id: q.id, role: 'teacher' } 
+                            }));
+
+                            lectureQAService.markAsRead(q.id)
+                              .then(() => {
+                                console.log('[Q&A] Marked thread as read from list click:', q.id);
+                              })
+                              .catch((err) => {
+                                console.error('[Q&A] Failed to mark thread as read from list:', q.id, err);
+                              });
+                          }
+
+                          setSelectedQuestionId(q.id);
+                        }}
                         className={`p-3 sm:p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between group ${
                           isActive
                             ? 'bg-indigo-50 border-indigo-200'

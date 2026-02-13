@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { ArrowRight, X, Lightbulb, CheckCircle, Flag, Gauge } from 'lucide-react';
+import { ArrowRight, X, Lightbulb, CheckCircle, Flag, Gauge, ArrowLeft } from 'lucide-react';
 import { Button, Card } from '../../components/ui';
 import { useQuiz } from '../../context/QuizContext';
 
@@ -34,10 +34,19 @@ const QuizQuestion = () => {
   });
 
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+
+  const handleExit = () => {
+    if (lectureId) {
+      navigate(`/quiz?lectureId=${lectureId}`);
+    } else {
+      navigate('/dashboard');
+    }
+  };
 
   useEffect(() => {
     if (questions.length === 0) {
-      navigate('/quiz');
+      navigate('/dashboard');
     }
   }, [questions, navigate]);
 
@@ -117,12 +126,45 @@ const QuizQuestion = () => {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-6 sm:py-8">
+      {/* Exit Confirmation Modal */}
+      {showExitConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowExitConfirm(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm animate-scale-in">
+            <h3 className="text-lg font-black text-slate-900 mb-2">Leave Quiz?</h3>
+            <p className="text-sm text-slate-500 font-medium mb-6">Your progress will be lost. You've answered {state.currentIndex} of {questions.length} questions.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowExitConfirm(false)}
+                className="flex-1 py-3 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleExit}
+                className="flex-1 py-3 rounded-xl bg-rose-500 text-white text-sm font-bold hover:bg-rose-600 transition-colors shadow-sm"
+              >
+                Leave Quiz
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Breadcrumb & Progress */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-[10px] font-black uppercase tracking-widest text-primary-600 line-clamp-1 mr-4">
-            {lecture?.title || 'General Quiz'} {sectionName ? `• ${sectionName}` : ''}
-          </span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowExitConfirm(true)}
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-600 hover:text-primary-600 hover:border-primary-300 hover:shadow-md transition-all shadow-sm"
+            >
+              <ArrowLeft size={18} />
+            </button>
+            <span className="text-[10px] font-black uppercase tracking-widest text-primary-600 line-clamp-1">
+              {lecture?.title || 'General Quiz'} {sectionName ? `• ${sectionName}` : ''}
+            </span>
+          </div>
           <span className="text-[10px] font-black uppercase tracking-widest text-primary-600 whitespace-nowrap">
             {Math.round(((state.currentIndex + 1) / questions.length) * 100)}% Complete
           </span>
@@ -368,23 +410,12 @@ const QuizQuestion = () => {
 
           {/* Explanation */}
           {state.isAnswered && currentQuestion.explanation && (
-            <div className="animate-fade-in py-6 border-t border-slate-100">
-              <div className="p-6 rounded-2xl bg-primary-50 border border-primary-100">
-                <div className="flex items-start gap-4">
-                  <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center flex-shrink-0">
-                    <Lightbulb size={18} className="text-white" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-black text-primary-900 mb-2 uppercase tracking-widest">Explanation</h4>
-                    <p className="text-slate-700 text-sm leading-relaxed font-semibold">
-                      {currentQuestion.explanation}
-                    </p>
-                    <button className="mt-4 text-[11px] font-black text-primary-600 uppercase tracking-widest flex items-center gap-2 hover:gap-3 transition-all">
-                      Review Lesson: Cellular Organelles
-                      <ArrowRight size={14} />
-                    </button>
-                  </div>
-                </div>
+            <div className="animate-fade-in mt-6 pt-5 border-t border-slate-100">
+              <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-primary-50/70 border border-primary-100">
+                <Lightbulb size={16} className="text-primary-600 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-slate-700 leading-relaxed font-medium">
+                  {currentQuestion.explanation}
+                </p>
               </div>
             </div>
           )}
