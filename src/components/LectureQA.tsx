@@ -855,15 +855,25 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
 
                     {messages.map((m: LectureQuestionMessage) => {
                       const isMe = m.sender_id === currentUser?.id;
-                      const senderIsMentor = m.sender?.role === 'teacher' || m.sender?.role === 'admin';
+                      
+                      // CRITICAL: Determine message position based on sender
+                      // Rule: If sender_id matches question's student_id → Student message (LEFT)
+                      //       Otherwise → Teacher message (RIGHT)
+                      // This ensures consistent positioning regardless of sender data availability
+                      const isSenderTheStudent = selectedQ && m.sender_id === selectedQ.student_id;
+                      
+                      // Also check sender role as secondary confirmation
+                      const senderRole = m.sender?.role;
+                      const roleIsTeacher = senderRole === 'teacher' || senderRole === 'admin';
+                      const roleIsStudent = senderRole === 'student';
+                      
+                      // Final determination: student if sender is the question's student, teacher otherwise
+                      const isStudentMessage = isSenderTheStudent || (roleIsStudent && !roleIsTeacher);
+                      const isTeacherMessage = !isStudentMessage;
+                      
                       const canEdit = isMe || isMentor;
                       const canDelete = isMe || isMentor;
                       const hasActions = canEdit || canDelete;
-                      
-                      // FIXED: Position based on sender role, not current user
-                      // Students always LEFT, Teachers always RIGHT
-                      const isTeacherMessage = senderIsMentor;
-                      const isStudentMessage = !senderIsMentor;
                       
                       return (
                         <div key={m.id} className={`flex ${isTeacherMessage ? 'justify-end' : 'justify-start'}`}>
@@ -925,7 +935,7 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
                             )}
                             {isTeacherMessage && (
                               <div className="text-[10px] font-black uppercase tracking-widest mb-1.5 flex items-center gap-2 text-indigo-200">
-                                {m.sender?.full_name || 'Teacher'} · Mentor
+                                {m.sender?.full_name ? `${m.sender.full_name} · Mentor` : 'Teacher · Mentor'}
                               </div>
                             )}
                             {m.image_url && (() => {
