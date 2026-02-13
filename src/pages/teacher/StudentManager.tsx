@@ -29,6 +29,7 @@ const StudentManager = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClassId, setSelectedClassId] = useState<string>('all');
+  const [deviceFilter, setDeviceFilter] = useState<'all' | 'locked' | 'unlocked'>('all');
   
   const [newStudent, setNewStudent] = useState({
     fullName: '',
@@ -165,10 +166,18 @@ const StudentManager = () => {
     toast.success(`${label} copied!`);
   };
 
-  const filteredStudents = students.filter(s => 
-    s.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.serial_id?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredStudents = students.filter(s => {
+    const matchesSearch = s.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         s.serial_id?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesDevice = deviceFilter === 'all' 
+      ? true 
+      : deviceFilter === 'locked' 
+        ? s.device_lock_active 
+        : !s.device_lock_active;
+
+    return matchesSearch && matchesDevice;
+  });
 
   return (
     <div className="animate-fade-in w-full">
@@ -219,6 +228,20 @@ const StudentManager = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
+        </div>
+
+        <div className="relative flex-1 max-w-[180px]">
+          <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <select
+            className="w-full pl-10 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl outline-none font-bold text-slate-700 appearance-none cursor-pointer text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all shadow-sm"
+            value={deviceFilter}
+            onChange={(e) => setDeviceFilter(e.target.value as any)}
+          >
+            <option value="all">All Devices</option>
+            <option value="locked">Locked Only</option>
+            <option value="unlocked">Unlocked Only</option>
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
         </div>
       </div>
 
