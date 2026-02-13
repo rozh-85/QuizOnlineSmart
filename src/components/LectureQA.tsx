@@ -902,8 +902,11 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
                         isTeacherMessage = true;
                       }
                       
-                      const canEdit = isMe || isMentor;
-                      const canDelete = isMe || isMentor;
+                      // FIXED: Permission logic - Students can only edit/delete their own messages
+                      // Teachers can edit/delete any message
+                      // Students CANNOT edit/delete teacher messages
+                      const canEdit = isMentor || (isMe && isStudentMessage);
+                      const canDelete = isMentor || (isMe && isStudentMessage);
                       const hasActions = canEdit || canDelete;
                       
                       return (
