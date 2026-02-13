@@ -189,6 +189,10 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
           lectureQAService.markAsRead(selectedQuestionId)
             .then(() => {
               console.log('[Q&A] Successfully marked thread as read:', selectedQuestionId);
+              // Fire event again after backend confirms (in case first one was missed)
+              window.dispatchEvent(new CustomEvent('unread-count-changed', { 
+                detail: { id: selectedQuestionId, role: 'teacher' } 
+              }));
             })
             .catch((err) => {
               console.error('[Q&A] Failed to mark thread as read in backend:', selectedQuestionId, err);
@@ -420,24 +424,31 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
       setNewMessage('');
       clearSelectedImages();
       
-      // If mentor sends a message, mark as read locally and notify counts
+      // If mentor sends a message, mark as read locally and notify counts IMMEDIATELY
       if (isMentor) {
+        // Update local state immediately
         setQuestions(prev => prev.map(q => 
           q.id === selectedQuestionId ? { ...q, is_read: true, is_read_by_student: false } : q
         ));
         addTeacherReadId(selectedQuestionId);
+        
+        // CRITICAL: Fire event IMMEDIATELY to update sidebar badge
         window.dispatchEvent(new CustomEvent('unread-count-changed', { 
           detail: { id: selectedQuestionId, role: 'teacher' } 
         }));
         
-        // Ensure backend is marked as read (sendMessage already does this, but double-check)
-        // This is a safety net in case sendMessage's update failed
+        // Ensure backend is marked as read - this is critical for persistence
         lectureQAService.markAsRead(selectedQuestionId)
           .then(() => {
-            console.log('[Q&A] Confirmed thread marked as read after sending message:', selectedQuestionId);
+            console.log('[Q&A] Thread marked as read after teacher sent message:', selectedQuestionId);
+            // Fire event again after backend confirms (in case first one was missed)
+            window.dispatchEvent(new CustomEvent('unread-count-changed', { 
+              detail: { id: selectedQuestionId, role: 'teacher' } 
+            }));
           })
           .catch((err) => {
-            console.error('[Q&A] Failed to confirm read status after sending message:', selectedQuestionId, err);
+            console.error('[Q&A] Failed to mark thread as read after sending message:', selectedQuestionId, err);
+            // Even if backend fails, localStorage will keep it marked as read
           });
       }
 
@@ -873,17 +884,26 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
                       
                       // Final determination with explicit logic:
                       // Priority 1: If sender_id matches student_id → Student message (LEFT)
-                      // Priority 2: If sender role is teacher/admin → Teacher message (RIGHT)
-                      // Priority 3: If in admin view and sender is NOT the student → Teacher message (RIGHT)
-                      // Priority 4: If role is student → Student message (LEFT)
+                      // Priority 2: If current user is teacher and sender is current user → Teacher message (RIGHT)
+                      // Priority 3: If sender role is teacher/admin → Teacher message (RIGHT)
+                      // Priority 4: If in admin view and sender is NOT the student → Teacher message (RIGHT)
+                      // Priority 5: If role is student → Student message (LEFT)
                       // Default: Teacher message (RIGHT) for safety
                       let isStudentMessage = false;
                       let isTeacherMessage = false;
+                      
+                      // Check if current user (who is a teacher) sent this message
+                      const isCurrentUserTeacher = isMentor && currentUser?.id;
+                      const isMessageFromCurrentTeacher = isCurrentUserTeacher && senderId === currentUser.id;
                       
                       if (isSenderTheStudent) {
                         // Definitely the student
                         isStudentMessage = true;
                         isTeacherMessage = false;
+                      } else if (isMessageFromCurrentTeacher) {
+                        // Current user (teacher) sent this message - definitely teacher message
+                        isStudentMessage = false;
+                        isTeacherMessage = true;
                       } else if (roleIsTeacher) {
                         // Role confirms teacher
                         isStudentMessage = false;
