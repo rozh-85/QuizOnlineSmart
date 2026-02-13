@@ -17,7 +17,8 @@ import {
   AlertCircle,
   Loader2,
   X,
-  Trash2
+  Trash2,
+  Unlock
 } from 'lucide-react';
 import { studentService, classService } from '../../services/supabaseService';
 import toast from 'react-hot-toast';
@@ -48,6 +49,8 @@ const StudentManager = () => {
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<any>(null);
+  const [isResetDeviceOpen, setIsResetDeviceOpen] = useState(false);
+  const [studentToReset, setStudentToReset] = useState<any>(null);
 
   useEffect(() => {
     fetchData();
@@ -125,14 +128,25 @@ const StudentManager = () => {
     }
   };
 
-  const handleResetDevice = async (id: string) => {
-    if (!window.confirm('Reset device lock?')) return;
+  const handleResetDevice = (student: any) => {
+    setStudentToReset(student);
+    setIsResetDeviceOpen(true);
+  };
+
+  const confirmResetDevice = async () => {
+    if (!studentToReset) return;
     try {
-      await studentService.resetDeviceLock(id);
-      toast.success('Reset complete');
+      setLoading(true);
+      setIsResetDeviceOpen(false);
+      await studentService.resetDeviceLock(studentToReset.id);
+      toast.success('Device lock reset successfully');
+      setStudentToReset(null);
       fetchData();
     } catch (error) {
-      toast.error('Reset failed');
+      console.error('Reset device error:', error);
+      toast.error('Failed to reset device lock');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -407,7 +421,7 @@ const StudentManager = () => {
                         <Trash2 size={15} />
                       </button>
                       <button 
-                        onClick={() => handleResetDevice(s.id)}
+                        onClick={() => handleResetDevice(s)}
                         disabled={!s.device_lock_active}
                         className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all disabled:opacity-30 disabled:pointer-events-none"
                         title="Reset device"
@@ -641,6 +655,40 @@ const StudentManager = () => {
             <button onClick={() => setIsAssignModalOpen(false)} className="w-full mt-4 py-2.5 text-slate-400 hover:text-slate-900 font-bold text-sm transition-colors">
               Cancel
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Device Lock Confirmation Modal */}
+      {isResetDeviceOpen && studentToReset && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[150] p-4">
+          <div className="bg-white w-full max-w-[340px] rounded-[2rem] shadow-2xl p-8 animate-scale-in text-center">
+            <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-6">
+              <Unlock size={32} />
+            </div>
+            
+            <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2">Reset Device Lock?</h3>
+            <p className="text-xs text-slate-400 font-bold leading-relaxed mb-8 px-2">
+              This will unlock the device for <span className="text-slate-900 font-black">{studentToReset.full_name}</span> and allow them to log in from a different device.
+            </p>
+
+            <div className="grid grid-cols-1 gap-3">
+              <button
+                onClick={confirmResetDevice}
+                className="w-full py-4 bg-amber-600 text-white font-black rounded-2xl text-sm transition-all active:scale-95 hover:bg-amber-700 shadow-xl shadow-amber-100"
+              >
+                Yes, Reset Lock
+              </button>
+              <button
+                onClick={() => {
+                  setIsResetDeviceOpen(false);
+                  setStudentToReset(null);
+                }}
+                className="w-full py-3 text-slate-400 hover:text-slate-900 font-black text-sm transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}
