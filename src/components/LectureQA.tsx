@@ -935,7 +935,23 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
                             )}
                             {isTeacherMessage && (
                               <div className="text-[10px] font-black uppercase tracking-widest mb-1.5 flex items-center gap-2 text-indigo-200">
-                                {m.sender?.full_name ? `${m.sender.full_name} · Mentor` : 'Teacher · Mentor'}
+                                {/* CRITICAL: Show actual sender name (teacher), never student name */}
+                                {(() => {
+                                  // If sender has a name and it's confirmed to be a teacher message, use it
+                                  const senderName = m.sender?.full_name;
+                                  // Double-check: if sender name matches student name, don't use it
+                                  const isStudentName = senderName === selectedQ?.student?.full_name;
+                                  
+                                  if (senderName && !isStudentName) {
+                                    return `${senderName} · Mentor`;
+                                  }
+                                  // Fallback to current user's profile name if they're a teacher
+                                  if (profile && (profile.role === 'teacher' || profile.role === 'admin') && profile.full_name) {
+                                    return `${profile.full_name} · Mentor`;
+                                  }
+                                  // Last resort: generic teacher label
+                                  return 'Teacher · Mentor';
+                                })()}
                               </div>
                             )}
                             {m.image_url && (() => {
