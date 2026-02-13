@@ -860,16 +860,47 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
                       // Rule: If sender_id matches question's student_id → Student message (LEFT)
                       //       Otherwise → Teacher message (RIGHT)
                       // This ensures consistent positioning regardless of sender data availability
-                      const isSenderTheStudent = selectedQ && m.sender_id === selectedQ.student_id;
+                      const studentId = selectedQ?.student_id;
+                      const senderId = m.sender_id;
                       
-                      // Also check sender role as secondary confirmation
+                      // Explicit check: is this message from the student who asked the question?
+                      const isSenderTheStudent = studentId && senderId && studentId === senderId;
+                      
+                      // Also check sender role for additional confirmation
                       const senderRole = m.sender?.role;
                       const roleIsTeacher = senderRole === 'teacher' || senderRole === 'admin';
                       const roleIsStudent = senderRole === 'student';
                       
-                      // Final determination: student if sender is the question's student, teacher otherwise
-                      const isStudentMessage = isSenderTheStudent || (roleIsStudent && !roleIsTeacher);
-                      const isTeacherMessage = !isStudentMessage;
+                      // Final determination with explicit logic:
+                      // Priority 1: If sender_id matches student_id → Student message (LEFT)
+                      // Priority 2: If sender role is teacher/admin → Teacher message (RIGHT)
+                      // Priority 3: If in admin view and sender is NOT the student → Teacher message (RIGHT)
+                      // Priority 4: If role is student → Student message (LEFT)
+                      // Default: Teacher message (RIGHT) for safety
+                      let isStudentMessage = false;
+                      let isTeacherMessage = false;
+                      
+                      if (isSenderTheStudent) {
+                        // Definitely the student
+                        isStudentMessage = true;
+                        isTeacherMessage = false;
+                      } else if (roleIsTeacher) {
+                        // Role confirms teacher
+                        isStudentMessage = false;
+                        isTeacherMessage = true;
+                      } else if (isAdminView && !isSenderTheStudent) {
+                        // In admin view, if not the student, assume teacher
+                        isStudentMessage = false;
+                        isTeacherMessage = true;
+                      } else if (roleIsStudent) {
+                        // Role confirms student
+                        isStudentMessage = true;
+                        isTeacherMessage = false;
+                      } else {
+                        // Default: assume teacher (safer for admin view)
+                        isStudentMessage = false;
+                        isTeacherMessage = true;
+                      }
                       
                       const canEdit = isMe || isMentor;
                       const canDelete = isMe || isMentor;
@@ -935,20 +966,37 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
                             )}
                             {isTeacherMessage && (
                               <div className="text-[10px] font-black uppercase tracking-widest mb-1.5 flex items-center gap-2 text-indigo-200">
-                                {/* CRITICAL: Show actual sender name (teacher), never student name */}
+                                {/* CRITICAL: Show actual sender name (teacher), NEVER student name */}
                                 {(() => {
-                                  // If sender has a name and it's confirmed to be a teacher message, use it
                                   const senderName = m.sender?.full_name;
-                                  // Double-check: if sender name matches student name, don't use it
-                                  const isStudentName = senderName === selectedQ?.student?.full_name;
+                                  const studentName = selectedQ?.student?.full_name;
                                   
-                                  if (senderName && !isStudentName) {
-                                    return `${senderName} · Mentor`;
+                                  // STRICT CHECK: Never use student name for teacher messages
+                                  // If sender name exists and is NOT the student name, use it
+                                  if (senderName && senderName !== studentName) {
+                                    // Additional safety: verify sender_id is NOT student_id
+                                    if (senderId && studentId && senderId !== studentId) {
+                                      return `${senderName} · Mentor`;
+                                    }
+                                    // If sender role confirms teacher, use the name
+                                    if (roleIsTeacher) {
+                                      return `${senderName} · Mentor`;
+                                    }
                                   }
-                                  // Fallback to current user's profile name if they're a teacher
+                                  
+                                  // Fallback 1: Use current user's profile name if they're a teacher/admin
                                   if (profile && (profile.role === 'teacher' || profile.role === 'admin') && profile.full_name) {
-                                    return `${profile.full_name} · Mentor`;
+                                    // Double-check it's not the student name
+                                    if (profile.full_name !== studentName) {
+                                      return `${profile.full_name} · Mentor`;
+                                    }
                                   }
+                                  
+                                  // Fallback 2: If in admin view and sender is NOT the student, show generic teacher label
+                                  if (isAdminView && !isSenderTheStudent) {
+                                    return 'Teacher · Mentor';
+                                  }
+                                  
                                   // Last resort: generic teacher label
                                   return 'Teacher · Mentor';
                                 })()}
