@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { studentService, classService } from '../../services/supabaseService';
 import toast from 'react-hot-toast';
+import { Select } from '../../components/ui';
 
 const StudentManager = () => {
   const [students, setStudents] = useState<any[]>([]);
@@ -244,21 +245,6 @@ const StudentManager = () => {
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <div className="relative flex-1 max-w-xs">
-          <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-          <select
-            className="w-full pl-10 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl outline-none font-bold text-slate-700 appearance-none cursor-pointer text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all shadow-sm"
-            value={selectedClassId}
-            onChange={(e) => setSelectedClassId(e.target.value)}
-          >
-            <option value="all">All Students</option>
-            {classes.map(c => (
-              <option key={c.id} value={c.id}>{c.name}</option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
-        </div>
-
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
           <input
@@ -270,19 +256,28 @@ const StudentManager = () => {
           />
         </div>
 
-        <div className="relative flex-1 max-w-[180px]">
-          <Smartphone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-          <select
-            className="w-full pl-10 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl outline-none font-bold text-slate-700 appearance-none cursor-pointer text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all shadow-sm"
-            value={deviceFilter}
-            onChange={(e) => setDeviceFilter(e.target.value as any)}
-          >
-            <option value="all">All Devices</option>
-            <option value="locked">Locked Only</option>
-            <option value="unlocked">Unlocked Only</option>
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
-        </div>
+        <Select
+          containerClassName="flex-1 max-w-xs"
+          icon={<Users size={16} />}
+          value={selectedClassId}
+          onChange={(e) => setSelectedClassId(e.target.value)}
+        >
+          <option value="all">All Students</option>
+          {classes.map(c => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </Select>
+
+        <Select
+          containerClassName="flex-1 max-w-[180px]"
+          icon={<Smartphone size={16} />}
+          value={deviceFilter}
+          onChange={(e) => setDeviceFilter(e.target.value as any)}
+        >
+          <option value="all">All Devices</option>
+          <option value="locked">Locked Only</option>
+          <option value="unlocked">Unlocked Only</option>
+        </Select>
       </div>
 
       {/* Stats */}

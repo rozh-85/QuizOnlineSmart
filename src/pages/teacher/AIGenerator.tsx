@@ -16,7 +16,7 @@ import {
   Layout
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { Button, Card, TextArea, Input } from '../../components/ui';
+import { Button, Card, TextArea, Input, Select } from '../../components/ui';
 import { useQuiz } from '../../context/QuizContext';
 import { Question, QuestionType } from '../../types';
 import { generateQuestionsWithAI, testGeminiConnection } from '../../services/aiService';
@@ -242,9 +242,9 @@ const AIGenerator = () => {
   return (
     <div className="animate-fade-in space-y-4 w-full">
       {/* Top Header & Settings */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-3 rounded-2xl border border-slate-200 shadow-sm sticky top-0 z-30">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-sm sticky top-0 z-30">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center shrink-0">
             <Sparkles className="text-primary-600" size={20} />
           </div>
           <div>
@@ -256,37 +256,37 @@ const AIGenerator = () => {
           </div>
         </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleTestConnection}
-              disabled={isTestLoading || !apiKey}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black text-primary-600 bg-primary-50 hover:bg-primary-100 transition-all border border-primary-200 disabled:opacity-50"
-            >
-              {isTestLoading ? <Loader2 size={12} className="animate-spin" /> : <BrainCircuit size={12} />}
-              Test Gemini
-            </button>
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+          <button
+            onClick={handleTestConnection}
+            disabled={isTestLoading || !apiKey}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black text-primary-600 bg-primary-50 hover:bg-primary-100 transition-all border border-primary-200 disabled:opacity-50"
+          >
+            {isTestLoading ? <Loader2 size={12} className="animate-spin" /> : <BrainCircuit size={12} />}
+            Test Gemini
+          </button>
 
-            {showKeyInput ? (
-              <div className="flex gap-2">
-                <Input 
-                  type="password" 
-                  placeholder="Enter Gemini API Key..." 
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  className="h-9 py-0 text-[10px] w-48"
-                />
-                <Button size="sm" onClick={saveApiKey} className="h-9">Save</Button>
-              </div>
-            ) : (
-              <button 
-                onClick={() => setShowKeyInput(true)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-all border border-slate-100"
-              >
-                <Key size={12} />
-                API Key Configured
-              </button>
-            )}
-          </div>
+          {showKeyInput ? (
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Input 
+                type="password" 
+                placeholder="Enter Gemini API Key..." 
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                className="h-9 py-0 text-[10px] flex-1 sm:w-48"
+              />
+              <Button size="sm" onClick={saveApiKey} className="h-9 shrink-0">Save</Button>
+            </div>
+          ) : (
+            <button 
+              onClick={() => setShowKeyInput(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-all border border-slate-100"
+            >
+              <Key size={12} />
+              API Key Configured
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Main Configuration Card - Compact & viewport fitting */}
@@ -303,9 +303,9 @@ const AIGenerator = () => {
         </button>
 
         {isConfigExpanded && (
-          <div className="p-6 grid lg:grid-cols-2 gap-8 divide-x divide-slate-100">
+          <div className="p-4 sm:p-6 grid lg:grid-cols-2 gap-8 lg:divide-x lg:divide-slate-100">
             {/* Column 1: Source Selection */}
-            <div className="space-y-6 pr-4">
+            <div className="space-y-6 lg:pr-4">
                <div>
                   <label className="text-[10px] font-black uppercase tracking-widest text-primary-500 mb-3 block">1. Material Source</label>
                   <div className="grid grid-cols-2 gap-3 mb-4">
@@ -373,36 +373,34 @@ const AIGenerator = () => {
                    <label className="text-[10px] font-black uppercase tracking-widest text-primary-500 mb-3 block">2. Target Destination</label>
                    <div className="space-y-3">
                      <div>
-                       <span className="text-[9px] font-bold text-slate-400 mb-1.5 block">SELECT LECTURE</span>
-                       <select
-                          value={selectedLecture}
-                          onChange={(e) => {
-                            setSelectedLecture(e.target.value);
-                            setSelectedSection('');
-                          }}
-                          className="w-full px-3 py-2.5 rounded-xl border-2 border-slate-100 focus:border-primary-500 outline-none transition-all font-black text-[10px] uppercase tracking-widest text-slate-700 bg-white"
-                        >
-                          <option value="">Select a lecture...</option>
-                          {lectures.map(l => (
-                            <option key={l.id} value={l.id}>{l.title}</option>
-                          ))}
-                        </select>
+                      <Select
+                        label="SELECT LECTURE"
+                        value={selectedLecture}
+                        onChange={(e) => {
+                          setSelectedLecture(e.target.value);
+                          setSelectedSection('');
+                        }}
+                      >
+                        <option value="">Select a lecture...</option>
+                        {lectures.map(l => (
+                          <option key={l.id} value={l.id}>{l.title}</option>
+                        ))}
+                      </Select>
                      </div>
 
                      {selectedLecture && (
-                       <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                         <span className="text-[9px] font-bold text-slate-400 mb-1.5 block">SELECT SECTION</span>
-                         <select
+                        <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                          <Select
+                            label="SELECT SECTION"
                             value={selectedSection}
                             onChange={(e) => setSelectedSection(e.target.value)}
-                            className="w-full px-3 py-2.5 rounded-xl border-2 border-slate-100 focus:border-primary-500 outline-none transition-all font-black text-[10px] uppercase tracking-widest text-slate-700 bg-white"
                           >
                             <option value="">Select a section...</option>
                             {(lectures.find(l => l.id === selectedLecture)?.sections ?? []).map(s => (
                               <option key={s} value={s}>{s}</option>
                             ))}
-                          </select>
-                       </div>
+                          </Select>
+                        </div>
                      )}
                    </div>
                  </div>
@@ -410,33 +408,27 @@ const AIGenerator = () => {
             </div>
 
             {/* Column 2: Parameters */}
-            <div className="space-y-6 pl-8">
-               <div>
+            <div className="space-y-6 lg:pl-8 pt-6 lg:pt-0 border-t lg:border-t-0 border-slate-100">
+                <div>
                   <label className="text-[10px] font-black uppercase tracking-widest text-primary-500 mb-3 block">3. Agent Parameters</label>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-[9px] font-bold text-slate-400 mb-1.5 block">FORMAT</span>
-                      <select value={questionType} onChange={e => setType(e.target.value as any)} className="w-full p-2 border-2 border-slate-100 rounded-lg text-[10px] font-black uppercase bg-white">
-                        <option value="multiple-choice">MCQ</option>
-                        <option value="true-false">True/False</option>
-                        <option value="blank">Blank</option>
-                      </select>
-                    </div>
-                    <div>
-                      <span className="text-[9px] font-bold text-slate-400 mb-1.5 block">DIFFICULTY</span>
-                      <select value={difficulty} onChange={e => setDifficulty(e.target.value as any)} className="w-full p-2 border-2 border-slate-100 rounded-lg text-[10px] font-black uppercase bg-white">
-                        <option value="easy">Easy</option>
-                        <option value="medium">Medium</option>
-                        <option value="hard">Hard</option>
-                      </select>
-                    </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Select label="FORMAT" value={questionType} onChange={e => setType(e.target.value as any)}>
+                      <option value="multiple-choice">MCQ</option>
+                      <option value="true-false">True/False</option>
+                      <option value="blank">Blank</option>
+                    </Select>
+                    <Select label="DIFFICULTY" value={difficulty} onChange={e => setDifficulty(e.target.value as any)}>
+                      <option value="easy">Easy</option>
+                      <option value="medium">Medium</option>
+                      <option value="hard">Hard</option>
+                    </Select>
                     <div>
                       <span className="text-[9px] font-bold text-slate-400 mb-1.5 block">QUANTITY</span>
-                      <input type="number" min="1" max="15" value={count} onChange={e => setCount(parseInt(e.target.value))} className="w-full p-2 border-2 border-slate-100 rounded-lg text-[10px] font-black bg-white" />
+                      <input type="number" min="1" max="15" value={count} onChange={e => setCount(parseInt(e.target.value))} className="w-full px-4 py-2 bg-white border-2 border-slate-100 rounded-xl font-black text-[10px] focus:border-primary-500 focus:ring-4 focus:ring-primary-50/50 outline-none transition-all" />
                     </div>
                     <div>
                       <span className="text-[9px] font-bold text-slate-400 mb-1.5 block">LANGUAGE</span>
-                      <input type="text" value={language} onChange={e => setLanguage(e.target.value)} className="w-full p-2 border-2 border-slate-100 rounded-lg text-[10px] font-black bg-white" />
+                      <input type="text" value={language} onChange={e => setLanguage(e.target.value)} className="w-full px-4 py-2 bg-white border-2 border-slate-100 rounded-xl font-black text-[10px] focus:border-primary-500 focus:ring-4 focus:ring-primary-50/50 outline-none transition-all" />
                     </div>
                   </div>
                </div>
@@ -572,7 +564,7 @@ const AIGenerator = () => {
       </div>
     </div>
   );
-};
+}
 
 export default AIGenerator;
 

@@ -659,17 +659,22 @@ export const lectureQAService = {
     }
   },
 
-  async sendMessage(questionId: string, text: string, isMentor = false, imageUrls?: string[]): Promise<LectureQuestionMessage> {
+  async sendMessage(question_id: string, text: string, is_mentor = false, image_urls?: string[]): Promise<LectureQuestionMessage> {
     const user = await authService.getCurrentUser();
+    
+    // Determine the sender ID. In prototype mode, if is_mentor is true but no real user
+    // or current user is student (testing from same session), we might need to handle this.
+    // However, for standard operation, we use the authenticated user ID.
+    const sender_id = user?.id || null;
 
     const insertData: any = {
-      question_id: questionId,
-      sender_id: user?.id || null,
+      question_id,
+      sender_id,
       message_text: text
     };
-    if (imageUrls && imageUrls.length > 0) {
-      // Store as JSON array string for multiple images, or single URL for one image
-      insertData.image_url = imageUrls.length === 1 ? imageUrls[0] : JSON.stringify(imageUrls);
+    
+    if (image_urls && image_urls.length > 0) {
+      insertData.image_url = image_urls.length === 1 ? image_urls[0] : JSON.stringify(image_urls);
     }
 
     const { data, error } = await supabase
@@ -680,55 +685,27 @@ export const lectureQAService = {
     
     if (error) throw error;
 
-    // Reset is_read to false if a student sends a message, so the admin gets notified
-    if (!isMentor) {
-      const { error: updateError } = await supabase
+    // --- Role & Notification Logic ---
+    if (!is_mentor) {
+      // Student message: mark thread as unread for teacher, read for student
+      await supabase
         .from('lecture_questions')
         .update({ 
           is_read: false, 
           is_read_by_student: true,
           updated_at: new Date().toISOString() 
         })
-        .eq('id', questionId);
-      
-      if (updateError) {
-        console.error('[sendMessage] Failed to update is_read for student message:', updateError);
-        throw updateError;
-      }
+        .eq('id', question_id);
     } else {
-       // Flag for student if mentor sends a message - CRITICAL: ensure is_read is set to true
-       // Try updating without updated_at first, then with it if that fails
-       let updateData: any = { 
-         is_read: true,
-         is_read_by_student: false
-       };
-       
-       const { error: updateError } = await supabase
+      // Teacher message: mark thread as read for teacher, unread for student
+      await supabase
         .from('lecture_questions')
-        .update(updateData)
-        .eq('id', questionId);
-      
-      if (updateError) {
-        console.error('[sendMessage] Failed to mark thread as read when teacher sent message:', updateError);
-        // Try again without updated_at in case that field doesn't exist or has issues
-        const { error: retryError } = await supabase
-          .from('lecture_questions')
-          .update({ 
-            is_read: true,
-            is_read_by_student: false
-          })
-          .eq('id', questionId);
-        
-        if (retryError) {
-          console.error('[sendMessage] Retry also failed:', retryError);
-          // Don't throw here - message was sent successfully, but read status update failed
-          // We'll retry with markAsRead below
-        } else {
-          console.log('[sendMessage] Successfully marked thread as read (retry without updated_at):', questionId);
-        }
-      } else {
-        console.log('[sendMessage] Successfully marked thread as read when teacher sent message:', questionId);
-      }
+        .update({ 
+          is_read: true,
+          is_read_by_student: false,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', question_id);
     }
 
     return data;

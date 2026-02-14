@@ -866,65 +866,16 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
 
                     {messages.map((m: LectureQuestionMessage) => {
                       const isMe = m.sender_id === currentUser?.id;
-                      
-                      // CRITICAL: Determine message position based on sender
-                      // Rule: If sender_id matches question's student_id → Student message (LEFT)
-                      //       Otherwise → Teacher message (RIGHT)
-                      // This ensures consistent positioning regardless of sender data availability
-                      const studentId = selectedQ?.student_id;
-                      const senderId = m.sender_id;
-                      
-                      // Explicit check: is this message from the student who asked the question?
-                      const isSenderTheStudent = studentId && senderId && studentId === senderId;
-                      
-                      // Also check sender role for additional confirmation
                       const senderRole = m.sender?.role;
-                      const roleIsTeacher = senderRole === 'teacher' || senderRole === 'admin';
-                      const roleIsStudent = senderRole === 'student';
                       
-                      // Final determination with explicit logic:
-                      // Priority 1: If sender_id matches student_id → Student message (LEFT)
-                      // Priority 2: If current user is teacher and sender is current user → Teacher message (RIGHT)
-                      // Priority 3: If sender role is teacher/admin → Teacher message (RIGHT)
-                      // Priority 4: If in admin view and sender is NOT the student → Teacher message (RIGHT)
-                      // Priority 5: If role is student → Student message (LEFT)
-                      // Default: Teacher message (RIGHT) for safety
-                      let isStudentMessage = false;
-                      let isTeacherMessage = false;
+                      // Determination: Is this a teacher message? (Any teacher or admin)
+                      const isTeacherMessage = senderRole === 'teacher' || senderRole === 'admin';
+                      // Otherwise, it's a student message
+                      const isStudentMessage = !isTeacherMessage;
                       
-                      // Check if current user (who is a teacher) sent this message
-                      const isCurrentUserTeacher = isMentor && currentUser?.id;
-                      const isMessageFromCurrentTeacher = isCurrentUserTeacher && senderId === currentUser.id;
-                      
-                      if (isSenderTheStudent) {
-                        // Definitely the student
-                        isStudentMessage = true;
-                        isTeacherMessage = false;
-                      } else if (isMessageFromCurrentTeacher) {
-                        // Current user (teacher) sent this message - definitely teacher message
-                        isStudentMessage = false;
-                        isTeacherMessage = true;
-                      } else if (roleIsTeacher) {
-                        // Role confirms teacher
-                        isStudentMessage = false;
-                        isTeacherMessage = true;
-                      } else if (isAdminView && !isSenderTheStudent) {
-                        // In admin view, if not the student, assume teacher
-                        isStudentMessage = false;
-                        isTeacherMessage = true;
-                      } else if (roleIsStudent) {
-                        // Role confirms student
-                        isStudentMessage = true;
-                        isTeacherMessage = false;
-                      } else {
-                        // Default: assume teacher (safer for admin view)
-                        isStudentMessage = false;
-                        isTeacherMessage = true;
-                      }
-                      
-                      // FIXED: Permission logic - Students can only edit/delete their own messages
-                      // Teachers can edit/delete any message
-                      // Students CANNOT edit/delete teacher messages
+                      // Permission logic: 
+                      // 1. Teachers/Admins can edit/delete any message.
+                      // 2. Students can only edit their own messages.
                       const canEdit = isMentor || (isMe && isStudentMessage);
                       const canDelete = isMentor || (isMe && isStudentMessage);
                       const hasActions = canEdit || canDelete;
@@ -981,7 +932,7 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
                               </div>
                             )}
 
-                            {/* FIXED: Always show sender name on student messages, show teacher label on teacher messages */}
+                            {/* Role labels / Names */}
                             {isStudentMessage && (
                               <div className="text-[10px] font-black uppercase tracking-widest mb-1.5 flex items-center gap-2 text-slate-400">
                                 {m.sender?.full_name || selectedQ.student?.full_name || 'Student'}
@@ -989,40 +940,7 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
                             )}
                             {isTeacherMessage && (
                               <div className="text-[10px] font-black uppercase tracking-widest mb-1.5 flex items-center gap-2 text-indigo-200">
-                                {/* CRITICAL: Show actual sender name (teacher), NEVER student name */}
-                                {(() => {
-                                  const senderName = m.sender?.full_name;
-                                  const studentName = selectedQ?.student?.full_name;
-                                  
-                                  // STRICT CHECK: Never use student name for teacher messages
-                                  // If sender name exists and is NOT the student name, use it
-                                  if (senderName && senderName !== studentName) {
-                                    // Additional safety: verify sender_id is NOT student_id
-                                    if (senderId && studentId && senderId !== studentId) {
-                                      return `${senderName} · Mentor`;
-                                    }
-                                    // If sender role confirms teacher, use the name
-                                    if (roleIsTeacher) {
-                                      return `${senderName} · Mentor`;
-                                    }
-                                  }
-                                  
-                                  // Fallback 1: Use current user's profile name if they're a teacher/admin
-                                  if (profile && (profile.role === 'teacher' || profile.role === 'admin') && profile.full_name) {
-                                    // Double-check it's not the student name
-                                    if (profile.full_name !== studentName) {
-                                      return `${profile.full_name} · Mentor`;
-                                    }
-                                  }
-                                  
-                                  // Fallback 2: If in admin view and sender is NOT the student, show generic teacher label
-                                  if (isAdminView && !isSenderTheStudent) {
-                                    return 'Teacher · Mentor';
-                                  }
-                                  
-                                  // Last resort: generic teacher label
-                                  return 'Teacher · Mentor';
-                                })()}
+                                {m.sender?.full_name || 'Teacher'} · Mentor
                               </div>
                             )}
                             {m.image_url && (() => {
