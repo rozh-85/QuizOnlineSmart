@@ -707,7 +707,8 @@ export const lectureQAService = {
     const insertData: any = {
       question_id,
       sender_id,
-      message_text: text
+      message_text: text,
+      is_from_teacher: is_mentor
     };
     
     if (image_urls && image_urls.length > 0) {
@@ -749,12 +750,16 @@ export const lectureQAService = {
   },
 
   async editMessage(messageId: string, newText: string): Promise<void> {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('lecture_question_messages')
       .update({ message_text: newText })
-      .eq('id', messageId);
+      .eq('id', messageId)
+      .select();
     
     if (error) throw error;
+    if (!data || data.length === 0) {
+      console.warn('[editMessage] Update returned 0 rows – RLS may be blocking. Run fix_message_edit_rls.sql in Supabase SQL Editor.');
+    }
   },
 
   async deleteMessage(messageId: string): Promise<void> {

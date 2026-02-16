@@ -442,15 +442,20 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
 
   const handleEditMessage = async (messageId: string) => {
     if (!editingText.trim()) return;
+    const savedText = editingText;
+    // Optimistic local update so the change appears immediately
+    setMessages(prev => prev.map(m => m.id === messageId ? { ...m, message_text: savedText } : m));
+    setEditingMessageId(null);
+    setEditingText('');
     try {
-      await lectureQAService.editMessage(messageId, editingText);
-      setEditingMessageId(null);
-      setEditingText('');
+      await lectureQAService.editMessage(messageId, savedText);
       if (selectedQuestionId) await loadMessages(selectedQuestionId);
       toast.success('Message updated.');
-    } catch (e) {
+    } catch (e: any) {
       console.error('Error editing message:', e);
-      toast.error('Failed to edit message.');
+      // Revert optimistic update on failure
+      if (selectedQuestionId) await loadMessages(selectedQuestionId);
+      toast.error(e?.message || 'Failed to edit message.');
     }
   };
 
@@ -786,14 +791,20 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
                   {/* Message History */}
                   <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3 bg-slate-50/20 custom-scrollbar">
                     {/* The original question */}
-                    <div className="flex justify-start">
-                      <div className="max-w-[85%] bg-white border border-slate-100 rounded-[1.2rem] rounded-tl-none p-3 px-4 shadow-sm relative">
+                    <div className={`flex ${!isMentor ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[85%] rounded-[1.2rem] p-3 px-4 relative ${
+                        !isMentor
+                          ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 rounded-tr-none'
+                          : 'bg-white border border-slate-100 text-slate-800 shadow-sm rounded-tl-none'
+                      }`}>
                         {/* Edit question menu */}
-                        {(selectedQ.student_id === currentUser?.id || isMentor) && editingQuestionId !== selectedQ.id && (
+                        {isMentor && editingQuestionId !== selectedQ.id && (
                           <div className="absolute top-2 right-2">
                             <button
                               onClick={(e) => { e.stopPropagation(); setMenuOpenId(menuOpenId === 'q-' + selectedQ.id ? null : 'q-' + selectedQ.id); }}
-                              className="w-6 h-6 rounded-full flex items-center justify-center hover:bg-slate-100 text-slate-300 hover:text-slate-500 transition-all active:scale-90"
+                              className={`w-6 h-6 rounded-full flex items-center justify-center transition-all active:scale-90 ${
+                                !isMentor ? 'hover:bg-white/20 text-white/60 hover:text-white' : 'hover:bg-slate-100 text-slate-300 hover:text-slate-500'
+                              }`}
                             >
                               <MoreVertical size={14} />
                             </button>
@@ -813,8 +824,8 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
                             )}
                           </div>
                         )}
-                        <div className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-1.5 flex items-center gap-2">
-                          <HelpCircle size={12} /> Student Inquiry
+                        <div className={`text-[10px] font-black uppercase tracking-widest mb-1.5 flex items-center gap-2 ${!isMentor ? 'text-indigo-200' : 'text-slate-400'}`}>
+                          {selectedQ.student?.full_name || 'Student'}
                         </div>
                         {editingQuestionId === selectedQ.id ? (
                           <div className="space-y-2 min-w-[180px]">
@@ -832,9 +843,9 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
                             </div>
                           </div>
                         ) : (
-                          <p className="text-[13px] font-medium text-slate-800 leading-relaxed italic">"{selectedQ.question_text}"</p>
+                          <p className={`text-[13px] font-medium leading-relaxed italic ${!isMentor ? 'text-white' : 'text-slate-800'}`}>"{selectedQ.question_text}"</p>
                         )}
-                        <div className="text-[10px] font-bold text-slate-300 mt-2 flex items-center gap-2">
+                        <div className={`text-[10px] font-bold mt-2 flex items-center gap-2 ${!isMentor ? 'opacity-60' : 'text-slate-300'}`}>
                           <Calendar size={10} />
                           {fmtFullDate(selectedQ.created_at)}
                         </div>
@@ -842,13 +853,11 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
                     </div>
 
                     {messages.map((m: LectureQuestionMessage) => {
-                      const isMe = m.sender_id === currentUser?.id;
-                      const senderRole = m.sender?.role;
-                      
-                      // Determination: Is this a teacher message? (Any teacher or admin)
-                      const isTeacherMessage = senderRole === 'teacher' || senderRole === 'admin';
-                      // Otherwise, it's a student message
+                      // Use is_from_teacher flag (reliable even when teacher/student share session)
+                      const isTeacherMessage = m.is_from_teacher === true;
                       const isStudentMessage = !isTeacherMessage;
+                      // Alignment: teacher sees teacher msgs on right, student sees student msgs on right
+                      const isMe = isMentor ? isTeacherMessage : isStudentMessage;
                       
                       // Permission logic: 
                       // 1. Teachers/Admins can edit/delete any message.

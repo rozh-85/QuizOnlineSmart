@@ -120,6 +120,7 @@ export type LectureQuestionMessage = {
   question_id: string;
   sender_id: string;
   message_text: string;
+  is_from_teacher?: boolean;
   image_url?: string | null;
   created_at: string;
   sender?: {
