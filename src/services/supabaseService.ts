@@ -568,6 +568,43 @@ export const materialService = {
 };
 
 // =====================================================
+// TEACHER READ TRACKING (localStorage safety net)
+// =====================================================
+// Stores { threadId: isoTimestamp } so that even if the DB update for
+// is_read fails (e.g. RLS), the count functions can filter them out.
+// A thread is considered "read" only if the stored timestamp is >= the
+// thread's updated_at (i.e. no new student activity since the teacher read it).
+
+const TEACHER_READ_KEY = 'teacher_read_threads_v2';
+
+export const getTeacherReadMap = (): Record<string, string> => {
+  try {
+    const raw = localStorage.getItem(TEACHER_READ_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+};
+
+export const addTeacherReadTimestamp = (id: string) => {
+  try {
+    const map = getTeacherReadMap();
+    map[id] = new Date().toISOString();
+    localStorage.setItem(TEACHER_READ_KEY, JSON.stringify(map));
+  } catch {
+    // best-effort
+  }
+};
+
+/** Returns true if this thread should still count as unread for the teacher */
+const isStillUnread = (threadId: string, threadUpdatedAt: string, readMap: Record<string, string>): boolean => {
+  const readAt = readMap[threadId];
+  if (!readAt) return true; // never read locally
+  // If the thread was updated (new student message) after the teacher read it, it's unread again
+  return new Date(threadUpdatedAt) > new Date(readAt);
+};
+
+// =====================================================
 // LECTURE Q&A
 // =====================================================
 
@@ -796,38 +833,43 @@ export const lectureQAService = {
   },
 
   async getUnreadCount(): Promise<number> {
-    const { data, count, error } = await supabase
+    const { data, error } = await supabase
       .from('lecture_questions')
-      .select('*', { count: 'exact' })
+      .select('id, updated_at')
       .eq('is_read', false);
     
-    console.log('[DEBUG] Admin Unread Count Fetch:', { count, firstFewIds: (data || []).slice(0, 3).map(d => d.id), error });
     if (error) throw error;
-    return count || 0;
+    
+    const readMap = getTeacherReadMap();
+    const unread = (data || []).filter(q => isStillUnread(q.id, q.updated_at, readMap));
+    return unread.length;
   },
 
   async getUnreadLectureIds(): Promise<string[]> {
     const { data, error } = await supabase
       .from('lecture_questions')
-      .select('lecture_id')
+      .select('id, lecture_id, updated_at')
       .eq('is_read', false);
     
     if (error) throw error;
-    // Return unique IDs
-    return Array.from(new Set((data || []).map(q => q.lecture_id)));
+    
+    const readMap = getTeacherReadMap();
+    const unread = (data || []).filter(q => isStillUnread(q.id, q.updated_at, readMap));
+    return Array.from(new Set(unread.map(q => q.lecture_id)));
   },
 
   async getUnreadCountsByLecture(): Promise<Record<string, number>> {
     const { data, error } = await supabase
       .from('lecture_questions')
-      .select('lecture_id')
+      .select('id, lecture_id, updated_at')
       .eq('is_read', false);
     
     if (error) throw error;
     
+    const readMap = getTeacherReadMap();
     const counts: Record<string, number> = {};
     (data || []).forEach((q: any) => {
-      if (q.lecture_id) {
+      if (q.lecture_id && isStillUnread(q.id, q.updated_at, readMap)) {
         counts[q.lecture_id] = (counts[q.lecture_id] || 0) + 1;
       }
     });

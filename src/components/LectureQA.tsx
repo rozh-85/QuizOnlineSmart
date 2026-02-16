@@ -23,7 +23,9 @@ import {
   lectureQAService, 
   subscribeToLectureQuestions, 
   subscribeToQuestionMessages, 
-  authService 
+  authService,
+  addTeacherReadTimestamp,
+  getTeacherReadMap 
 } from '../services/supabaseService';
 import { LectureQuestion, LectureQuestionMessage, Profile } from '../lib/supabase';
 
@@ -59,36 +61,11 @@ const getSnippet = (text: string, length = 80) => {
   return text.substring(0, length) + '...';
 };
 
-// Persist which threads a mentor has explicitly opened/read on this device.
-// This gives us a stable fallback so that after refresh, chats the teacher
-// has already viewed don't appear as "unread" again even if the backend
-// update was delayed or blocked by RLS.
-const TEACHER_READ_STORAGE_KEY = 'teacher_read_threads_v1';
-
-const getTeacherReadSet = (): Set<string> => {
-  if (typeof window === 'undefined') return new Set();
-  try {
-    const raw = window.localStorage.getItem(TEACHER_READ_STORAGE_KEY);
-    if (!raw) return new Set();
-    const arr = JSON.parse(raw) as string[];
-    return new Set(arr);
-  } catch {
-    return new Set();
-  }
-};
-
-const addTeacherReadId = (id: string) => {
-  if (typeof window === 'undefined') return;
-  try {
-    const set = getTeacherReadSet();
-    if (!set.has(id)) {
-      set.add(id);
-      window.localStorage.setItem(TEACHER_READ_STORAGE_KEY, JSON.stringify(Array.from(set)));
-    }
-  } catch {
-    // best-effort only
-  }
-};
+// Use shared localStorage-based read tracking from supabaseService.
+// addTeacherReadTimestamp stores { threadId: isoTimestamp } so that
+// getUnreadCount / getUnreadCountsByLecture can filter out threads
+// the teacher already read, even if the DB update was blocked by RLS.
+const addTeacherReadId = addTeacherReadTimestamp;
 
 /* ═══════════════════════════════════════════════════
    MAIN COMPONENT
@@ -268,10 +245,10 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
       // Apply local mentor read-state override so that after refresh, any
       // thread the teacher has already opened on this device stays "read"
       // even if the backend flag didn't update for some reason.
-      const teacherRead = getTeacherReadSet();
+      const teacherRead = getTeacherReadMap();
       const adjusted = sorted.map(q => ({
         ...q,
-        is_read: teacherRead.has(q.id) ? true : q.is_read
+        is_read: (teacherRead[q.id] && new Date(q.updated_at) <= new Date(teacherRead[q.id])) ? true : q.is_read
       }));
 
       setQuestions(adjusted);
