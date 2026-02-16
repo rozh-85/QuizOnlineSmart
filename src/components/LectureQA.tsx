@@ -853,15 +853,15 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
                       // Permission logic: 
                       // 1. Teachers/Admins can edit/delete any message.
                       // 2. Students can only edit their own messages.
-                      const canEdit = isMentor || (isMe && isStudentMessage);
-                      const canDelete = isMentor || (isMe && isStudentMessage);
+                      const canEdit = isMentor;
+                      const canDelete = isMentor;
                       const hasActions = canEdit || canDelete;
                       
                       return (
-                        <div key={m.id} className={`flex ${isTeacherMessage ? 'justify-end' : 'justify-start'}`}>
+                        <div key={m.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                           {/* ── Message bubble ── */}
                           <div className={`max-w-[85%] rounded-[1.2rem] p-3 px-4 relative ${
-                            isTeacherMessage
+                            isMe
                               ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 rounded-tr-none'
                               : 'bg-white border border-slate-100 text-slate-800 shadow-sm rounded-tl-none'
                           }`}>
@@ -871,7 +871,7 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setMenuOpenId(menuOpenId === m.id ? null : m.id); }}
                                   className={`w-6 h-6 rounded-full flex items-center justify-center transition-all active:scale-90 ${
-                                    isTeacherMessage
+                                    isMe
                                       ? 'hover:bg-white/20 text-white/60 hover:text-white'
                                       : 'hover:bg-slate-100 text-slate-300 hover:text-slate-500'
                                   }`}
@@ -883,7 +883,7 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
                                   <>
                                     <div className="fixed inset-0 z-40" onClick={() => setMenuOpenId(null)} />
                                     <div className={`absolute z-50 mt-1 w-32 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150 ${
-                                      isTeacherMessage ? 'right-0' : 'left-0'
+                                      isMe ? 'right-0' : 'left-0'
                                     }`}>
                                       {canEdit && (
                                         <button
@@ -911,13 +911,13 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
 
                             {/* Role labels / Names */}
                             {isStudentMessage && (
-                              <div className="text-[10px] font-black uppercase tracking-widest mb-1.5 flex items-center gap-2 text-slate-400">
+                              <div className={`text-[10px] font-black uppercase tracking-widest mb-1.5 flex items-center gap-2 ${isMe ? 'text-indigo-200' : 'text-slate-400'}`}>
                                 {m.sender?.full_name || selectedQ.student?.full_name || 'Student'}
                               </div>
                             )}
                             {isTeacherMessage && (
-                              <div className="text-[10px] font-black uppercase tracking-widest mb-1.5 flex items-center gap-2 text-indigo-200">
-                                {m.sender?.full_name || 'Teacher'} · Mentor
+                              <div className={`text-[10px] font-black uppercase tracking-widest mb-1.5 flex items-center gap-2 ${isMe ? 'text-indigo-200' : 'text-slate-400'}`}>
+                                Teacher
                               </div>
                             )}
                             {m.image_url && (() => {
@@ -952,7 +952,7 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
                                   value={editingText}
                                   onChange={(e) => setEditingText(e.target.value)}
                                   className={`w-full rounded-lg px-3 py-2 text-[13px] font-medium outline-none ${
-                                    isTeacherMessage
+                                    isMe
                                       ? 'bg-white/20 border border-white/30 text-white placeholder:text-white/50'
                                       : 'bg-slate-50 border border-slate-200 text-slate-800'
                                   }`}
@@ -963,7 +963,7 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
                                   <button 
                                     onClick={() => setEditingMessageId(null)} 
                                     className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-colors ${
-                                      isTeacherMessage ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                                      isMe ? 'text-white/60 hover:text-white hover:bg-white/10' : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
                                     }`}
                                   >
                                     Cancel
@@ -971,7 +971,7 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
                                   <button 
                                     onClick={() => handleEditMessage(m.id)} 
                                     className={`px-3 py-1 rounded-lg text-[10px] font-bold transition-colors ${
-                                      isTeacherMessage ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                                      isMe ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
                                     }`}
                                   >
                                     Save
@@ -988,7 +988,7 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
                                 )}
                               </>
                             )}
-                            <div className={`text-[10px] mt-2 font-bold flex items-center gap-2 ${isTeacherMessage ? 'opacity-60' : 'text-slate-300'}`}>
+                            <div className={`text-[10px] mt-2 font-bold flex items-center gap-2 ${isMe ? 'opacity-60' : 'text-slate-300'}`}>
                               <Calendar size={10} />
                               {fmtFullDate(m.created_at)}
                             </div>
