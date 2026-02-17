@@ -60,6 +60,30 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#039;');
 }
 
+function formatTimeAllowed(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return '';
+  const colonMatch = trimmed.match(/^(\d+):(\d{1,2})$/);
+  if (colonMatch) {
+    const h = parseInt(colonMatch[1], 10);
+    const m = parseInt(colonMatch[2], 10);
+    const parts: string[] = [];
+    if (h > 0) parts.push(`${h}H`);
+    if (m > 0) parts.push(`${m}M`);
+    return parts.join(' ') || '0M';
+  }
+  const num = parseFloat(trimmed);
+  if (!isNaN(num) && /^\d+(\.\d+)?$/.test(trimmed)) {
+    const h = Math.floor(num);
+    const m = Math.round((num - h) * 60);
+    const parts: string[] = [];
+    if (h > 0) parts.push(`${h}H`);
+    if (m > 0) parts.push(`${m}M`);
+    return parts.join(' ') || '0M';
+  }
+  return trimmed;
+}
+
 // --- Extracted sub-components (must live OUTSIDE ExamBuilder to avoid remount on every render) ---
 
 const Toggle = ({ on, onToggle, label }: { on: boolean; onToggle: () => void; label: string }) => (
@@ -322,7 +346,7 @@ const ExamBuilder = () => {
       if (settings.subject) leftCol.push(`<div class="info-row"><span class="info-label">Subject:</span> ${escapeHtml(settings.subject)}</div>`);
 
       if (settings.date) rightCol.push(`<div class="info-row"><span class="info-label">Date:</span> ${escapeHtml(settings.date)}</div>`);
-      if (settings.time_allowed) rightCol.push(`<div class="info-row"><span class="info-label">Time Allowed:</span> ${escapeHtml(settings.time_allowed)}</div>`);
+      if (settings.time_allowed) rightCol.push(`<div class="info-row"><span class="info-label">Time Allowed:</span> ${escapeHtml(formatTimeAllowed(settings.time_allowed))}</div>`);
 
       const hasAnyField = leftCol.length > 0 || rightCol.length > 0;
 
@@ -398,9 +422,9 @@ const ExamBuilder = () => {
       ? `
         .print-footer {
           position: fixed;
-          bottom: 0;
-          left: 0;
-          right: 0;
+          bottom: 6mm;
+          left: 20mm;
+          right: 20mm;
           text-align: center;
           font-size: 8.5pt;
           color: #999;
@@ -411,7 +435,7 @@ const ExamBuilder = () => {
       : '';
 
     const footerHTML = settings.footer_enabled
-      ? `<div class="print-footer">${settings.subject ? escapeHtml(settings.subject) + ' &mdash; Exam' : 'Exam'}</div>`
+      ? `<div class="print-footer"></div>`
       : '';
 
     const totalQ = selected.length;
@@ -420,12 +444,11 @@ const ExamBuilder = () => {
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>${escapeHtml(settings.subject || 'Exam')}</title>
+  <title>Exam</title>
   <style>
     @page {
       size: A4;
-      margin: 18mm 20mm;
-      ${settings.footer_enabled ? 'margin-bottom: 24mm;' : ''}
+      margin: 0;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -433,6 +456,8 @@ const ExamBuilder = () => {
       font-size: 11.5pt;
       line-height: 1.55;
       color: #000;
+      padding: 18mm 20mm;
+      ${settings.footer_enabled ? 'padding-bottom: 24mm;' : ''}
     }
 
     /* ── Header ── */
@@ -582,12 +607,6 @@ const ExamBuilder = () => {
     if (printWindow) {
       printWindow.document.write(html);
       printWindow.document.close();
-      if (settings.footer_enabled) {
-        toast('Tip: Enable "Headers and footers" in the print dialog for page numbers', {
-          icon: '📄',
-          duration: 5000,
-        });
-      }
     } else {
       toast.error('Please allow popups to generate the exam PDF');
     }
