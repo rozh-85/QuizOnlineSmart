@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Edit2, Trash2, HelpCircle, Search, ChevronDown, ChevronRight, Eye, EyeOff, CheckCircle, MessageSquare, Layers, BarChart3 as BarChart, Gauge } from 'lucide-react';
+import previewIcon from '../../assets/icons/preview.png';
 import { toast } from 'react-hot-toast';
 import { Button, Card, Modal } from '../../components/ui';
 import { useQuiz } from '../../context/QuizContext';
@@ -239,14 +240,22 @@ const TeacherDashboard = () => {
                                           </button>
                                           <button
                                             onClick={() => toggleQuickView(question.id)}
-                                            className={`h-7 w-7 rounded-md flex items-center justify-center transition-all ${
+                                            className={`group h-7 w-7 rounded-md flex items-center justify-center transition-all ${
                                               quickView[question.id] 
                                                 ? 'bg-primary-600 text-white shadow-md' 
                                                 : 'text-slate-400 hover:text-primary-600 hover:bg-primary-50'
                                             }`}
-                                            title="Quick View"
+                                            title={quickView[question.id] ? 'Close preview' : 'Open preview'}
                                           >
-                                            {quickView[question.id] ? <EyeOff size={12} /> : <Eye size={12} />}
+                                            <img
+                                              src={previewIcon}
+                                              alt={quickView[question.id] ? 'Close preview' : 'Open preview'}
+                                              className={`w-3.5 h-3.5 transition-all ${
+                                                quickView[question.id]
+                                                  ? 'opacity-100 brightness-0 invert'
+                                                  : 'opacity-70 grayscale group-hover:opacity-100 group-hover:grayscale-0'
+                                              }`}
+                                            />
                                           </button>
                                           <Link to={`/admin/edit/${question.id}`}>
                                             <Button variant="ghost" size="sm" className="h-7 w-7 !p-0 text-slate-400 hover:text-primary-600">
