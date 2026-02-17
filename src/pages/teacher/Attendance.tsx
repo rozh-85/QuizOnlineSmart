@@ -112,8 +112,8 @@ const Attendance = () => {
     if (sessionStatus === 'active' && qrVisible && sessionId) {
       // Generate immediately
       refreshQrToken();
-      // Then every 2 seconds
-      qrIntervalRef.current = setInterval(refreshQrToken, 3000);
+      // Then every 5 seconds
+      qrIntervalRef.current = setInterval(refreshQrToken, 5000);
     } else {
       // Stop generating and deactivate current tokens
       if (qrIntervalRef.current) {
@@ -445,7 +445,7 @@ const Attendance = () => {
                       </div>
                       <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
                         <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                        Refreshing every 2 seconds
+                        Refreshing every 5 seconds
                       </div>
                     </div>
                   ) : (
