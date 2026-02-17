@@ -9,6 +9,7 @@ import ClassManager from './pages/teacher/ClassManager';
 import StudentManager from './pages/teacher/StudentManager';
 import QuestionEditor from './pages/teacher/QuestionEditor';
 import AIGenerator from './pages/teacher/AIGenerator';
+import ExamBuilder from './pages/teacher/ExamBuilder';
 import LectureManager from './pages/teacher/LectureManager';
 import MaterialsManager from './pages/teacher/MaterialsManager';
 import QAManager from './pages/teacher/QAManager';
@@ -104,6 +105,10 @@ function App() {
             <Route 
               path="/admin/ai-generator" 
               element={<AdminLayout><ProtectedRoute allowedRoles={['teacher', 'admin']}><AIGenerator /></ProtectedRoute></AdminLayout>} 
+            />
+            <Route 
+              path="/admin/exam-builder" 
+              element={<AdminLayout><ProtectedRoute allowedRoles={['teacher', 'admin']}><ExamBuilder /></ProtectedRoute></AdminLayout>} 
             />
 
             {/* Fallback */}
