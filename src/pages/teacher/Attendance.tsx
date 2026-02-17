@@ -113,7 +113,7 @@ const Attendance = () => {
       // Generate immediately
       refreshQrToken();
       // Then every 2 seconds
-      qrIntervalRef.current = setInterval(refreshQrToken, 2000);
+      qrIntervalRef.current = setInterval(refreshQrToken, 3000);
     } else {
       // Stop generating and deactivate current tokens
       if (qrIntervalRef.current) {
