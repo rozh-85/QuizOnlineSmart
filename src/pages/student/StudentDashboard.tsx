@@ -182,7 +182,7 @@ const StudentDashboard = () => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-bold text-slate-700 truncate">{lecture.title}</div>
-                      <div className="text-[10px] text-slate-400">{getQuestionsByLecture(lecture.id).length} Questions</div>
+                      <div className="text-[10px] text-slate-400">{getQuestionsByLecture(lecture.id).filter(q => q.isVisible !== false).length} Questions</div>
                     </div>
                   </Link>
                 ))}
@@ -352,7 +352,7 @@ const StudentDashboard = () => {
             </div>
             <div className="flex-1 bg-white rounded-2xl p-5 sm:p-6 shadow-lg shadow-slate-100/50 border border-slate-100">
               <div className="text-3xl sm:text-4xl font-black bg-gradient-to-br from-purple-600 to-purple-700 bg-clip-text text-transparent">
-                {questions.length}
+                {questions.filter(q => q.isVisible !== false).length}
               </div>
               <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">Questions</div>
             </div>
@@ -373,7 +373,7 @@ const StudentDashboard = () => {
                 <div key={i} className="h-56 rounded-[2rem] bg-white/60 animate-pulse border border-slate-100" />
               ))
             ) : lectures.sort((a, b) => a.order - b.order).map((lecture) => {
-              const questionCount = getQuestionsByLecture(lecture.id).length;
+              const questionCount = getQuestionsByLecture(lecture.id).filter(q => q.isVisible !== false).length;
 
               return (
                 <Link

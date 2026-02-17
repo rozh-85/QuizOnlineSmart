@@ -12,6 +12,7 @@ export interface Question {
   explanation?: string;
   lectureId?: string;
   sectionId?: string;
+  isVisible?: boolean;
 }
 
 export interface Lecture {
@@ -38,6 +39,7 @@ export interface QuizContextType {
   deleteQuestion: (id: string) => Promise<void>;
   getQuestion: (id: string) => Question | undefined;
   getQuestionsByLecture: (lectureId: string) => Question[];
+  toggleQuestionVisibility: (id: string, isVisible: boolean) => Promise<void>;
   addLecture: (lecture: Omit<Lecture, 'id' | 'createdAt'>) => Promise<void>;
   updateLecture: (id: string, lecture: Omit<Lecture, 'id' | 'createdAt'>) => Promise<void>;
   deleteLecture: (id: string) => Promise<void>;

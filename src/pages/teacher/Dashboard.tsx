@@ -7,7 +7,7 @@ import { useQuiz } from '../../context/QuizContext';
 import { Question } from '../../types';
 
 const TeacherDashboard = () => {
-  const { questions, lectures, deleteQuestion } = useQuiz();
+  const { questions, lectures, deleteQuestion, toggleQuestionVisibility } = useQuiz();
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedLectures, setExpandedLectures] = useState<Record<string, boolean>>({});
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
@@ -224,6 +224,20 @@ const TeacherDashboard = () => {
                                         <h3 className="text-[13px] font-bold text-slate-800 leading-snug line-clamp-2">{question.text}</h3>
                                         <div className="flex items-center gap-1 flex-shrink-0">
                                           <button
+                                            onClick={() => {
+                                              toggleQuestionVisibility(question.id, !question.isVisible);
+                                              toast.success(question.isVisible ? 'Question hidden from students' : 'Question visible to students');
+                                            }}
+                                            className={`h-7 w-7 rounded-md flex items-center justify-center transition-all ${
+                                              question.isVisible !== false
+                                                ? 'text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50'
+                                                : 'text-slate-300 hover:text-slate-500 hover:bg-slate-50'
+                                            }`}
+                                            title={question.isVisible !== false ? 'Visible to students – click to hide' : 'Hidden from students – click to show'}
+                                          >
+                                            {question.isVisible !== false ? <Eye size={12} /> : <EyeOff size={12} />}
+                                          </button>
+                                          <button
                                             onClick={() => toggleQuickView(question.id)}
                                             className={`h-7 w-7 rounded-md flex items-center justify-center transition-all ${
                                               quickView[question.id] 
@@ -334,6 +348,14 @@ const TeacherDashboard = () => {
                                         </div>
                                         <div className="text-[9px] font-black uppercase text-slate-300 bg-slate-50/50 px-1.5 py-0.5 rounded border border-slate-50">
                                           {question.type?.replace('-', ' ') || 'multiple choice'}
+                                        </div>
+                                        <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border ${
+                                          question.isVisible !== false
+                                            ? 'bg-emerald-50 border-emerald-100 text-emerald-600'
+                                            : 'bg-slate-50 border-slate-200 text-slate-400'
+                                        }`}>
+                                          {question.isVisible !== false ? <Eye size={10} /> : <EyeOff size={10} />}
+                                          {question.isVisible !== false ? 'Visible' : 'Hidden'}
                                         </div>
                                       </div>
                                     </div>

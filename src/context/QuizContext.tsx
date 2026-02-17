@@ -25,7 +25,8 @@ const adaptQuestion = (question: SupabaseQuestion): LocalQuestion => ({
   correctAnswer: question.correct_answer ?? undefined,
   explanation: question.explanation ?? undefined,
   lectureId: question.lecture_id ?? undefined,
-  sectionId: question.section_id ?? undefined
+  sectionId: question.section_id ?? undefined,
+  isVisible: question.is_visible ?? true
 });
 
 const adaptMaterial = (material: SupabaseMaterial): any => ({
@@ -94,7 +95,8 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
       correct_answer: q.correctAnswer ?? null,
       explanation: q.explanation ?? null,
       lecture_id: q.lectureId ?? null,
-      section_id: q.sectionId ?? null
+      section_id: q.sectionId ?? null,
+      is_visible: q.isVisible ?? true
     });
   };
 
@@ -108,8 +110,14 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
       correct_answer: q.correctAnswer ?? null,
       explanation: q.explanation ?? null,
       lecture_id: q.lectureId ?? null,
-      section_id: q.sectionId ?? null
+      section_id: q.sectionId ?? null,
+      is_visible: q.isVisible ?? true
     });
+  };
+
+  const toggleQuestionVisibility = async (id: string, isVisible: boolean) => {
+    await questionService.update(id, { is_visible: isVisible });
+    await loadData();
   };
 
   const deleteQuestion = async (id: string) => {
@@ -213,7 +221,7 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
   return (
     <QuizContext.Provider value={{ 
       questions, lectures, materials, addQuestion, updateQuestion, deleteQuestion, 
-      getQuestion, getQuestionsByLecture, addLecture, updateLecture, deleteLecture, getLecture,
+      getQuestion, getQuestionsByLecture, toggleQuestionVisibility, addLecture, updateLecture, deleteLecture, getLecture,
       addMaterial, updateMaterial, deleteMaterial, getMaterialsByLecture
     }}>
       {children}

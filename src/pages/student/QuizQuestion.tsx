@@ -19,10 +19,11 @@ const QuizQuestion = () => {
   const sectionName = searchParams.get('section');
   const { getQuestionsByLecture, getLecture, questions: allQuestions } = useQuiz();
   
-  // Filter questions by lecture and optionally by section
-  const questions = lectureId 
+  // Filter questions by lecture and optionally by section, and only show visible questions
+  const questions = (lectureId 
     ? getQuestionsByLecture(lectureId).filter(q => !sectionName || q.sectionId === sectionName)
-    : allQuestions;
+    : allQuestions
+  ).filter(q => q.isVisible !== false);
   const lecture = lectureId ? getLecture(lectureId) : null;
   
   const [state, setState] = useState<QuizState>({

@@ -33,7 +33,7 @@ const QuizStart = () => {
   }
 
   const lecture = getLecture(lectureId);
-  const questions = getQuestionsByLecture(lectureId).filter(q => !sectionName || q.sectionId === sectionName);
+  const questions = getQuestionsByLecture(lectureId).filter(q => q.isVisible !== false && (!sectionName || q.sectionId === sectionName));
   const materials = getMaterialsByLecture(lectureId, sectionName || undefined);
 
   // Redirect if lecture not found
@@ -92,14 +92,14 @@ const QuizStart = () => {
               <div className="flex items-center gap-8">
                 <div className="text-center">
                   <div className="text-xl font-bold text-slate-900 leading-none">
-                    {sectionName ? questions.length : getQuestionsByLecture(lectureId).length}
+                    {sectionName ? questions.length : getQuestionsByLecture(lectureId).filter(q => q.isVisible !== false).length}
                   </div>
                   <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Questions</div>
                 </div>
                 <div className="w-px h-8 bg-slate-100" />
                 <div className="text-center">
                   <div className="text-xl font-bold text-slate-900 leading-none">
-                    ~{Math.ceil((sectionName ? questions.length : getQuestionsByLecture(lectureId).length) * 0.5)}m
+                    ~{Math.ceil((sectionName ? questions.length : getQuestionsByLecture(lectureId).filter(q => q.isVisible !== false).length) * 0.5)}m
                   </div>
                   <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-1">Duration</div>
                 </div>
@@ -125,7 +125,7 @@ const QuizStart = () => {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {lecture.sections.map((section, idx) => {
-                const sectionQuestions = getQuestionsByLecture(lectureId).filter(q => q.sectionId === section);
+                const sectionQuestions = getQuestionsByLecture(lectureId).filter(q => q.isVisible !== false && q.sectionId === section);
                 const sectionCount = sectionQuestions.length;
                 
                 return (

@@ -28,6 +28,7 @@ const QuestionEditor = () => {
   const [explanation, setExplanation] = useState('');
   const [lectureId, setLectureId] = useState<string>('');
   const [sectionId, setSectionId] = useState<string>('');
+  const [isVisible, setIsVisible] = useState(true);
   const [errors, setErrors] = useState<FormErrors>({});
 
   useEffect(() => {
@@ -43,6 +44,7 @@ const QuestionEditor = () => {
         setExplanation(question.explanation || '');
         setLectureId(question.lectureId || '');
         setSectionId(question.sectionId || '');
+        setIsVisible(question.isVisible !== false);
       } else {
         navigate('/admin');
       }
@@ -101,6 +103,7 @@ const QuestionEditor = () => {
         explanation: explanation.trim() || undefined,
         lectureId: lectureId || undefined,
         sectionId: sectionId || undefined,
+        isVisible,
       };
 
       if (isEditing && id) {
@@ -401,6 +404,47 @@ const QuestionEditor = () => {
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Visibility Toggle */}
+              <div className="pt-4 border-t border-slate-50">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 block">
+                  Student Visibility
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setIsVisible(!isVisible)}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border-2 transition-all ${
+                    isVisible
+                      ? 'border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50'
+                      : 'border-slate-100 bg-slate-50/50 hover:bg-slate-50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                      isVisible ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-400'
+                    }`}>
+                      {isVisible ? <Eye size={14} /> : <EyeOff size={14} />}
+                    </div>
+                    <div className="text-left">
+                      <span className={`text-xs font-black block ${
+                        isVisible ? 'text-emerald-700' : 'text-slate-500'
+                      }`}>
+                        {isVisible ? 'Visible to Students' : 'Hidden from Students'}
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-medium">
+                        {isVisible ? 'Students can see this question in quizzes' : 'This question will not appear in student quizzes'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className={`w-10 h-6 rounded-full p-0.5 transition-colors ${
+                    isVisible ? 'bg-emerald-500' : 'bg-slate-200'
+                  }`}>
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
+                      isVisible ? 'translate-x-4' : 'translate-x-0'
+                    }`} />
+                  </div>
+                </button>
               </div>
 
               {/* Metadata Section */}

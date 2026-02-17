@@ -57,6 +57,7 @@ export type Question = {
   explanation: string | null;
   lecture_id: string | null;
   section_id: string | null;
+  is_visible: boolean;
   teacher_id: string | null;
   created_at: string;
   updated_at: string;
