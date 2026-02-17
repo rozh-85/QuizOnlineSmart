@@ -10,6 +10,8 @@ import StudentManager from './pages/teacher/StudentManager';
 import QuestionEditor from './pages/teacher/QuestionEditor';
 import AIGenerator from './pages/teacher/AIGenerator';
 import ExamBuilder from './pages/teacher/ExamBuilder';
+import Attendance from './pages/teacher/Attendance';
+import AttendanceScan from './pages/student/AttendanceScan';
 import LectureManager from './pages/teacher/LectureManager';
 import MaterialsManager from './pages/teacher/MaterialsManager';
 import QAManager from './pages/teacher/QAManager';
@@ -109,6 +111,16 @@ function App() {
             <Route 
               path="/admin/exam-builder" 
               element={<AdminLayout><ProtectedRoute allowedRoles={['teacher', 'admin']}><ExamBuilder /></ProtectedRoute></AdminLayout>} 
+            />
+            <Route 
+              path="/admin/attendance" 
+              element={<AdminLayout><ProtectedRoute allowedRoles={['teacher', 'admin']}><Attendance /></ProtectedRoute></AdminLayout>} 
+            />
+
+            {/* Student Attendance Scan */}
+            <Route 
+              path="/attend/:token" 
+              element={<AttendanceScan />} 
             />
 
             {/* Fallback */}

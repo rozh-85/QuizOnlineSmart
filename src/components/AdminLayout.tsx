@@ -12,7 +12,8 @@ import {
   MessageSquare,
   Users,
   ShieldCheck,
-  FileText
+  FileText,
+  ClipboardCheck
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { lectureQAService, subscribeToAllQuestions } from '../services/supabaseService';
@@ -141,6 +142,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     { path: '/admin/new', icon: Plus, label: 'New Question' },
     { path: '/admin/ai-generator', icon: Sparkles, label: 'AI Generator' },
     { path: '/admin/exam-builder', icon: FileText, label: 'Exam Builder' },
+    { path: '/admin/attendance', icon: ClipboardCheck, label: 'Attendance' },
   ];
 
   return (

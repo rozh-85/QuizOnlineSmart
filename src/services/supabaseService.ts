@@ -1,6 +1,188 @@
 import { supabase, type Lecture, type Question, type Profile, type LectureQuestion, type LectureQuestionMessage } from '../lib/supabase';
 
 // =====================================================
+// ATTENDANCE
+// =====================================================
+
+export const attendanceService = {
+  // Generate a secure token from session_id + random + timestamp
+  generateToken(sessionId: string): string {
+    const random = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    const timestamp = Date.now().toString(36);
+    const raw = `${sessionId}-${random}-${timestamp}`;
+    // Simple hash: convert to base36 encoded string
+    let hash = 0;
+    for (let i = 0; i < raw.length; i++) {
+      const char = raw.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash |= 0;
+    }
+    return `${Math.abs(hash).toString(36)}-${random}-${timestamp}`;
+  },
+
+  async createSession(classId: string, teacherId: string, sessionDate: string): Promise<any> {
+    const { data, error } = await supabase
+      .from('attendance_sessions')
+      .insert([{
+        class_id: classId,
+        teacher_id: teacherId,
+        session_date: sessionDate,
+        status: 'pending'
+      }])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async startSession(sessionId: string): Promise<any> {
+    const { data, error } = await supabase
+      .from('attendance_sessions')
+      .update({ status: 'active', started_at: new Date().toISOString() })
+      .eq('id', sessionId)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async stopSession(sessionId: string): Promise<any> {
+    const endTime = new Date().toISOString();
+
+    // 1. End the session
+    const { data: session, error: sessErr } = await supabase
+      .from('attendance_sessions')
+      .update({ status: 'completed', ended_at: endTime })
+      .eq('id', sessionId)
+      .select()
+      .single();
+    if (sessErr) throw sessErr;
+
+    // 2. Fill end time for all present students and calculate hours
+    const { data: records, error: recErr } = await supabase
+      .from('attendance_records')
+      .select('*')
+      .eq('session_id', sessionId)
+      .eq('status', 'present')
+      .is('time_left', null);
+    if (recErr) throw recErr;
+
+    if (records && records.length > 0) {
+      for (const record of records) {
+        const joined = new Date(record.time_joined).getTime();
+        const ended = new Date(endTime).getTime();
+        const hoursAttended = Math.round(((ended - joined) / (1000 * 60 * 60)) * 100) / 100;
+
+        await supabase
+          .from('attendance_records')
+          .update({
+            time_left: endTime,
+            hours_attended: hoursAttended
+          })
+          .eq('id', record.id);
+      }
+    }
+
+    // 3. Deactivate all tokens for this session
+    await supabase
+      .from('attendance_tokens')
+      .update({ is_active: false })
+      .eq('session_id', sessionId);
+
+    return session;
+  },
+
+  async createToken(sessionId: string): Promise<any> {
+    const token = this.generateToken(sessionId);
+    const expiresAt = new Date(Date.now() + 4000).toISOString(); // 4s expiry (2s refresh + 2s buffer)
+
+    const { data, error } = await supabase
+      .from('attendance_tokens')
+      .insert([{
+        session_id: sessionId,
+        token,
+        is_active: true,
+        expires_at: expiresAt
+      }])
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async deactivateSessionTokens(sessionId: string): Promise<void> {
+    const { error } = await supabase
+      .from('attendance_tokens')
+      .update({ is_active: false })
+      .eq('session_id', sessionId);
+    if (error) throw error;
+  },
+
+  async getSessionRecords(sessionId: string): Promise<any[]> {
+    const { data, error } = await supabase
+      .from('attendance_records')
+      .select(`
+        *,
+        student:profiles!attendance_records_student_id_fkey(id, full_name, serial_id, email)
+      `)
+      .eq('session_id', sessionId)
+      .order('time_joined', { ascending: true });
+    if (error) throw error;
+    return data || [];
+  },
+
+  async kickStudent(recordId: string): Promise<void> {
+    // Get the record to calculate hours
+    const { data: record, error: fetchErr } = await supabase
+      .from('attendance_records')
+      .select('*')
+      .eq('id', recordId)
+      .single();
+    if (fetchErr) throw fetchErr;
+
+    const endTime = new Date().toISOString();
+    const joined = new Date(record.time_joined).getTime();
+    const ended = new Date(endTime).getTime();
+    const hoursAttended = Math.round(((ended - joined) / (1000 * 60 * 60)) * 100) / 100;
+
+    const { error } = await supabase
+      .from('attendance_records')
+      .update({
+        status: 'removed',
+        time_left: endTime,
+        hours_attended: hoursAttended
+      })
+      .eq('id', recordId);
+    if (error) throw error;
+  },
+
+  async verifyAndJoin(token: string): Promise<any> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data, error } = await supabase.rpc('verify_and_join_attendance', {
+      p_token: token,
+      p_student_id: user.id
+    });
+    if (error) throw error;
+    return data;
+  },
+
+  async getSession(sessionId: string): Promise<any> {
+    const { data, error } = await supabase
+      .from('attendance_sessions')
+      .select(`
+        *,
+        class:classes(id, name)
+      `)
+      .eq('id', sessionId)
+      .single();
+    if (error) throw error;
+    return data;
+  }
+};
+
+// =====================================================
 // AUTHENTICATION
 // =====================================================
 
