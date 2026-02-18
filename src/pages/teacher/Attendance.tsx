@@ -18,6 +18,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { supabase } from '../../lib/supabase';
 import { classService, attendanceService, authService, lectureService } from '../../services/supabaseService';
 import toast from 'react-hot-toast';
+import { PageHeader, FormField, EmptyState } from '../../components/ui';
 
 type SessionStatus = 'idle' | 'pending' | 'active' | 'completed';
 
@@ -321,25 +322,21 @@ const Attendance = () => {
   return (
     <div className="animate-fade-in w-full">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Attendance.</h1>
-            <div className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest border border-slate-200">
-              Live
-            </div>
-          </div>
-          <p className="text-sm text-slate-400 font-medium">Start a class session and track student attendance via QR code</p>
-        </div>
-        {sessionStatus === 'completed' && (
-          <button
-            onClick={handleReset}
-            className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-md shadow-primary-200 transition-all active:scale-95 text-sm"
-          >
-            New Session
-          </button>
-        )}
-      </div>
+      <PageHeader
+        title="Attendance."
+        badge="Live"
+        subtitle="Start a class session and track student attendance via QR code"
+        action={
+          sessionStatus === 'completed' ? (
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-md shadow-primary-200 transition-all active:scale-95 text-sm"
+            >
+              New Session
+            </button>
+          ) : undefined
+        }
+      />
 
       {/* Setup Panel - shown when idle */}
       {sessionStatus === 'idle' && (
@@ -347,8 +344,7 @@ const Attendance = () => {
           <h2 className="text-lg font-black text-slate-900 tracking-tight">Create Attendance Session</h2>
 
           {/* Lecture Selector (Optional) */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-500">Lecture <span className="text-slate-300">(optional)</span></label>
+          <FormField label={<>Lecture <span className="text-slate-300">(optional)</span></>}>
             <div className="relative">
               <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <select
@@ -363,11 +359,10 @@ const Attendance = () => {
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
             </div>
-          </div>
+          </FormField>
 
           {/* Class Selector */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-500">Class</label>
+          <FormField label="Class">
             <div className="relative">
               <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <select
@@ -382,7 +377,7 @@ const Attendance = () => {
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
             </div>
-          </div>
+          </FormField>
 
           <button
             onClick={handleCreateSession}
@@ -529,15 +524,11 @@ const Attendance = () => {
 
               {/* Student Table */}
               {records.length === 0 ? (
-                <div className="bg-white rounded-2xl border-2 border-dashed border-slate-200 py-16 flex flex-col items-center justify-center text-center px-6">
-                  <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 mb-4">
-                    <Users size={28} />
-                  </div>
-                  <h3 className="text-lg font-bold text-slate-400 mb-1">No Students Yet</h3>
-                  <p className="text-sm text-slate-300 font-medium">
-                    {sessionStatus === 'active' ? 'Waiting for students to scan the QR code...' : 'Start the session to begin tracking attendance'}
-                  </p>
-                </div>
+                <EmptyState
+                  icon={<Users size={28} />}
+                  title="No Students Yet"
+                  subtitle={sessionStatus === 'active' ? 'Waiting for students to scan the QR code...' : 'Start the session to begin tracking attendance'}
+                />
               ) : (
                 <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                   <table className="w-full">

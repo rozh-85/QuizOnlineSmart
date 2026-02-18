@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { classService } from '../../services/supabaseService';
 import toast from 'react-hot-toast';
+import { PageHeader, EmptyState, DataTable, FormField } from '../../components/ui';
 
 const ClassManager = () => {
   const [classes, setClasses] = useState<any[]>([]);
@@ -158,25 +159,20 @@ const ClassManager = () => {
   return (
     <div className="animate-fade-in w-full">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Classes.</h1>
-            <div className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest border border-slate-200">
-              Groups
-            </div>
-          </div>
-          <p className="text-sm text-slate-400 font-medium">Manage classes and student enrollment</p>
-        </div>
-        
-        <button
-          onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-md shadow-primary-200 transition-all active:scale-95 text-sm"
-        >
-          <Plus size={18} />
-          New Class
-        </button>
-      </div>
+      <PageHeader
+        title="Classes."
+        badge="Groups"
+        subtitle="Manage classes and student enrollment"
+        action={
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-md shadow-primary-200 transition-all active:scale-95 text-sm"
+          >
+            <Plus size={18} />
+            New Class
+          </button>
+        }
+      />
 
       {/* Class Selector */}
       <div className="mb-6">
@@ -198,13 +194,11 @@ const ClassManager = () => {
 
       {/* Content Area */}
       {!selectedClassId ? (
-        <div className="bg-white rounded-2xl border-2 border-dashed border-slate-200 py-20 flex flex-col items-center justify-center text-center px-6">
-          <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 mb-4">
-            <Users size={28} />
-          </div>
-          <h3 className="text-lg font-bold text-slate-400 mb-1">No Class Selected</h3>
-          <p className="text-sm text-slate-300 font-medium">Select a class above to manage students</p>
-        </div>
+        <EmptyState
+          icon={<Users size={28} />}
+          title="No Class Selected"
+          subtitle="Select a class above to manage students"
+        />
       ) : (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* Class Info Card */}
@@ -257,81 +251,60 @@ const ClassManager = () => {
           </div>
 
           {/* Students Table */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Student</th>
-                    <th className="px-4 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Serial ID</th>
-                    <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {studentsLoading ? (
-                    Array(3).fill(0).map((_, i) => (
-                      <tr key={i} className="animate-pulse">
-                        <td className="px-6 py-4"><div className="h-8 bg-slate-100 rounded-lg w-40" /></td>
-                        <td className="px-4 py-4"><div className="h-6 bg-slate-100 rounded-lg w-24" /></td>
-                        <td className="px-6 py-4 text-right"><div className="h-8 bg-slate-100 rounded-lg w-20 ml-auto" /></td>
-                      </tr>
-                    ))
-                  ) : students.length === 0 ? (
-                    <tr>
-                      <td colSpan={3} className="px-6 py-16 text-center">
-                        <div className="flex flex-col items-center gap-3">
-                          <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300">
-                            <Users size={24} />
-                          </div>
-                          <span className="font-bold text-sm text-slate-400">No students enrolled yet</span>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : students.map((s) => (
-                    <tr key={s.id} className="hover:bg-slate-50/50 transition-colors group">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-sm">
-                            {s.full_name?.charAt(0)?.toUpperCase()}
-                          </div>
-                          <div>
-                            <div className="font-bold text-slate-900 text-sm">{s.full_name}</div>
-                            <div className="text-[10px] text-slate-400 font-medium">{s.email || `${s.serial_id}@kimya.com`}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <span className="px-3 py-1 bg-slate-100 rounded-lg text-xs font-bold text-slate-700 border border-slate-200">
-                          {s.serial_id || s.email?.split('@')[0] || 'N/A'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex justify-end gap-1">
-                          <button 
-                            onClick={() => {
-                              setMovingStudent(s);
-                              setTargetClassId('');
-                            }}
-                            className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all"
-                            title="Move to another class"
-                          >
-                            <ArrowRightLeft size={15} />
-                          </button>
-                          <button 
-                            onClick={() => handleRemoveStudent(s.id)}
-                            className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
-                            title="Remove from class"
-                          >
-                            <UserMinus size={15} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <DataTable
+            columns={[
+              { label: 'Student' },
+              { label: 'Serial ID' },
+              { label: 'Actions', align: 'right' },
+            ]}
+            loading={studentsLoading}
+            isEmpty={students.length === 0}
+            emptyIcon={<Users size={24} />}
+            emptyText="No students enrolled yet"
+            skeletonRows={3}
+          >
+            {students.map((s) => (
+              <tr key={s.id} className="hover:bg-slate-50/50 transition-colors group">
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                      {s.full_name?.charAt(0)?.toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="font-bold text-slate-900 text-sm">{s.full_name}</div>
+                      <div className="text-[10px] text-slate-400 font-medium">{s.email || `${s.serial_id}@kimya.com`}</div>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-4 py-4">
+                  <span className="px-3 py-1 bg-slate-100 rounded-lg text-xs font-bold text-slate-700 border border-slate-200">
+                    {s.serial_id || s.email?.split('@')[0] || 'N/A'}
+                  </span>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex justify-end gap-1">
+                    <button 
+                      onClick={() => {
+                        setMovingStudent(s);
+                        setTargetClassId('');
+                      }}
+                      className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all"
+                      title="Move to another class"
+                    >
+                      <ArrowRightLeft size={15} />
+                    </button>
+                    <button 
+                      onClick={() => handleRemoveStudent(s.id)}
+                      className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                      title="Remove from class"
+                    >
+                      <UserMinus size={15} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </DataTable>
         </div>
       )}
 
@@ -350,8 +323,7 @@ const ClassManager = () => {
             </div>
               
             <form onSubmit={handleCreateClass} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500">Class Name</label>
+              <FormField label="Class Name">
                 <input
                   autoFocus
                   type="text"
@@ -361,7 +333,7 @@ const ClassManager = () => {
                   value={newClassName}
                   onChange={(e) => setNewClassName(e.target.value)}
                 />
-              </div>
+              </FormField>
               
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setIsCreateModalOpen(false)} className="flex-1 py-3 text-slate-500 font-bold text-sm hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-colors">
@@ -400,15 +372,13 @@ const ClassManager = () => {
             </div>
 
             <form onSubmit={handleMoveStudent} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500">Current Class</label>
+              <FormField label="Current Class">
                 <div className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-400 text-sm select-none">
                   {selectedClass?.name}
                 </div>
-              </div>
+              </FormField>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500">Move to</label>
+              <FormField label="Move to">
                 <div className="relative">
                   <select 
                     required
@@ -423,7 +393,7 @@ const ClassManager = () => {
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
                 </div>
-              </div>
+              </FormField>
 
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setMovingStudent(null)} className="flex-1 py-3 text-slate-500 font-bold text-sm hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-colors">

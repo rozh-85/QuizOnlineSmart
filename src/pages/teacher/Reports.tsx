@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { classService, lectureService, studentService, reportService } from '../../services/supabaseService';
 import toast from 'react-hot-toast';
+import { PageHeader, FormField, EmptyState } from '../../components/ui';
 
 const Reports = () => {
   // Filter states
@@ -251,26 +252,22 @@ const Reports = () => {
   return (
     <div className="animate-fade-in w-full">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Reports.</h1>
-            <div className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest border border-slate-200">
-              Analytics
-            </div>
-          </div>
-          <p className="text-sm text-slate-400 font-medium">View attendance reports and analytics</p>
-        </div>
-        {hasActiveFilters && (
-          <button
-            onClick={clearFilters}
-            className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 px-4 py-2 rounded-xl border border-slate-200 hover:border-rose-200 transition-all"
-          >
-            <X size={14} />
-            Clear Filters
-          </button>
-        )}
-      </div>
+      <PageHeader
+        title="Reports."
+        badge="Analytics"
+        subtitle="View attendance reports and analytics"
+        action={
+          hasActiveFilters ? (
+            <button
+              onClick={clearFilters}
+              className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 px-4 py-2 rounded-xl border border-slate-200 hover:border-rose-200 transition-all"
+            >
+              <X size={14} />
+              Clear Filters
+            </button>
+          ) : undefined
+        }
+      />
 
       {/* Filters */}
       <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 mb-6">
@@ -330,8 +327,7 @@ const Reports = () => {
           </div>
 
           {/* Date From */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-500">From Date</label>
+          <FormField label="From Date">
             <div className="relative">
               <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input
@@ -341,11 +337,10 @@ const Reports = () => {
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
               />
             </div>
-          </div>
+          </FormField>
 
           {/* Date To */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-500">To Date</label>
+          <FormField label="To Date">
             <div className="relative">
               <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input
@@ -355,11 +350,10 @@ const Reports = () => {
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
               />
             </div>
-          </div>
+          </FormField>
 
           {/* Class */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-500">Class</label>
+          <FormField label="Class">
             <div className="relative">
               <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <select
@@ -374,11 +368,10 @@ const Reports = () => {
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
             </div>
-          </div>
+          </FormField>
 
           {/* Lecture */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-500">Lecture</label>
+          <FormField label="Lecture">
             <div className="relative">
               <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <select
@@ -393,7 +386,7 @@ const Reports = () => {
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
             </div>
-          </div>
+          </FormField>
         </div>
       </div>
 
@@ -446,15 +439,11 @@ const Reports = () => {
         </div>
 
         {sessions.length === 0 && !fetching ? (
-          <div className="bg-white rounded-2xl border-2 border-dashed border-slate-200 py-16 flex flex-col items-center justify-center text-center px-6">
-            <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 mb-4">
-              <BarChart3 size={28} />
-            </div>
-            <h3 className="text-lg font-bold text-slate-400 mb-1">No Sessions Found</h3>
-            <p className="text-sm text-slate-300 font-medium">
-              Adjust your filters or create attendance sessions first
-            </p>
-          </div>
+          <EmptyState
+            icon={<BarChart3 size={28} />}
+            title="No Sessions Found"
+            subtitle="Adjust your filters or create attendance sessions first"
+          />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             {sessions.map((session: any) => {
