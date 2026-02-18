@@ -70,13 +70,29 @@ const Attendance = () => {
   const [showStopModal, setShowStopModal] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Initialize: fetch teacher info + classes
+  // Initialize: fetch teacher info + classes + restore active session
   useEffect(() => {
     const init = async () => {
       try {
         const user = await authService.getCurrentUser();
         if (user) {
           setTeacherId(user.id);
+
+          // Check for an active or pending session to restore
+          const activeSession = await attendanceService.getActiveSessionForTeacher(user.id);
+          if (activeSession) {
+            setSessionId(activeSession.id);
+            setSelectedClassId(activeSession.class_id);
+            if (activeSession.lecture_id) setSelectedLectureId(activeSession.lecture_id);
+
+            if (activeSession.status === 'active') {
+              setSessionStatus('active');
+              setStartedAt(new Date(activeSession.started_at));
+              setQrVisible(true);
+            } else if (activeSession.status === 'pending') {
+              setSessionStatus('pending');
+            }
+          }
         }
         const [cls, lecs] = await Promise.all([
           classService.getAll(),

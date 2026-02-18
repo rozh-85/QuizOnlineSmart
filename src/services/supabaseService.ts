@@ -182,6 +182,22 @@ export const attendanceService = {
       .single();
     if (error) throw error;
     return data;
+  },
+
+  async getActiveSessionForTeacher(teacherId: string): Promise<any | null> {
+    const { data, error } = await supabase
+      .from('attendance_sessions')
+      .select(`
+        *,
+        class:classes(id, name)
+      `)
+      .eq('teacher_id', teacherId)
+      .in('status', ['active', 'pending'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    return data;
   }
 };
 
@@ -1149,7 +1165,8 @@ export const reportService = {
         )
       `)
       .eq('status', 'completed')
-      .order('session_date', { ascending: false });
+      .order('session_date', { ascending: false })
+      .order('started_at', { ascending: false });
 
     if (filters.classId) query = query.eq('class_id', filters.classId);
     if (filters.lectureId) query = query.eq('lecture_id', filters.lectureId);
