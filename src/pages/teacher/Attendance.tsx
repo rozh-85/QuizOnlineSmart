@@ -11,11 +11,12 @@ import {
   Users,
   QrCode,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  GraduationCap
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { supabase } from '../../lib/supabase';
-import { classService, attendanceService, authService } from '../../services/supabaseService';
+import { classService, attendanceService, authService, lectureService } from '../../services/supabaseService';
 import toast from 'react-hot-toast';
 
 type SessionStatus = 'idle' | 'pending' | 'active' | 'completed';
@@ -40,7 +41,9 @@ interface AttendanceRecord {
 const Attendance = () => {
   // Core state
   const [classes, setClasses] = useState<any[]>([]);
+  const [lectures, setLectures] = useState<any[]>([]);
   const [selectedClassId, setSelectedClassId] = useState('');
+  const [selectedLectureId, setSelectedLectureId] = useState('');
   const [sessionDate, setSessionDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(true);
   const [teacherId, setTeacherId] = useState<string | null>(null);
@@ -71,8 +74,12 @@ const Attendance = () => {
         if (user) {
           setTeacherId(user.id);
         }
-        const cls = await classService.getAll();
+        const [cls, lecs] = await Promise.all([
+          classService.getAll(),
+          lectureService.getAll()
+        ]);
         setClasses(cls);
+        setLectures(lecs);
       } catch (e) {
         toast.error('Failed to load data');
       } finally {
@@ -196,7 +203,7 @@ const Attendance = () => {
       return;
     }
     try {
-      const session = await attendanceService.createSession(selectedClassId, teacherId, sessionDate);
+      const session = await attendanceService.createSession(selectedClassId, teacherId, sessionDate, selectedLectureId || undefined);
       setSessionId(session.id);
       setSessionStatus('pending');
       toast.success('Session created. Click Start to begin.');
@@ -312,6 +319,25 @@ const Attendance = () => {
                 onChange={(e) => setSessionDate(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
               />
+            </div>
+          </div>
+
+          {/* Lecture Selector (Optional) */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-500">Lecture <span className="text-slate-300">(optional)</span></label>
+            <div className="relative">
+              <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <select
+                value={selectedLectureId}
+                onChange={(e) => setSelectedLectureId(e.target.value)}
+                className="w-full pl-10 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 appearance-none cursor-pointer text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
+              >
+                <option value="">No lecture</option>
+                {lectures.map(l => (
+                  <option key={l.id} value={l.id}>{l.title}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
             </div>
           </div>
 

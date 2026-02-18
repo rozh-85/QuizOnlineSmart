@@ -11,6 +11,7 @@ import QuestionEditor from './pages/teacher/QuestionEditor';
 import AIGenerator from './pages/teacher/AIGenerator';
 import ExamBuilder from './pages/teacher/ExamBuilder';
 import Attendance from './pages/teacher/Attendance';
+import Reports from './pages/teacher/Reports';
 import AttendanceScan from './pages/student/AttendanceScan';
 import LectureManager from './pages/teacher/LectureManager';
 import MaterialsManager from './pages/teacher/MaterialsManager';
@@ -115,6 +116,10 @@ function App() {
             <Route 
               path="/admin/attendance" 
               element={<AdminLayout><ProtectedRoute allowedRoles={['teacher', 'admin']}><Attendance /></ProtectedRoute></AdminLayout>} 
+            />
+            <Route 
+              path="/admin/reports" 
+              element={<AdminLayout><ProtectedRoute allowedRoles={['teacher', 'admin']}><Reports /></ProtectedRoute></AdminLayout>} 
             />
 
             {/* Student Attendance Scan */}
