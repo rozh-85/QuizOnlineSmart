@@ -1,6 +1,7 @@
-import { FileText, File, Link as LinkIcon, ChevronRight } from 'lucide-react';
+import { FileText, Link as LinkIcon, ChevronRight } from 'lucide-react';
 import { Card } from './ui';
 import { Material } from '../types';
+import MaterialFileIcon from './MaterialFileIcon';
 
 interface MaterialsViewProps {
   materials: Material[];
@@ -25,12 +26,7 @@ const MaterialsView = ({ materials }: MaterialsViewProps) => {
         {materials.map((material) => (
           <Card key={material.id} className="p-5 hover:bg-slate-50 transition-all border-slate-100 group">
             <div className="flex items-start gap-4">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                material.fileType === 'note' ? 'bg-amber-50 text-amber-600' : 
-                material.fileType === 'pdf' ? 'bg-rose-50 text-rose-600' : 'bg-blue-50 text-blue-600'
-              }`}>
-                {material.fileType === 'note' ? <FileText size={20} /> : <File size={20} />}
-              </div>
+              <MaterialFileIcon fileType={material.fileType} className="w-10 h-10 shrink-0" iconSize={20} />
               <div className="flex-1 min-w-0">
                 <h3 className="font-bold text-slate-900 group-hover:text-primary-600 transition-colors truncate">
                   {material.title}

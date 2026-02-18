@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { 
   Plus, 
-  Search, 
   User, 
   Smartphone, 
   Link as LinkIcon, 
@@ -22,7 +21,7 @@ import {
 } from 'lucide-react';
 import { studentService, classService } from '../../services/supabaseService';
 import toast from 'react-hot-toast';
-import { Select } from '../../components/ui';
+import { Select, PageHeader, SearchInput, StatCard, DataTable, ConfirmDialog, FormField } from '../../components/ui';
 
 const StudentManager = () => {
   const [students, setStudents] = useState<any[]>([]);
@@ -223,38 +222,29 @@ const StudentManager = () => {
   return (
     <div className="animate-fade-in w-full">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Students.</h1>
-            <div className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-widest border border-slate-200">
-              Directory
-            </div>
-          </div>
-          <p className="text-sm text-slate-400 font-medium">Manage student accounts and access control</p>
-        </div>
-        
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-md shadow-primary-200 transition-all active:scale-95 text-sm"
-        >
-          <Plus size={18} />
-          New Student
-        </button>
-      </div>
+      <PageHeader
+        title="Students."
+        badge="Directory"
+        subtitle="Manage student accounts and access control"
+        action={
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-md shadow-primary-200 transition-all active:scale-95 text-sm"
+          >
+            <Plus size={18} />
+            New Student
+          </button>
+        }
+      />
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-          <input
-            type="text"
-            placeholder="Search students..."
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl outline-none font-bold text-slate-700 text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all placeholder:text-slate-300 shadow-sm"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+        <SearchInput
+          containerClassName="flex-1 max-w-sm"
+          placeholder="Search students..."
+          value={searchQuery}
+          onChange={setSearchQuery}
+        />
 
         <Select
           containerClassName="flex-1 max-w-xs"
@@ -282,155 +272,118 @@ const StudentManager = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-2">
-            <div className="p-2 rounded-xl bg-blue-50">
-              <User size={14} className="text-blue-500" />
-            </div>
-            <div className="text-2xl font-black text-slate-900 leading-none">{students.length}</div>
-          </div>
-          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-            {selectedClassId === 'all' ? 'Total Students' : 'In Class'}
-          </div>
-        </div>
-        
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-2">
-            <div className="p-2 rounded-xl bg-rose-50">
-              <Smartphone size={14} className="text-rose-500" />
-            </div>
-            <div className="text-2xl font-black text-slate-900 leading-none">
-              {students.filter(s => s.device_lock_active).length}
-            </div>
-          </div>
-          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Locked Devices</div>
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-2">
-            <div className="p-2 rounded-xl bg-emerald-50">
-              <ShieldCheck size={14} className="text-emerald-500" />
-            </div>
-            <div className="text-2xl font-black text-slate-900 leading-none">{classes.length}</div>
-          </div>
-          <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Classes</div>
-        </div>
+        <StatCard
+          icon={<User size={14} className="text-blue-500" />}
+          value={students.length}
+          label={selectedClassId === 'all' ? 'Total Students' : 'In Class'}
+          color="bg-blue-50"
+        />
+        <StatCard
+          icon={<Smartphone size={14} className="text-rose-500" />}
+          value={students.filter(s => s.device_lock_active).length}
+          label="Locked Devices"
+          color="bg-rose-50"
+        />
+        <StatCard
+          icon={<ShieldCheck size={14} className="text-emerald-500" />}
+          value={classes.length}
+          label="Classes"
+          color="bg-emerald-50"
+        />
       </div>
 
       {/* Student List */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-200">
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">Student</th>
-                <th className="px-4 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Serial ID</th>
-                <th className="px-4 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">Device</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {loading && students.length === 0 ? (
-                Array(4).fill(0).map((_, i) => (
-                  <tr key={i} className="animate-pulse">
-                    <td className="px-6 py-4"><div className="h-8 bg-slate-100 rounded-lg w-40" /></td>
-                    <td className="px-4 py-4 text-center"><div className="h-6 bg-slate-100 rounded-lg w-20 mx-auto" /></td>
-                    <td className="px-4 py-4 text-center"><div className="w-3 h-3 bg-slate-100 rounded-full mx-auto" /></td>
-                    <td className="px-6 py-4 text-right"><div className="h-8 bg-slate-100 rounded-lg w-28 ml-auto" /></td>
-                  </tr>
-                ))
-              ) : filteredStudents.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-6 py-20 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300">
-                        <Users size={28} />
-                      </div>
-                      <span className="font-bold text-sm text-slate-400">No students found</span>
-                    </div>
-                  </td>
-                </tr>
-              ) : filteredStudents.map((s) => (
-                <tr key={s.id} className="hover:bg-slate-50/50 transition-colors group">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-sm">
-                        {s.full_name?.charAt(0)?.toUpperCase()}
-                      </div>
-                      <div>
-                        <div className="font-bold text-slate-900 text-sm">{s.full_name}</div>
-                        <div className="text-[10px] text-slate-400 font-medium">{s.email || `${s.serial_id}@kimya.com`}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 text-center">
-                    <span className="px-3 py-1 bg-slate-100 rounded-lg text-xs font-bold text-slate-700 border border-slate-200">
-                      {s.serial_id || 'N/A'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="flex justify-center">
-                      <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase ${
-                        s.device_lock_active 
-                          ? 'bg-rose-50 text-rose-600 border border-rose-100' 
-                          : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                      }`}>
-                        <div className={`w-1.5 h-1.5 rounded-full ${s.device_lock_active ? 'bg-rose-500' : 'bg-emerald-500'}`} />
-                        {s.device_lock_active ? 'Locked' : 'Free'}
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex justify-end gap-1">
-                      {selectedClassId !== 'all' && (
-                        <button 
-                          onClick={() => handleRemoveFromClass(s.id)}
-                          className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
-                          title="Remove from class"
-                        >
-                          <UserMinus size={15} />
-                        </button>
-                      )}
-                      <button 
-                        onClick={() => {
-                          setSelectedStudent(s);
-                          setIsViewInfoOpen(true);
-                        }}
-                        className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
-                        title="View details"
-                      >
-                        <Info size={15} />
-                      </button>
-                      <button 
-                        onClick={() => { setSelectedStudent(s); setIsAssignModalOpen(true); }}
-                        className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all"
-                        title="Assign to class"
-                      >
-                        <LinkIcon size={15} />
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteStudent(s)}
-                        className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
-                        title="Delete student"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                      <button 
-                        onClick={() => handleResetDevice(s)}
-                        disabled={!s.device_lock_active}
-                        className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all disabled:opacity-30 disabled:pointer-events-none"
-                        title="Reset device"
-                      >
-                        <SmartphoneNfc size={15} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <DataTable
+        columns={[
+          { label: 'Student' },
+          { label: 'Serial ID', align: 'center' },
+          { label: 'Device', align: 'center' },
+          { label: 'Actions', align: 'right' },
+        ]}
+        loading={loading && students.length === 0}
+        isEmpty={filteredStudents.length === 0}
+        emptyIcon={<Users size={28} />}
+        emptyText="No students found"
+        skeletonRows={4}
+      >
+        {filteredStudents.map((s) => (
+          <tr key={s.id} className="hover:bg-slate-50/50 transition-colors group">
+            <td className="px-6 py-4">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                  {s.full_name?.charAt(0)?.toUpperCase()}
+                </div>
+                <div>
+                  <div className="font-bold text-slate-900 text-sm">{s.full_name}</div>
+                  <div className="text-[10px] text-slate-400 font-medium">{s.email || `${s.serial_id}@kimya.com`}</div>
+                </div>
+              </div>
+            </td>
+            <td className="px-4 py-4 text-center">
+              <span className="px-3 py-1 bg-slate-100 rounded-lg text-xs font-bold text-slate-700 border border-slate-200">
+                {s.serial_id || 'N/A'}
+              </span>
+            </td>
+            <td className="px-4 py-4">
+              <div className="flex justify-center">
+                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase ${
+                  s.device_lock_active 
+                    ? 'bg-rose-50 text-rose-600 border border-rose-100' 
+                    : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
+                }`}>
+                  <div className={`w-1.5 h-1.5 rounded-full ${s.device_lock_active ? 'bg-rose-500' : 'bg-emerald-500'}`} />
+                  {s.device_lock_active ? 'Locked' : 'Free'}
+                </div>
+              </div>
+            </td>
+            <td className="px-6 py-4">
+              <div className="flex justify-end gap-1">
+                {selectedClassId !== 'all' && (
+                  <button 
+                    onClick={() => handleRemoveFromClass(s.id)}
+                    className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                    title="Remove from class"
+                  >
+                    <UserMinus size={15} />
+                  </button>
+                )}
+                <button 
+                  onClick={() => {
+                    setSelectedStudent(s);
+                    setIsViewInfoOpen(true);
+                  }}
+                  className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+                  title="View details"
+                >
+                  <Info size={15} />
+                </button>
+                <button 
+                  onClick={() => { setSelectedStudent(s); setIsAssignModalOpen(true); }}
+                  className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all"
+                  title="Assign to class"
+                >
+                  <LinkIcon size={15} />
+                </button>
+                <button 
+                  onClick={() => handleDeleteStudent(s)}
+                  className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+                  title="Delete student"
+                >
+                  <Trash2 size={15} />
+                </button>
+                <button 
+                  onClick={() => handleResetDevice(s)}
+                  disabled={!s.device_lock_active}
+                  className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-all disabled:opacity-30 disabled:pointer-events-none"
+                  title="Reset device"
+                >
+                  <SmartphoneNfc size={15} />
+                </button>
+              </div>
+            </td>
+          </tr>
+        ))}
+      </DataTable>
 
       {/* Create Student Modal */}
       {isModalOpen && (
@@ -447,8 +400,7 @@ const StudentManager = () => {
             </div>
              
             <form onSubmit={handleCreateStudent} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500">Full Name</label>
+              <FormField label="Full Name">
                 <input
                   type="text"
                   required
@@ -457,11 +409,10 @@ const StudentManager = () => {
                   value={newStudent.fullName}
                   onChange={(e) => handleNameChange(e.target.value)}
                 />
-              </div>
+              </FormField>
               
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500">Serial ID</label>
+                <FormField label="Serial ID">
                   <div className="relative">
                     <AtSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
@@ -473,9 +424,8 @@ const StudentManager = () => {
                       onChange={(e) => setNewStudent({...newStudent, serialId: e.target.value.toLowerCase()})}
                     />
                   </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500">PIN</label>
+                </FormField>
+                <FormField label="PIN">
                   <input
                     type="password"
                     required
@@ -484,11 +434,10 @@ const StudentManager = () => {
                     value={newStudent.pin}
                     onChange={(e) => setNewStudent({...newStudent, pin: e.target.value})}
                   />
-                </div>
+                </FormField>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500">Assign to Class (optional)</label>
+              <FormField label="Assign to Class (optional)">
                 <div className="relative">
                   <select
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:border-primary-500 focus:bg-white rounded-xl outline-none font-medium text-slate-700 appearance-none cursor-pointer text-sm transition-all focus:ring-4 focus:ring-primary-50"
@@ -502,7 +451,7 @@ const StudentManager = () => {
                   </select>
                   <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400" size={14} />
                 </div>
-              </div>
+              </FormField>
 
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 text-slate-500 font-bold text-sm hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-colors">
@@ -655,72 +604,31 @@ const StudentManager = () => {
       )}
 
       {/* Reset Device Lock Confirmation Modal */}
-      {isResetDeviceOpen && studentToReset && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[150] p-4">
-          <div className="bg-white w-full max-w-[340px] rounded-[2rem] shadow-2xl p-8 animate-scale-in text-center">
-            <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-6">
-              <Unlock size={32} />
-            </div>
-            
-            <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2">Reset Device Lock?</h3>
-            <p className="text-xs text-slate-400 font-bold leading-relaxed mb-8 px-2">
-              This will unlock the device for <span className="text-slate-900 font-black">{studentToReset.full_name}</span> and allow them to log in from a different device.
-            </p>
-
-            <div className="grid grid-cols-1 gap-3">
-              <button
-                onClick={confirmResetDevice}
-                className="w-full py-4 bg-amber-600 text-white font-black rounded-2xl text-sm transition-all active:scale-95 hover:bg-amber-700 shadow-xl shadow-amber-100"
-              >
-                Yes, Reset Lock
-              </button>
-              <button
-                onClick={() => {
-                  setIsResetDeviceOpen(false);
-                  setStudentToReset(null);
-                }}
-                className="w-full py-3 text-slate-400 hover:text-slate-900 font-black text-sm transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={isResetDeviceOpen && !!studentToReset}
+        onClose={() => { setIsResetDeviceOpen(false); setStudentToReset(null); }}
+        onConfirm={confirmResetDevice}
+        icon={<Unlock size={32} />}
+        iconBg="bg-amber-50 text-amber-600"
+        title="Reset Device Lock?"
+        message={<>This will unlock the device for <span className="text-slate-900 font-black">{studentToReset?.full_name}</span> and allow them to log in from a different device.</>}
+        confirmLabel="Yes, Reset Lock"
+        confirmColor="amber"
+      />
 
       {/* Delete Confirmation Modal */}
-      {isDeleteConfirmOpen && studentToDelete && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-[150] p-4">
-          <div className="bg-white w-full max-w-[340px] rounded-[2rem] shadow-2xl p-8 animate-scale-in text-center">
-            <div className="w-16 h-16 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto mb-6">
-              <Trash2 size={32} />
-            </div>
-            
-            <h3 className="text-xl font-black text-slate-900 tracking-tight mb-2">Are you sure?</h3>
-            <p className="text-xs text-slate-400 font-bold leading-relaxed mb-8 px-2">
-              You are about to delete <span className="text-slate-900 font-black">{studentToDelete.full_name}</span>. This action cannot be undone and all data will be lost.
-            </p>
-
-            <div className="grid grid-cols-1 gap-3">
-              <button
-                onClick={confirmDelete}
-                className="w-full py-4 bg-rose-600 text-white font-black rounded-2xl text-sm transition-all active:scale-95 hover:bg-rose-700 shadow-xl shadow-rose-100"
-              >
-                Yes, Delete Student
-              </button>
-              <button
-                onClick={() => {
-                  setIsDeleteConfirmOpen(false);
-                  setStudentToDelete(null);
-                }}
-                className="w-full py-3 text-slate-400 hover:text-slate-900 font-black text-sm transition-colors"
-              >
-                No, Keep it
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={isDeleteConfirmOpen && !!studentToDelete}
+        onClose={() => { setIsDeleteConfirmOpen(false); setStudentToDelete(null); }}
+        onConfirm={confirmDelete}
+        icon={<Trash2 size={32} />}
+        iconBg="bg-rose-50 text-rose-500"
+        title="Are you sure?"
+        message={<>You are about to delete <span className="text-slate-900 font-black">{studentToDelete?.full_name}</span>. This action cannot be undone and all data will be lost.</>}
+        confirmLabel="Yes, Delete Student"
+        cancelLabel="No, Keep it"
+        confirmColor="rose"
+      />
     </div>
   );
 };

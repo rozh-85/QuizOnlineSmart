@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Plus, Edit2, Trash2, FileText, Upload, Link as LinkIcon, File } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Button, Card, Modal, Input, TextArea } from '../../components/ui';
+import MaterialFileIcon from '../../components/MaterialFileIcon';
 import { useQuiz } from '../../context/QuizContext';
 import { materialService } from '../../services/supabaseService';
 import { Material, MaterialFileType } from '../../types';
@@ -125,12 +126,7 @@ const MaterialsManager = () => {
         {materials.map((material) => (
           <Card key={material.id} className="p-6 hover:shadow-lg transition-all group border-slate-100">
             <div className="flex items-start justify-between mb-4">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-sm ${
-                material.fileType === 'note' ? 'bg-amber-50 text-amber-600' : 
-                material.fileType === 'pdf' ? 'bg-rose-50 text-rose-600' : 'bg-blue-50 text-blue-600'
-              }`}>
-                {material.fileType === 'note' ? <FileText size={24} /> : <File size={24} />}
-              </div>
+              <MaterialFileIcon fileType={material.fileType} className="w-12 h-12 shadow-sm" iconSize={24} />
               <div className="flex gap-1">
                 <button 
                   onClick={() => handleOpenModal(material)}
