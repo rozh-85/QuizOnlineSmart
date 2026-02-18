@@ -184,8 +184,8 @@ const ClassManager = () => {
           <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
           <select 
             value={selectedClassId}
-            onChange={(e) => setSelectedClassId(e.target.value)}
-            className="w-full pl-10 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl outline-none font-bold text-slate-700 appearance-none cursor-pointer text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all shadow-sm"
+            onChange={(e) => { setSelectedClassId(e.target.value); e.target.blur(); }}
+            className="w-full pl-10 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl outline-none focus:outline-none font-bold text-slate-700 appearance-none cursor-pointer text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all shadow-sm"
           >
             <option value="">Select a class...</option>
             {classes.map(c => (

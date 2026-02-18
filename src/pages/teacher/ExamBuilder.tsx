@@ -18,6 +18,8 @@ import {
   GraduationCap,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   Hash,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -173,6 +175,8 @@ const ExamBuilder = () => {
   const [selectedSection, setSelectedSection] = useState('');
   const [selectedType, setSelectedType] = useState<QuestionType | ''>('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const QUESTIONS_PER_PAGE = 10;
 
   // Selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -275,6 +279,11 @@ const ExamBuilder = () => {
     return true;
   });
 
+  // Reset page when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [lectureFilterOn, selectedLecture, sectionFilterOn, selectedSection, typeFilterOn, selectedType, searchQuery]);
+
   // Sections for selected lecture
   const currentLecture = lectures.find(l => l.id === selectedLecture);
   const sections = currentLecture?.sections || [];
@@ -313,6 +322,14 @@ const ExamBuilder = () => {
   });
 
   const allFilteredSelected = filteredQuestions.length > 0 && filteredQuestions.every(q => selectedIds.has(q.id));
+
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(filteredQuestions.length / QUESTIONS_PER_PAGE));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const paginatedQuestions = filteredQuestions.slice(
+    (safeCurrentPage - 1) * QUESTIONS_PER_PAGE,
+    safeCurrentPage * QUESTIONS_PER_PAGE
+  );
 
   // Generate PDF
   const generatePDF = () => {
@@ -755,7 +772,7 @@ const ExamBuilder = () => {
                 <p className="text-xs text-slate-300 mt-1">Try adjusting your filters or search query</p>
               </Card>
             ) : (
-              filteredQuestions.map((q) => {
+              paginatedQuestions.map((q) => {
                 const isSelected = selectedIds.has(q.id);
                 const lectureName = lectures.find(l => l.id === q.lectureId)?.title;
                 return (
@@ -814,9 +831,42 @@ const ExamBuilder = () => {
           </div>
 
           {filteredQuestions.length > 0 && (
-            <p className="text-center text-[10px] font-bold text-slate-300 uppercase tracking-widest py-2">
-              {filteredQuestions.length} question{filteredQuestions.length !== 1 ? 's' : ''} shown
-            </p>
+            <div className="flex flex-col items-center gap-2 py-2">
+              <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+                Showing {(safeCurrentPage - 1) * QUESTIONS_PER_PAGE + 1}–{Math.min(safeCurrentPage * QUESTIONS_PER_PAGE, filteredQuestions.length)} of {filteredQuestions.length} question{filteredQuestions.length !== 1 ? 's' : ''}
+              </p>
+              {totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={safeCurrentPage <= 1}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg border-2 border-slate-100 text-slate-400 hover:border-primary-200 hover:text-primary-600 transition-all disabled:opacity-30 disabled:cursor-not-allowed bg-white"
+                  >
+                    <ChevronLeft size={14} />
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${
+                        page === safeCurrentPage
+                          ? 'bg-primary-600 text-white shadow-sm'
+                          : 'border-2 border-slate-100 text-slate-500 hover:border-primary-200 hover:text-primary-600 bg-white'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={safeCurrentPage >= totalPages}
+                    className="w-8 h-8 flex items-center justify-center rounded-lg border-2 border-slate-100 text-slate-400 hover:border-primary-200 hover:text-primary-600 transition-all disabled:opacity-30 disabled:cursor-not-allowed bg-white"
+                  >
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
