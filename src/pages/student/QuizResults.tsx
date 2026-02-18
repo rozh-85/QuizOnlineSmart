@@ -34,7 +34,7 @@ const QuizResults = () => {
   const grade = getGrade();
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto px-4 lg:px-6 xl:px-10 py-4 lg:py-8 animate-fade-in">
+    <div className="w-full max-w-[1600px] mx-auto px-4 lg:px-6 xl:px-10 py-4 pb-8 lg:py-8 animate-fade-in">
       <div className="flex flex-col lg:flex-row gap-6">
         
         {/* LEFT COLUMN: Performance Metrics */}

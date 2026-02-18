@@ -1,8 +1,8 @@
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { QuizProvider } from './context/QuizContext';
-import Layout from './components/Layout';
 import AdminLayout from './components/AdminLayout';
+import StudentLayoutWrapper from './components/StudentLayoutWrapper';
 import Login from './pages/Login';
 import TeacherDashboard from './pages/teacher/Dashboard';
 import ClassManager from './pages/teacher/ClassManager';
@@ -17,6 +17,10 @@ import LectureManager from './pages/teacher/LectureManager';
 import MaterialsManager from './pages/teacher/MaterialsManager';
 import QAManager from './pages/teacher/QAManager';
 import StudentDashboard from './pages/student/StudentDashboard';
+import StudentNews from './pages/student/StudentNews';
+import StudentQRScan from './pages/student/StudentQRScan';
+import StudentNotifications from './pages/student/StudentNotifications';
+import StudentProfile from './pages/student/StudentProfile';
 import LectureDetail from './pages/student/LectureDetail';
 import QuizStart from './pages/student/QuizStart';
 import QuizQuestion from './pages/student/QuizQuestion';
@@ -46,30 +50,46 @@ function App() {
             <Route path="/login" element={<Login mode="student" />} />
             <Route path="/admin/login" element={<Login mode="teacher" />} />
             
-            {/* Student Routes */}
+            {/* Student Routes with StudentLayout */}
             <Route 
               path="/dashboard" 
-              element={<ProtectedRoute allowedRoles={['student']}><StudentDashboard /></ProtectedRoute>} 
+              element={<ProtectedRoute allowedRoles={['student']}><StudentLayoutWrapper><StudentDashboard /></StudentLayoutWrapper></ProtectedRoute>} 
+            />
+            <Route 
+              path="/news" 
+              element={<ProtectedRoute allowedRoles={['student']}><StudentLayoutWrapper><StudentNews /></StudentLayoutWrapper></ProtectedRoute>} 
+            />
+            <Route 
+              path="/scan" 
+              element={<ProtectedRoute allowedRoles={['student']}><StudentLayoutWrapper><StudentQRScan /></StudentLayoutWrapper></ProtectedRoute>} 
+            />
+            <Route 
+              path="/notifications" 
+              element={<ProtectedRoute allowedRoles={['student']}><StudentLayoutWrapper><StudentNotifications /></StudentLayoutWrapper></ProtectedRoute>} 
+            />
+            <Route 
+              path="/profile" 
+              element={<ProtectedRoute allowedRoles={['student']}><StudentLayoutWrapper><StudentProfile /></StudentLayoutWrapper></ProtectedRoute>} 
             />
             <Route 
               path="/lecture/:id" 
-              element={<ProtectedRoute allowedRoles={['student']}><LectureDetail /></ProtectedRoute>} 
+              element={<ProtectedRoute allowedRoles={['student']}><StudentLayoutWrapper><LectureDetail /></StudentLayoutWrapper></ProtectedRoute>} 
             />
             <Route 
               path="/quiz" 
-              element={<ProtectedRoute allowedRoles={['student']}><QuizStart /></ProtectedRoute>} 
+              element={<ProtectedRoute allowedRoles={['student']}><StudentLayoutWrapper><QuizStart /></StudentLayoutWrapper></ProtectedRoute>} 
             />
             <Route 
               path="/quiz/:lectureId" 
-              element={<ProtectedRoute allowedRoles={['student']}><QuizStart /></ProtectedRoute>} 
+              element={<ProtectedRoute allowedRoles={['student']}><StudentLayoutWrapper><QuizStart /></StudentLayoutWrapper></ProtectedRoute>} 
             />
             <Route 
               path="/quiz/question" 
-              element={<ProtectedRoute allowedRoles={['student']}><Layout><QuizQuestion /></Layout></ProtectedRoute>} 
+              element={<ProtectedRoute allowedRoles={['student']}><StudentLayoutWrapper><QuizQuestion /></StudentLayoutWrapper></ProtectedRoute>} 
             />
             <Route 
               path="/quiz/results" 
-              element={<ProtectedRoute allowedRoles={['student']}><Layout><QuizResults /></Layout></ProtectedRoute>} 
+              element={<ProtectedRoute allowedRoles={['student']}><StudentLayoutWrapper><QuizResults /></StudentLayoutWrapper></ProtectedRoute>} 
             />
             
             {/* Admin Routes with Admin Layout */}

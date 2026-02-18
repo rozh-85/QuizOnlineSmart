@@ -42,7 +42,7 @@ const QuizStart = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 pt-4 pb-12 sm:pt-6 sm:pb-20 animate-fade-in">
+    <div className="max-w-6xl mx-auto px-4 pt-4 pb-24 sm:pt-6 sm:pb-20 animate-fade-in">
       <div className="flex flex-col gap-6">
         {/* Top Navigation Row */}
         <div className="flex items-center justify-between px-1">
@@ -172,7 +172,7 @@ const QuizStart = () => {
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="md:hidden fixed bottom-6 right-6 h-12 w-12 rounded-full bg-primary-600 text-white shadow-lg hover:bg-primary-700 transition-all duration-300 flex items-center justify-center z-50 animate-fade-in"
+          className="md:hidden fixed bottom-20 sm:bottom-6 right-6 h-12 w-12 rounded-full bg-primary-600 text-white shadow-lg hover:bg-primary-700 transition-all duration-300 flex items-center justify-center z-40 animate-fade-in"
           aria-label="Scroll to top"
         >
           <ArrowUp size={20} />
