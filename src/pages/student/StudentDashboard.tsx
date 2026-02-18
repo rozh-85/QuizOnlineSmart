@@ -38,7 +38,7 @@ const StudentDashboard = () => {
     <div className="animate-fade-in">
       {/* Hero / Greeting */}
       <div className="bg-gradient-to-br from-primary-50 via-white to-purple-50/30 px-4 sm:px-6 pt-6 sm:pt-10 pb-8 sm:pb-12">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto">
           {/* Greeting */}
           <div className="mb-6 sm:mb-8">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white shadow-sm border border-primary-100/50 mb-4">
@@ -73,7 +73,7 @@ const StudentDashboard = () => {
       </div>
 
       {/* Lectures Grid */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8" id="lectures-section">
+      <div className="max-w-5xl xl:max-w-6xl 2xl:max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8" id="lectures-section">
         <div className="flex items-center justify-between mb-5 sm:mb-6">
           <div>
             <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">Available Lectures</h2>

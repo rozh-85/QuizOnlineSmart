@@ -80,8 +80,13 @@ const StudentQRScan = () => {
     }
   };
 
+  // Auto-start camera on mount so tapping QR opens scanner immediately
   useEffect(() => {
+    const timer = setTimeout(() => {
+      startScanner();
+    }, 300);
     return () => {
+      clearTimeout(timer);
       stopScanner();
     };
   }, []);
