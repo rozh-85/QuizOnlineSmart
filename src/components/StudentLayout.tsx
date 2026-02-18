@@ -141,6 +141,21 @@ const StudentLayout = ({ children, unreadCount = 0 }: StudentLayoutProps) => {
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.path);
+                const isQR = item.path === '/scan';
+
+                if (isQR) {
+                  return (
+                    <button
+                      key={item.path}
+                      onClick={openQrOverlay}
+                      className="relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all text-primary-600 bg-primary-50 hover:bg-primary-100"
+                    >
+                      <Icon size={16} />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                }
+
                 return (
                   <Link
                     key={item.path}
