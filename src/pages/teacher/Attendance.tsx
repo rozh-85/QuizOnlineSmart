@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import {
-  CalendarDays,
   ChevronDown,
   Play,
   Square,
@@ -12,7 +11,9 @@ import {
   QrCode,
   Loader2,
   AlertCircle,
-  GraduationCap
+  GraduationCap,
+  X,
+  AlertTriangle
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { supabase } from '../../lib/supabase';
@@ -44,7 +45,7 @@ const Attendance = () => {
   const [lectures, setLectures] = useState<any[]>([]);
   const [selectedClassId, setSelectedClassId] = useState('');
   const [selectedLectureId, setSelectedLectureId] = useState('');
-  const [sessionDate, setSessionDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const sessionDate = new Date().toISOString().split('T')[0];
   const [loading, setLoading] = useState(true);
   const [teacherId, setTeacherId] = useState<string | null>(null);
 
@@ -64,6 +65,9 @@ const Attendance = () => {
 
   // Attendance records
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
+
+  // Stop modal
+  const [showStopModal, setShowStopModal] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Initialize: fetch teacher info + classes
@@ -228,12 +232,12 @@ const Attendance = () => {
 
   const handleStop = async () => {
     if (!sessionId) return;
-    if (!window.confirm('Stop this session? All student timers will be finalized.')) return;
     try {
       await attendanceService.stopSession(sessionId);
       setSessionStatus('completed');
       setQrVisible(false);
       setCurrentToken(null);
+      setShowStopModal(false);
       if (timerRef.current) clearInterval(timerRef.current);
       if (qrIntervalRef.current) clearInterval(qrIntervalRef.current);
       if (pollRef.current) clearInterval(pollRef.current);
@@ -307,20 +311,6 @@ const Attendance = () => {
       {sessionStatus === 'idle' && (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 space-y-5 max-w-lg">
           <h2 className="text-lg font-black text-slate-900 tracking-tight">Create Attendance Session</h2>
-
-          {/* Date Picker */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-500">Date</label>
-            <div className="relative">
-              <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-              <input
-                type="date"
-                value={sessionDate}
-                onChange={(e) => setSessionDate(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
-              />
-            </div>
-          </div>
 
           {/* Lecture Selector (Optional) */}
           <div className="space-y-1.5">
@@ -436,7 +426,7 @@ const Attendance = () => {
                       {qrVisible ? 'Hide QR' : 'Show QR'}
                     </button>
                     <button
-                      onClick={handleStop}
+                      onClick={() => setShowStopModal(true)}
                       className="flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-md transition-all active:scale-95 text-sm"
                     >
                       <Square size={16} />
@@ -503,7 +493,7 @@ const Attendance = () => {
                 )}
               </div>
 
-              {/* Student Cards Grid */}
+              {/* Student Table */}
               {records.length === 0 ? (
                 <div className="bg-white rounded-2xl border-2 border-dashed border-slate-200 py-16 flex flex-col items-center justify-center text-center px-6">
                   <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 mb-4">
@@ -515,32 +505,117 @@ const Attendance = () => {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                  {records.map((record) => (
-                    <StudentCard
-                      key={record.id}
-                      record={record}
-                      sessionActive={sessionStatus === 'active'}
-                      onKick={() => handleKick(record)}
-                    />
-                  ))}
+                <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-slate-100 bg-slate-50/60">
+                        <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">#</th>
+                        <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">Student</th>
+                        <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">ID</th>
+                        <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">Joined</th>
+                        <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">Duration</th>
+                        <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">Status</th>
+                        {sessionStatus === 'active' && (
+                          <th className="text-right text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">Action</th>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {records.map((record, index) => (
+                        <StudentRow
+                          key={record.id}
+                          record={record}
+                          index={index + 1}
+                          sessionActive={sessionStatus === 'active'}
+                          onKick={() => handleKick(record)}
+                        />
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
           </div>
         </div>
       )}
+      {/* Stop Session Modal */}
+      {showStopModal && (
+        <StopSessionModal
+          onConfirm={handleStop}
+          onCancel={() => setShowStopModal(false)}
+          studentCount={activeRecords.length}
+        />
+      )}
     </div>
   );
 };
 
-// Student Card Component
-const StudentCard = ({
+// Stop Session Modal
+const StopSessionModal = ({
+  onConfirm,
+  onCancel,
+  studentCount
+}: {
+  onConfirm: () => void;
+  onCancel: () => void;
+  studentCount: number;
+}) => {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
+      {/* Modal */}
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 animate-fade-in">
+        <button
+          onClick={onCancel}
+          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
+        >
+          <X size={18} />
+        </button>
+
+        <div className="flex flex-col items-center text-center">
+          <div className="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-600 mb-4">
+            <AlertTriangle size={28} />
+          </div>
+          <h3 className="text-lg font-black text-slate-900 tracking-tight mb-1">Stop Session?</h3>
+          <p className="text-sm text-slate-500 font-medium mb-1">
+            All student timers will be finalized.
+          </p>
+          {studentCount > 0 && (
+            <p className="text-xs text-slate-400">
+              {studentCount} student{studentCount !== 1 ? 's' : ''} currently present
+            </p>
+          )}
+        </div>
+
+        <div className="flex gap-3 mt-6">
+          <button
+            onClick={onCancel}
+            className="flex-1 py-2.5 border border-slate-200 text-slate-700 font-bold rounded-xl text-sm hover:bg-slate-50 transition-all active:scale-95"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-sm shadow-md shadow-rose-200 transition-all active:scale-95"
+          >
+            Stop Session
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Student Row Component
+const StudentRow = ({
   record,
+  index,
   sessionActive,
   onKick
 }: {
   record: AttendanceRecord;
+  index: number;
   sessionActive: boolean;
   onKick: () => void;
 }) => {
@@ -559,7 +634,7 @@ const StudentCard = ({
   const isRemoved = record.status === 'removed';
   const isFinished = !!record.time_left;
 
-  const formatCardTime = (seconds: number): string => {
+  const formatRowTime = (seconds: number): string => {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
@@ -577,70 +652,65 @@ const StudentCard = ({
 
   const joinTime = new Date(record.time_joined).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
+  const durationDisplay = isFinished
+    ? formatHours(record.hours_attended)
+    : sessionActive
+      ? formatRowTime(liveElapsed)
+      : '—';
+
   return (
-    <div className={`bg-white border rounded-2xl p-4 transition-all ${
-      isRemoved ? 'border-rose-200 bg-rose-50/50 opacity-60' : 'border-slate-200 hover:border-slate-300'
+    <tr className={`transition-colors ${
+      isRemoved ? 'bg-rose-50/50 opacity-60' : 'hover:bg-slate-50/60'
     }`}>
-      <div className="flex items-start justify-between gap-2 mb-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shadow-sm shrink-0 ${
+      <td className="px-4 py-3 text-xs font-bold text-slate-400 w-10">{index}</td>
+      <td className="px-4 py-3">
+        <div className="flex items-center gap-3">
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
             isRemoved ? 'bg-rose-200 text-rose-700' : 'bg-slate-900 text-white'
           }`}>
             {record.student.full_name?.charAt(0)?.toUpperCase() || '?'}
           </div>
-          <div className="min-w-0">
-            <div className="font-bold text-slate-900 text-sm truncate">{record.student.full_name}</div>
-            <div className="text-[10px] text-slate-400 font-medium">
-              {record.student.serial_id || record.student.email?.split('@')[0] || 'N/A'}
-            </div>
-          </div>
+          <span className="font-bold text-sm text-slate-900 truncate">{record.student.full_name}</span>
         </div>
-        {!isRemoved && sessionActive && (
-          <button
-            onClick={onKick}
-            className="w-8 h-8 flex items-center justify-center text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all shrink-0"
-            title="Remove student"
-          >
-            <UserX size={15} />
-          </button>
+      </td>
+      <td className="px-4 py-3 text-xs font-medium text-slate-500">
+        {record.student.serial_id || record.student.email?.split('@')[0] || 'N/A'}
+      </td>
+      <td className="px-4 py-3 text-xs font-bold text-slate-700">{joinTime}</td>
+      <td className="px-4 py-3">
+        <span className={`text-xs font-bold font-mono ${
+          isRemoved ? 'text-rose-600' : 'text-emerald-600'
+        }`}>
+          {durationDisplay}
+        </span>
+      </td>
+      <td className="px-4 py-3">
+        {isRemoved ? (
+          <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-rose-600 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-md">
+            <AlertCircle size={10} />
+            Removed
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+            Present
+          </span>
         )}
-      </div>
-
-      <div className="space-y-1.5">
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-400 font-medium">Joined</span>
-          <span className="font-bold text-slate-700">{joinTime}</span>
-        </div>
-        {isFinished ? (
-          <>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400 font-medium">Left</span>
-              <span className="font-bold text-slate-700">
-                {new Date(record.time_left!).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-400 font-medium">Duration</span>
-              <span className={`font-bold ${isRemoved ? 'text-rose-600' : 'text-emerald-600'}`}>
-                {formatHours(record.hours_attended)}
-              </span>
-            </div>
-          </>
-        ) : sessionActive ? (
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-slate-400 font-medium">Duration</span>
-            <span className="font-bold text-emerald-600 font-mono">{formatCardTime(liveElapsed)}</span>
-          </div>
-        ) : null}
-      </div>
-
-      {isRemoved && (
-        <div className="mt-2 flex items-center gap-1.5 text-[10px] text-rose-500 font-bold">
-          <AlertCircle size={12} />
-          Removed
-        </div>
+      </td>
+      {sessionActive && (
+        <td className="px-4 py-3 text-right">
+          {!isRemoved && (
+            <button
+              onClick={onKick}
+              className="inline-flex items-center gap-1 text-xs font-bold text-slate-400 hover:text-rose-600 hover:bg-rose-50 px-2 py-1.5 rounded-lg transition-all"
+              title="Remove student"
+            >
+              <UserX size={14} />
+              Remove
+            </button>
+          )}
+        </td>
       )}
-    </div>
+    </tr>
   );
 };
 
