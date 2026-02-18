@@ -9,7 +9,6 @@ import {
   Clock,
   Users,
   QrCode,
-  Loader2,
   AlertCircle,
   GraduationCap,
   X,
@@ -294,8 +293,27 @@ const Attendance = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="animate-spin text-primary-600" size={32} />
+      <div className="animate-fade-in w-full">
+        {/* Skeleton Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+          <div className="space-y-2">
+            <div className="w-40 h-7 rounded-lg bg-slate-200/60 animate-pulse" />
+            <div className="w-64 h-4 rounded bg-slate-200/60 animate-pulse" />
+          </div>
+        </div>
+        {/* Skeleton Setup Panel */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-5 max-w-lg animate-pulse">
+          <div className="w-56 h-6 rounded bg-slate-200/60" />
+          <div className="space-y-3">
+            <div className="w-20 h-3 rounded bg-slate-200/60" />
+            <div className="h-11 rounded-xl bg-slate-200/60" />
+          </div>
+          <div className="space-y-3">
+            <div className="w-16 h-3 rounded bg-slate-200/60" />
+            <div className="h-11 rounded-xl bg-slate-200/60" />
+          </div>
+          <div className="h-11 w-40 rounded-xl bg-slate-200/60" />
+        </div>
       </div>
     );
   }

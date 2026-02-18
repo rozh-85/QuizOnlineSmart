@@ -1094,10 +1094,17 @@ export const lectureQAService = {
   },
 
   async getStudentUnreadThreads(studentId: string): Promise<any[]> {
-    // Simple query: just get the threads with lecture title
+    // Single query: fetch threads with lecture title AND latest messages in one go
     const { data, error } = await supabase
       .from('lecture_questions')
-      .select('*, lectures(id, title)')
+      .select(`
+        *,
+        lectures(id, title),
+        messages:lecture_question_messages(
+          message_text, created_at, sender_id,
+          sender:profiles!lecture_question_messages_sender_id_fkey(role)
+        )
+      `)
       .eq('student_id', studentId)
       .eq('is_read_by_student', false)
       .order('updated_at', { ascending: false });
@@ -1114,30 +1121,19 @@ export const lectureQAService = {
       return fallback || [];
     }
     
-    // For each thread, fetch the latest messages with proper sender role
-    const threadsWithMessages = await Promise.all(
-      (data || []).map(async (thread: any) => {
-        const { data: msgs } = await supabase
-          .from('lecture_question_messages')
-          .select('message_text, created_at, sender_id, sender:profiles!lecture_question_messages_sender_id_fkey(role)')
-          .eq('question_id', thread.id)
-          .order('created_at', { ascending: false })
-          .limit(3);
-        
-        return {
-          ...thread,
-          lecture: thread.lectures || { id: thread.lecture_id, title: 'Lecture' },
-          messages: (msgs || []).map((m: any) => ({
-            ...m,
-            // Normalize: put role in both paths so getLastTeacherMessage can find it
-            sender: m.sender || null,
-            profiles: m.sender || null
-          }))
-        };
-      })
-    );
-    
-    return threadsWithMessages;
+    // Normalize the joined data structure
+    return (data || []).map((thread: any) => ({
+      ...thread,
+      lecture: thread.lectures || { id: thread.lecture_id, title: 'Lecture' },
+      messages: (thread.messages || [])
+        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 3)
+        .map((m: any) => ({
+          ...m,
+          sender: m.sender || null,
+          profiles: m.sender || null
+        }))
+    }));
   }
 };
 

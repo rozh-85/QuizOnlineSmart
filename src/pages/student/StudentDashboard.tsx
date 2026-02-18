@@ -8,7 +8,6 @@ import toast from 'react-hot-toast';
 
 const StudentDashboard = () => {
   const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [unreadThreads, setUnreadThreads] = useState<any[]>([]);
@@ -43,7 +42,6 @@ const StudentDashboard = () => {
 
   const fetchProfile = async () => {
     try {
-      setLoading(true);
       const user = await authService.getCurrentUser();
       if (!user) {
         navigate('/login', { replace: true });
@@ -71,8 +69,6 @@ const StudentDashboard = () => {
       return () => { sub.unsubscribe(); };
     } catch (error) {
       console.error('Dashboard fetch error:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -368,11 +364,7 @@ const StudentDashboard = () => {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-            {loading ? (
-              Array(3).fill(0).map((_, i) => (
-                <div key={i} className="h-56 rounded-[2rem] bg-white/60 animate-pulse border border-slate-100" />
-              ))
-            ) : lectures.sort((a, b) => a.order - b.order).map((lecture) => {
+            {lectures.sort((a, b) => a.order - b.order).map((lecture) => {
               const questionCount = getQuestionsByLecture(lecture.id).filter(q => q.isVisible !== false).length;
 
               return (
@@ -410,7 +402,7 @@ const StudentDashboard = () => {
             })}
           </div>
 
-          {lectures.length === 0 && !loading && (
+          {lectures.length === 0 && (
             <div className="text-center py-16 bg-white rounded-[2rem] border border-slate-100">
               <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <BookOpen size={32} className="text-slate-300" />

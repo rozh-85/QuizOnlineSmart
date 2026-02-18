@@ -48,8 +48,59 @@ const LectureDetail = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-primary-100 border-t-primary-600 rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-white pb-20">
+        {/* Skeleton Header */}
+        <div className="bg-white border-b border-slate-100 sticky top-0 z-30">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-slate-200/60 animate-pulse" />
+              <div className="space-y-2">
+                <div className="w-40 h-5 rounded bg-slate-200/60 animate-pulse" />
+                <div className="w-24 h-3 rounded bg-slate-200/60 animate-pulse" />
+              </div>
+            </div>
+            <div className="hidden sm:flex items-center gap-2 p-1 bg-slate-50 rounded-xl">
+              <div className="w-24 h-9 rounded-lg bg-slate-200/60 animate-pulse" />
+              <div className="w-24 h-9 rounded-lg bg-slate-200/60 animate-pulse" />
+            </div>
+          </div>
+        </div>
+        {/* Skeleton Body */}
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-12 space-y-8">
+          <div className="bg-white p-10 sm:p-14 rounded-3xl border border-slate-100 space-y-6 animate-pulse">
+            <div className="w-16 h-16 rounded-2xl bg-slate-200/60" />
+            <div className="w-48 h-7 rounded bg-slate-200/60" />
+            <div className="w-full h-4 rounded bg-slate-200/60" />
+            <div className="w-3/4 h-4 rounded bg-slate-200/60" />
+            <div className="flex gap-10 pt-8 border-t border-slate-50">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-slate-200/60" />
+                <div className="space-y-2">
+                  <div className="w-16 h-3 rounded bg-slate-200/60" />
+                  <div className="w-20 h-4 rounded bg-slate-200/60" />
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-slate-200/60" />
+                <div className="space-y-2">
+                  <div className="w-16 h-3 rounded bg-slate-200/60" />
+                  <div className="w-20 h-4 rounded bg-slate-200/60" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="grid sm:grid-cols-2 gap-5">
+            {[1, 2].map(i => (
+              <div key={i} className="h-20 rounded-2xl bg-white border border-slate-100 animate-pulse p-6 flex items-center gap-5">
+                <div className="w-12 h-12 rounded-xl bg-slate-200/60" />
+                <div className="space-y-2 flex-1">
+                  <div className="w-32 h-4 rounded bg-slate-200/60" />
+                  <div className="w-20 h-3 rounded bg-slate-200/60" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

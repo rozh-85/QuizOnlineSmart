@@ -189,10 +189,34 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-slate-50">
-        <div className="text-center">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary-500 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-slate-600 font-bold">Connecting to Supabase...</p>
+      <div className="min-h-screen bg-slate-50">
+        {/* Skeleton top bar */}
+        <div className="bg-white border-b border-slate-100 h-14 flex items-center px-6 gap-4">
+          <div className="w-8 h-8 rounded-lg bg-slate-200/60 animate-pulse" />
+          <div className="w-24 h-4 rounded bg-slate-200/60 animate-pulse" />
+          <div className="flex-1" />
+          <div className="w-9 h-9 rounded-xl bg-slate-200/60 animate-pulse" />
+        </div>
+        {/* Skeleton body */}
+        <div className="max-w-6xl mx-auto px-6 py-12 space-y-8">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-48 h-6 rounded-lg bg-slate-200/60 animate-pulse" />
+            <div className="w-72 h-10 rounded-lg bg-slate-200/60 animate-pulse" />
+            <div className="w-64 h-4 rounded bg-slate-200/60 animate-pulse" />
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-12">
+            {[1,2,3].map(i => (
+              <div key={i} className="h-56 rounded-[2rem] bg-white border border-slate-100 p-7 space-y-4 animate-pulse">
+                <div className="flex justify-between">
+                  <div className="w-12 h-12 rounded-xl bg-slate-200/60" />
+                  <div className="w-20 h-6 rounded-full bg-slate-200/60" />
+                </div>
+                <div className="w-3/4 h-5 rounded bg-slate-200/60" />
+                <div className="w-full h-4 rounded bg-slate-200/60" />
+                <div className="w-1/2 h-4 rounded bg-slate-200/60" />
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );

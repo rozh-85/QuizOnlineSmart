@@ -190,8 +190,48 @@ const Reports = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="animate-spin text-primary-600" size={32} />
+      <div className="animate-fade-in w-full">
+        {/* Skeleton Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+          <div className="space-y-2">
+            <div className="w-36 h-7 rounded-lg bg-slate-200/60 animate-pulse" />
+            <div className="w-56 h-4 rounded bg-slate-200/60 animate-pulse" />
+          </div>
+        </div>
+        {/* Skeleton Filters */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-11 flex-1 max-w-xs rounded-xl bg-slate-200/60 animate-pulse" />
+          ))}
+        </div>
+        {/* Skeleton Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="bg-white border border-slate-200 rounded-2xl p-5 animate-pulse space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="w-10 h-10 rounded-xl bg-slate-200/60" />
+                <div className="w-12 h-7 rounded bg-slate-200/60" />
+              </div>
+              <div className="w-20 h-3 rounded bg-slate-200/60" />
+            </div>
+          ))}
+        </div>
+        {/* Skeleton Table */}
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+          <div className="bg-slate-50 border-b border-slate-200 px-6 py-4 flex gap-8">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="w-20 h-3 rounded bg-slate-200/60 animate-pulse" />
+            ))}
+          </div>
+          {[1, 2, 3, 4, 5].map(i => (
+            <div key={i} className="px-6 py-4 flex gap-8 border-b border-slate-100 animate-pulse">
+              <div className="w-32 h-4 rounded bg-slate-200/60" />
+              <div className="w-24 h-4 rounded bg-slate-200/60" />
+              <div className="w-20 h-4 rounded bg-slate-200/60" />
+              <div className="w-16 h-4 rounded bg-slate-200/60" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
