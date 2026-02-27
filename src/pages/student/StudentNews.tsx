@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Sparkles, BookOpen, Clock, ArrowRight, Search } from 'lucide-react';
 import { useQuiz } from '../../context/QuizContext';
-import { authService } from '../../services/supabaseService';
+import { authApi } from '../../api/authApi';
 
 const StudentNews = () => {
   const [search, setSearch] = useState('');
@@ -12,7 +12,7 @@ const StudentNews = () => {
   useEffect(() => {
     const init = async () => {
       try {
-        const user = await authService.getCurrentUser();
+        const user = await authApi.getCurrentUser();
         if (!user) { navigate('/login', { replace: true }); return; }
       } catch { /* ignore */ }
     };

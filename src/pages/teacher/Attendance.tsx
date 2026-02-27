@@ -12,7 +12,10 @@ import {
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { supabase } from '../../lib/supabase';
-import { classService, attendanceService, authService, lectureService } from '../../services/supabaseService';
+import { classApi } from '../../api/classApi';
+import { attendanceApi } from '../../api/attendanceApi';
+import { authApi } from '../../api/authApi';
+import { lectureApi } from '../../api/lectureApi';
 import toast from 'react-hot-toast';
 import { PageHeader, FormField, EmptyState } from '../../components/ui';
 import { StopSessionModal, StudentRow } from '../../components/attendance';
@@ -56,12 +59,12 @@ const Attendance = () => {
   useEffect(() => {
     const init = async () => {
       try {
-        const user = await authService.getCurrentUser();
+        const user = await authApi.getCurrentUser();
         if (user) {
           setTeacherId(user.id);
 
           // Check for an active or pending session to restore
-          const activeSession = await attendanceService.getActiveSessionForTeacher(user.id);
+          const activeSession = await attendanceApi.getActiveSessionForTeacher(user.id);
           if (activeSession) {
             setSessionId(activeSession.id);
             setSelectedClassId(activeSession.class_id);
@@ -77,8 +80,8 @@ const Attendance = () => {
           }
         }
         const [cls, lecs] = await Promise.all([
-          classService.getAll(),
-          lectureService.getAll()
+          classApi.getAll(),
+          lectureApi.getAll()
         ]);
         setClasses(cls);
         setLectures(lecs);
@@ -108,9 +111,9 @@ const Attendance = () => {
     if (!sessionId) return;
     try {
       // Deactivate old tokens
-      await attendanceService.deactivateSessionTokens(sessionId);
+      await attendanceApi.deactivateSessionTokens(sessionId);
       // Create new one
-      const tokenData = await attendanceService.createToken(sessionId);
+      const tokenData = await attendanceApi.createToken(sessionId);
       setCurrentToken(tokenData.token);
     } catch (e) {
       console.error('Failed to refresh QR token:', e);
@@ -130,7 +133,7 @@ const Attendance = () => {
         qrIntervalRef.current = null;
       }
       if (sessionId && sessionStatus === 'active' && !qrVisible) {
-        attendanceService.deactivateSessionTokens(sessionId);
+        attendanceApi.deactivateSessionTokens(sessionId);
         setCurrentToken(null);
       }
     }
@@ -144,7 +147,7 @@ const Attendance = () => {
     if (sessionStatus === 'active' && sessionId) {
       const fetchRecords = async () => {
         try {
-          const data = await attendanceService.getSessionRecords(sessionId);
+          const data = await attendanceApi.getSessionRecords(sessionId);
           setRecords(data);
         } catch (e) {
           console.error('Failed to fetch records:', e);
@@ -205,7 +208,7 @@ const Attendance = () => {
       return;
     }
     try {
-      const session = await attendanceService.createSession(selectedClassId, teacherId, sessionDate, selectedLectureId || undefined);
+      const session = await attendanceApi.createSession(selectedClassId, teacherId, sessionDate, selectedLectureId || undefined);
       setSessionId(session.id);
       setSessionStatus('pending');
       toast.success('Session created. Click Start to begin.');
@@ -217,7 +220,7 @@ const Attendance = () => {
   const handleStart = async () => {
     if (!sessionId) return;
     try {
-      const session = await attendanceService.startSession(sessionId);
+      const session = await attendanceApi.startSession(sessionId);
       setSessionStatus('active');
       setStartedAt(new Date(session.started_at));
       setElapsed(0);
@@ -231,7 +234,7 @@ const Attendance = () => {
   const handleStop = async () => {
     if (!sessionId) return;
     try {
-      await attendanceService.stopSession(sessionId);
+      await attendanceApi.stopSession(sessionId);
       setSessionStatus('completed');
       setQrVisible(false);
       setCurrentToken(null);
@@ -240,7 +243,7 @@ const Attendance = () => {
       if (qrIntervalRef.current) clearInterval(qrIntervalRef.current);
       if (pollRef.current) clearInterval(pollRef.current);
       // Fetch final records
-      const finalRecords = await attendanceService.getSessionRecords(sessionId);
+      const finalRecords = await attendanceApi.getSessionRecords(sessionId);
       setRecords(finalRecords);
       toast.success('Session completed!');
     } catch (e: any) {
@@ -251,8 +254,8 @@ const Attendance = () => {
   const handleKick = async (record: AttendanceRecord) => {
     if (!window.confirm(`Remove ${record.student.full_name} from attendance?`)) return;
     try {
-      await attendanceService.kickStudent(record.id);
-      const updated = await attendanceService.getSessionRecords(sessionId!);
+      await attendanceApi.kickStudent(record.id);
+      const updated = await attendanceApi.getSessionRecords(sessionId!);
       setRecords(updated);
       toast.success(`${record.student.full_name} removed`);
     } catch (e: any) {

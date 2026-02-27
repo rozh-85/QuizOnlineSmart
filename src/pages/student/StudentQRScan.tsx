@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QrCode, Camera, CheckCircle, XCircle, Loader2, RefreshCw } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
-import { attendanceService } from '../../services/supabaseService';
+import { attendanceApi } from '../../api/attendanceApi';
 
 const StudentQRScan = () => {
   const navigate = useNavigate();
@@ -66,7 +66,7 @@ const StudentQRScan = () => {
         token = attendMatch[1];
       }
 
-      const result = await attendanceService.verifyAndJoin(token);
+      const result = await attendanceApi.verifyAndJoin(token);
       if (result.success) {
         setStatus('success');
         setMessage(result.message || 'Attendance recorded successfully!');

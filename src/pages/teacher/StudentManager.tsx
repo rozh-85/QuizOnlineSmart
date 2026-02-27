@@ -8,7 +8,8 @@ import {
   Trash2,
   Unlock,
 } from 'lucide-react';
-import { studentService, classService } from '../../services/supabaseService';
+import { studentApi } from '../../api/studentApi';
+import { classApi } from '../../api/classApi';
 import toast from 'react-hot-toast';
 import { Select, PageHeader, SearchInput, StatCard, DataTable, ConfirmDialog } from '../../components/ui';
 import {
@@ -49,14 +50,14 @@ const StudentManager = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const classData = await classService.getAll();
+      const classData = await classApi.getAll();
       setClasses(classData);
 
       let studentData;
       if (selectedClassId === 'all') {
-        studentData = await studentService.getAll();
+        studentData = await studentApi.getAll();
       } else {
-        studentData = await classService.getClassStudents(selectedClassId);
+        studentData = await classApi.getClassStudents(selectedClassId);
       }
       setStudents(studentData);
     } catch (error) {
@@ -73,10 +74,10 @@ const StudentManager = () => {
       return;
     }
     try {
-      const signUpResult = await studentService.createStudent(data.fullName, data.serialId, data.pin);
+      const signUpResult = await studentApi.createStudent(data.fullName, data.serialId, data.pin);
       const studentId = (signUpResult as any).user?.id || (signUpResult as any).id;
       if (data.classId && studentId) {
-        await classService.addStudentToClass(data.classId, studentId);
+        await classApi.addStudentToClass(data.classId, studentId);
       }
       setCreatedStudentInfo({ fullName: data.fullName, serialId: data.serialId, pin: data.pin });
       setIsModalOpen(false);
@@ -98,7 +99,7 @@ const StudentManager = () => {
     try {
       setLoading(true);
       setIsResetDeviceOpen(false);
-      await studentService.resetDeviceLock(studentToReset.id);
+      await studentApi.resetDeviceLock(studentToReset.id);
       toast.success('Device lock reset successfully');
       setStudentToReset(null);
       fetchData();
@@ -114,7 +115,7 @@ const StudentManager = () => {
     if (!newPassword) { toast.error('Please enter a new password'); return; }
     if (newPassword.length < 4) { toast.error('Password must be at least 4 characters'); return; }
     try {
-      await studentService.changeStudentPassword(studentId, newPassword);
+      await studentApi.changeStudentPassword(studentId, newPassword);
       toast.success(`Password updated for ${studentToChangePassword?.full_name}`);
       setIsPasswordModalOpen(false);
       setStudentToChangePassword(null);
@@ -131,7 +132,7 @@ const StudentManager = () => {
     try {
       setLoading(true);
       setIsDeleteConfirmOpen(false);
-      await studentService.deleteStudent(studentToDelete.id);
+      await studentApi.deleteStudent(studentToDelete.id);
       toast.success('Student deleted successfully');
       setStudentToDelete(null);
       fetchData();
@@ -146,7 +147,7 @@ const StudentManager = () => {
   const handleAssignToClass = async (classId: string) => {
     if (!selectedStudent) return;
     try {
-      await classService.addStudentToClass(classId, selectedStudent.id);
+      await classApi.addStudentToClass(classId, selectedStudent.id);
       toast.success('Enrolled');
       setIsAssignModalOpen(false);
       fetchData();
@@ -160,7 +161,7 @@ const StudentManager = () => {
     if (!window.confirm('Remove student from this class?')) return;
     try {
       setLoading(true);
-      await classService.removeStudentFromClass(selectedClassId, studentId);
+      await classApi.removeStudentFromClass(selectedClassId, studentId);
       toast.success('Removed from class');
       fetchData();
     } catch (error) {

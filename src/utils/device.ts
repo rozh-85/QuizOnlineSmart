@@ -1,5 +1,7 @@
+import { STORAGE_KEYS } from '../constants/storage';
+
 export const getDeviceFingerprint = (): string => {
-  let fingerprint = localStorage.getItem('device_fingerprint');
+  let fingerprint = localStorage.getItem(STORAGE_KEYS.DEVICE_FINGERPRINT);
   
   if (!fingerprint) {
     // Generate a simple unique fingerprint
@@ -10,7 +12,7 @@ export const getDeviceFingerprint = (): string => {
     // In a real app, you'd use a more robust fingerprinting library
     // but a generated UUID saved to localStorage is often sufficient for "device lock"
     fingerprint = btoa(`${screenRes}-${userAgent}-${random}-${Date.now()}`).substring(0, 32);
-    localStorage.setItem('device_fingerprint', fingerprint);
+    localStorage.setItem(STORAGE_KEYS.DEVICE_FINGERPRINT, fingerprint);
   }
   
   return fingerprint;

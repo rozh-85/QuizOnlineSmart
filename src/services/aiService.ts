@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { QuestionType } from "../types";
+import { QuestionType } from "../types/app";
+import { GEMINI_MODELS } from "../constants/app";
 
 export interface AIGenOptions {
   apiKey: string;
@@ -12,18 +13,7 @@ export interface AIGenOptions {
 }
 
 const getPreferredModel = async (genAI: GoogleGenerativeAI, testCall: boolean = false) => {
-  // A comprehensive list of possible model IDs to try, from newest to oldest
-  const models = [
-    "gemini-2.5-flash",
-    "gemini-2.5-pro",
-    "gemini-2.0-flash-exp",
-    "gemini-1.5-flash",
-    "gemini-1.5-pro",
-    "gemini-1.5-flash-latest",
-    "gemini-1.5-pro-latest",
-    "gemini-1.0-pro",
-    "gemini-pro"
-  ];
+  const models = [...GEMINI_MODELS];
   
   let errors: string[] = [];
   
@@ -61,7 +51,7 @@ export const generateQuestionsWithAI = async (options: AIGenOptions): Promise<an
   const genAI = new GoogleGenerativeAI(options.apiKey);
   
   // We don't pre-test every time for performance, but we handle the retry logic
-  const models = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash-exp", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.5-flash-latest", "gemini-1.5-pro-latest", "gemini-pro"];
+  const models = [...GEMINI_MODELS];
   
   let lastError: any = null;
   

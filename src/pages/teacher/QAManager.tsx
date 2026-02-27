@@ -8,8 +8,10 @@ import {
   Check
 } from 'lucide-react';
 import { Card } from '../../components/ui';
-import { lectureService, lectureQAService, subscribeToAllQuestions } from '../../services/supabaseService';
-import { Lecture } from '../../lib/supabase';
+import { lectureApi } from '../../api/lectureApi';
+import { lectureQAApi } from '../../api/lectureQAApi';
+import { subscribeToAllQuestions } from '../../services/realtimeService';
+import type { Lecture } from '../../types/database';
 import { supabase } from '../../lib/supabase';
 import LectureQA from '../../components/LectureQA';
 
@@ -27,9 +29,9 @@ const QAManager = () => {
 
   const loadLectures = async () => {
     try {
-      const data = await lectureService.getAll();
+      const data = await lectureApi.getAll();
       setLectures(data);
-      const counts = await lectureQAService.getUnreadCountsByLecture();
+      const counts = await lectureQAApi.getUnreadCountsByLecture();
       setUnreadCounts(counts);
     } catch (e) {
       console.error('Error loading lectures:', e);
@@ -45,7 +47,7 @@ const QAManager = () => {
     const processedIds = new Set<string>();
 
     const refreshCounts = () => {
-      lectureQAService.getUnreadCountsByLecture().then(setUnreadCounts).catch(console.error);
+      lectureQAApi.getUnreadCountsByLecture().then(setUnreadCounts).catch(console.error);
     };
     refreshCounts();
 

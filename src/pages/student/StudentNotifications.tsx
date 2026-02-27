@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageSquare, Clock, ChevronRight } from 'lucide-react';
-import { authService, lectureQAService } from '../../services/supabaseService';
+import { authApi } from '../../api/authApi';
+import { lectureQAApi } from '../../api/lectureQAApi';
 import { supabase } from '../../lib/supabase';
 
 const StudentNotifications = () => {
@@ -15,7 +16,7 @@ const StudentNotifications = () => {
 
   const fetchData = async () => {
     try {
-      const user = await authService.getCurrentUser();
+      const user = await authApi.getCurrentUser();
       if (!user) { navigate('/login', { replace: true }); return; }
       await fetchUnread(user.id);
 
@@ -45,7 +46,7 @@ const StudentNotifications = () => {
 
   const fetchUnread = async (userId: string) => {
     try {
-      const threads = await lectureQAService.getStudentUnreadThreads(userId);
+      const threads = await lectureQAApi.getStudentUnreadThreads(userId);
       setUnreadThreads(threads);
     } catch (e) {
       console.error('Error fetching unread:', e);
@@ -79,7 +80,7 @@ const StudentNotifications = () => {
   const handleNotificationClick = async (thread: any) => {
     try {
       // 1. Update database first
-      await lectureQAService.markAsRead(thread.id, true);
+      await lectureQAApi.markAsRead(thread.id, true);
       // 2. DB succeeded → update local list
       setUnreadThreads(prev => prev.filter(t => t.id !== thread.id));
       // 3. Instant nav bar badge decrement

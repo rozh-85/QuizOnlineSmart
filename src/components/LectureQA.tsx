@@ -10,7 +10,8 @@ import {
   ThreadList,
   PublishedFAQ,
 } from './lecture-qa';
-import { lectureQAService, addTeacherReadTimestamp } from '../services/supabaseService';
+import { lectureQAApi } from '../api/lectureQAApi';
+import { addTeacherReadTimestamp } from '../utils/localStorage';
 
 interface LectureQAProps {
   lectureId: string;
@@ -125,7 +126,7 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
                 window.dispatchEvent(new CustomEvent('unread-count-changed', {
                   detail: { id: q.id, role: 'teacher' }
                 }));
-                lectureQAService.markAsRead(q.id)
+                lectureQAApi.markAsRead(q.id)
                   .then(() => console.log('[Q&A] Marked thread as read from list click:', q.id))
                   .catch((err) => console.error('[Q&A] Failed to mark thread as read from list:', q.id, err));
               }

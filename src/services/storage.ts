@@ -1,12 +1,12 @@
-import { Question } from '../types';
-
-const STORAGE_KEY = 'quiz_questions';
+import { Question } from '../types/app';
+import { STORAGE_KEYS } from '../constants/storage';
+import { generateId } from '../utils/id';
 
 // Sample questions to start with
 const sampleQuestions: Question[] = [];
 
 export const getQuestions = (): Question[] => {
-  const stored = localStorage.getItem(STORAGE_KEY);
+  const stored = localStorage.getItem(STORAGE_KEYS.QUIZ_QUESTIONS);
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
@@ -17,14 +17,13 @@ export const getQuestions = (): Question[] => {
     }
   }
   // Initialize with sample questions
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(sampleQuestions));
+  localStorage.setItem(STORAGE_KEYS.QUIZ_QUESTIONS, JSON.stringify(sampleQuestions));
   return sampleQuestions;
 };
 
 export const saveQuestions = (questions: Question[]): void => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(questions));
+  localStorage.setItem(STORAGE_KEYS.QUIZ_QUESTIONS, JSON.stringify(questions));
 };
 
-export const generateId = (): string => {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
-};
+// Re-export generateId for backward compatibility
+export { generateId };

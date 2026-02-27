@@ -3,7 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, Sparkles, QrCode, MessageSquare, User, Beaker, LogOut, BookOpen, X, CheckCircle, XCircle, Loader2, RefreshCw } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { useQuiz } from '../context/QuizContext';
-import { authService, attendanceService } from '../services/supabaseService';
+import { authApi } from '../api/authApi';
+import { attendanceApi } from '../api/attendanceApi';
 import toast from 'react-hot-toast';
 
 interface StudentLayoutProps {
@@ -37,7 +38,7 @@ const StudentLayout = ({ children, unreadCount = 0 }: StudentLayoutProps) => {
       let token = text;
       const attendMatch = text.match(/\/attend\/([^/?#]+)/);
       if (attendMatch) token = attendMatch[1];
-      const result = await attendanceService.verifyAndJoin(token);
+      const result = await attendanceApi.verifyAndJoin(token);
       if (result.success) {
         setQrStatus('success');
         setQrMessage(result.message || 'Attendance recorded successfully!');
@@ -98,7 +99,7 @@ const StudentLayout = ({ children, unreadCount = 0 }: StudentLayoutProps) => {
 
   const handleLogout = async () => {
     try {
-      await authService.signOut();
+      await authApi.signOut();
       Object.keys(localStorage).forEach(key => {
         if (key.startsWith('sb-')) localStorage.removeItem(key);
       });

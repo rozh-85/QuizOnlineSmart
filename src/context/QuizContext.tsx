@@ -1,45 +1,12 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Question as LocalQuestion, Lecture as LocalLecture, QuizContextType } from '../types';
-import { lectureService, questionService, materialService, subscribeToLectures, subscribeToQuestions, subscribeToMaterials } from '../services/supabaseService';
-import type { Lecture as SupabaseLecture, Question as SupabaseQuestion, LectureMaterial as SupabaseMaterial } from '../lib/supabase';
+import type { Question as LocalQuestion, Lecture as LocalLecture, QuizContextType } from '../types/app';
+import { lectureApi } from '../api/lectureApi';
+import { questionApi } from '../api/questionApi';
+import { materialApi } from '../api/materialApi';
+import { subscribeToLectures, subscribeToQuestions, subscribeToMaterials } from '../services/realtimeService';
+import { adaptLecture, adaptQuestion, adaptMaterial } from '../utils/adapters';
 
 const QuizContext = createContext<QuizContextType | undefined>(undefined);
-
-// Type adapters
-const adaptLecture = (lecture: SupabaseLecture): LocalLecture => ({
-  id: lecture.id,
-  title: lecture.title,
-  description: lecture.description || '',
-  sections: lecture.sections || [],
-  order: lecture.order_index,
-  createdAt: lecture.created_at
-});
-
-const adaptQuestion = (question: SupabaseQuestion): LocalQuestion => ({
-  id: question.id,
-  text: question.text,
-  type: question.type as any,
-  difficulty: question.difficulty as any,
-  options: question.options || [],
-  correctIndex: question.correct_index ?? undefined,
-  correctAnswer: question.correct_answer ?? undefined,
-  explanation: question.explanation ?? undefined,
-  lectureId: question.lecture_id ?? undefined,
-  sectionId: question.section_id ?? undefined,
-  isVisible: question.is_visible ?? true
-});
-
-const adaptMaterial = (material: SupabaseMaterial): any => ({
-  id: material.id,
-  title: material.title,
-  content: material.content || undefined,
-  fileUrl: material.file_url || undefined,
-  fileName: material.file_name || undefined,
-  fileType: material.file_type as any,
-  lectureId: material.lecture_id || undefined,
-  sectionId: material.section_id || undefined,
-  createdAt: material.created_at
-});
 
 export const QuizProvider = ({ children }: { children: ReactNode }) => {
   const [questions, setQuestions] = useState<LocalQuestion[]>([]);
@@ -54,9 +21,9 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
       setError(null);
       
       const [lecturesData, questionsData, materialsData] = await Promise.all([
-        lectureService.getAll(),
-        questionService.getAll(),
-        materialService.getAll()
+        lectureApi.getAll(),
+        questionApi.getAll(),
+        materialApi.getAll()
       ]);
 
       setLectures(lecturesData.map(adaptLecture));
@@ -86,7 +53,7 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const addQuestion = async (q: Omit<LocalQuestion, 'id'>) => {
-    await questionService.create({
+    await questionApi.create({
       text: q.text,
       type: q.type as any,
       difficulty: q.difficulty as any,
@@ -101,7 +68,7 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateQuestion = async (id: string, q: Omit<LocalQuestion, 'id'>) => {
-    await questionService.update(id, {
+    await questionApi.update(id, {
       text: q.text,
       type: q.type as any,
       difficulty: q.difficulty as any,
@@ -116,16 +83,16 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const toggleQuestionVisibility = async (id: string, isVisible: boolean) => {
-    await questionService.update(id, { is_visible: isVisible });
+    await questionApi.update(id, { is_visible: isVisible });
     await loadData();
   };
 
   const deleteQuestion = async (id: string) => {
-    await questionService.delete(id);
+    await questionApi.delete(id);
   };
 
   const addLecture = async (l: Omit<LocalLecture, 'id' | 'createdAt'>) => {
-    await lectureService.create({
+    await lectureApi.create({
       title: l.title,
       description: l.description || null,
       sections: l.sections || [],
@@ -134,7 +101,7 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateLecture = async (id: string, l: Omit<LocalLecture, 'id' | 'createdAt'>) => {
-    await lectureService.update(id, {
+    await lectureApi.update(id, {
       title: l.title,
       description: l.description || null,
       sections: l.sections || [],
@@ -143,7 +110,7 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteLecture = async (id: string) => {
-    await lectureService.delete(id);
+    await lectureApi.delete(id);
   };
 
   const getQuestion = (id: string) => questions.find(q => q.id === id);
@@ -151,7 +118,7 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
   const getQuestionsByLecture = (id: string) => questions.filter(q => q.lectureId === id);
 
   const addMaterial = async (m: any) => {
-    await materialService.create({
+    await materialApi.create({
       title: m.title,
       content: m.content || null,
       file_url: m.fileUrl || null,
@@ -164,7 +131,7 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateMaterial = async (id: string, m: any) => {
-    await materialService.update(id, {
+    await materialApi.update(id, {
       title: m.title,
       content: m.content || null,
       file_url: m.fileUrl || null,
@@ -177,7 +144,7 @@ export const QuizProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const deleteMaterial = async (id: string) => {
-    await materialService.delete(id);
+    await materialApi.delete(id);
     await loadData();
   };
 

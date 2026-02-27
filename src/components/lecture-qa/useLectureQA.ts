@@ -1,14 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
-import {
-  lectureQAService,
-  subscribeToLectureQuestions,
-  subscribeToQuestionMessages,
-  authService,
-  addTeacherReadTimestamp,
-  getTeacherReadMap
-} from '../../services/supabaseService';
-import { LectureQuestion, LectureQuestionMessage, Profile } from '../../lib/supabase';
+import { lectureQAApi } from '../../api/lectureQAApi';
+import { authApi } from '../../api/authApi';
+import { subscribeToLectureQuestions, subscribeToQuestionMessages } from '../../services/realtimeService';
+import { addTeacherReadTimestamp, getTeacherReadMap } from '../../utils/localStorage';
+import type { LectureQuestion, LectureQuestionMessage, Profile } from '../../types/database';
 
 const addTeacherReadId = addTeacherReadTimestamp;
 
@@ -54,7 +50,7 @@ export function useLectureQA({ lectureId, isAdminView = false, initialThreadId }
   /* ── data helpers ── */
   const loadQuestions = useCallback(async () => {
     try {
-      const rawQs = await lectureQAService.getQuestionsByLecture(lectureId);
+      const rawQs = await lectureQAApi.getQuestionsByLecture(lectureId);
       const sorted = rawQs.sort((a, b) => {
         const timeA = a.messages && a.messages.length > 0
           ? new Date(a.messages[a.messages.length - 1].created_at).getTime()
@@ -88,7 +84,7 @@ export function useLectureQA({ lectureId, isAdminView = false, initialThreadId }
 
   const loadMessages = useCallback(async (qid: string) => {
     try {
-      const msgs = await lectureQAService.getMessagesByQuestion(qid);
+      const msgs = await lectureQAApi.getMessagesByQuestion(qid);
       setMessages(msgs);
     } catch (e: any) {
       console.error('[DEBUG] Error loading messages for question:', qid, e);
@@ -100,11 +96,11 @@ export function useLectureQA({ lectureId, isAdminView = false, initialThreadId }
   useEffect(() => {
     const init = async () => {
       try {
-        const user = await authService.getCurrentUser();
+        const user = await authApi.getCurrentUser();
         setCurrentUser(user);
         if (user) {
           try {
-            const p = await authService.getProfile(user.id);
+            const p = await authApi.getProfile(user.id);
             setProfile(p);
           } catch (e) {
             console.error('Error loading profile:', e);
@@ -148,7 +144,7 @@ export function useLectureQA({ lectureId, isAdminView = false, initialThreadId }
           window.dispatchEvent(new CustomEvent('unread-count-changed', {
             detail: { id: selectedQuestionId, role: 'teacher' }
           }));
-          lectureQAService.markAsRead(selectedQuestionId)
+          lectureQAApi.markAsRead(selectedQuestionId)
             .then(() => {
               console.log('[Q&A] Successfully marked thread as read:', selectedQuestionId);
               window.dispatchEvent(new CustomEvent('unread-count-changed', {
@@ -162,7 +158,7 @@ export function useLectureQA({ lectureId, isAdminView = false, initialThreadId }
 
         if (!isMentor && q && !q.is_read_by_student) {
           setQuestions(prev => prev.map(item => item.id === selectedQuestionId ? { ...item, is_read_by_student: true } : item));
-          lectureQAService.markAsRead(selectedQuestionId, true).then(() => {
+          lectureQAApi.markAsRead(selectedQuestionId, true).then(() => {
             window.dispatchEvent(new CustomEvent('unread-count-changed', {
               detail: { id: selectedQuestionId, role: 'student' }
             }));
@@ -178,13 +174,13 @@ export function useLectureQA({ lectureId, isAdminView = false, initialThreadId }
                 setQuestions(prev => prev.map(i => i.id === selectedQuestionId ? { ...i, is_read: true } : i));
                 addTeacherReadId(selectedQuestionId);
                 window.dispatchEvent(new CustomEvent('unread-count-changed', { detail: { id: selectedQuestionId, role: 'teacher' } }));
-                lectureQAService.markAsRead(selectedQuestionId).catch(console.error);
+                lectureQAApi.markAsRead(selectedQuestionId).catch(console.error);
               }
             } else {
               if (!isMyMsg) {
                 setQuestions(prev => prev.map(i => i.id === selectedQuestionId ? { ...i, is_read_by_student: true } : i));
                 window.dispatchEvent(new CustomEvent('unread-count-changed', { detail: { id: selectedQuestionId, role: 'student' } }));
-                lectureQAService.markAsRead(selectedQuestionId, true).catch(console.error);
+                lectureQAApi.markAsRead(selectedQuestionId, true).catch(console.error);
               }
             }
           }
@@ -238,16 +234,16 @@ export function useLectureQA({ lectureId, isAdminView = false, initialThreadId }
     if (!newQuestion.trim() && selectedImages.length === 0) return;
     try {
       setIsUploading(true);
-      const result = await lectureQAService.createQuestion(lectureId, newQuestion || 'Question with photo');
+      const result = await lectureQAApi.createQuestion(lectureId, newQuestion || 'Question with photo');
       setNewQuestion('');
       setShowForm(false);
       if (result?.id) {
         if (selectedImages.length > 0) {
           const urls: string[] = [];
           for (const img of selectedImages) {
-            urls.push(await lectureQAService.uploadChatImage(img));
+            urls.push(await lectureQAApi.uploadChatImage(img));
           }
-          await lectureQAService.sendMessage(result.id, '📷 Photo', false, urls);
+          await lectureQAApi.sendMessage(result.id, '📷 Photo', false, urls);
         }
         clearSelectedImages();
         setSelectedQuestionId(result.id);
@@ -271,10 +267,10 @@ export function useLectureQA({ lectureId, isAdminView = false, initialThreadId }
     if (!manualData.question.trim() || !manualData.answer.trim()) return;
     try {
       if (manualData.id) {
-        await lectureQAService.updateOfficialAnswer(manualData.id, manualData.answer);
-        await lectureQAService.togglePublishQuestion(manualData.id, manualData.publish);
+        await lectureQAApi.updateOfficialAnswer(manualData.id, manualData.answer);
+        await lectureQAApi.togglePublishQuestion(manualData.id, manualData.publish);
       } else {
-        await lectureQAService.createQuestion(lectureId, manualData.question, manualData.publish, manualData.answer);
+        await lectureQAApi.createQuestion(lectureId, manualData.question, manualData.publish, manualData.answer);
       }
       setManualData({ id: '', question: '', answer: '', publish: true });
       setShowManualForm(false);
@@ -295,7 +291,7 @@ export function useLectureQA({ lectureId, isAdminView = false, initialThreadId }
       if (selectedImages.length > 0) {
         try {
           for (const img of selectedImages) {
-            const url = await lectureQAService.uploadChatImage(img);
+            const url = await lectureQAApi.uploadChatImage(img);
             uploadedUrls.push(url);
           }
         } catch (uploadError: any) {
@@ -307,7 +303,7 @@ export function useLectureQA({ lectureId, isAdminView = false, initialThreadId }
       }
       const text = newMessage.trim() || (uploadedUrls.length > 0 ? '📷 Photo' : '');
       try {
-        await lectureQAService.sendMessage(selectedQuestionId, text, isMentor, uploadedUrls.length > 0 ? uploadedUrls : undefined);
+        await lectureQAApi.sendMessage(selectedQuestionId, text, isMentor, uploadedUrls.length > 0 ? uploadedUrls : undefined);
       } catch (sendError: any) {
         console.error('[Q&A] Failed to send message:', sendError);
         toast.error(`Failed to send message: ${sendError.message || 'Unknown error'}`);
@@ -325,7 +321,7 @@ export function useLectureQA({ lectureId, isAdminView = false, initialThreadId }
         window.dispatchEvent(new CustomEvent('unread-count-changed', {
           detail: { id: selectedQuestionId, role: 'teacher' }
         }));
-        lectureQAService.markAsRead(selectedQuestionId)
+        lectureQAApi.markAsRead(selectedQuestionId)
           .then(() => {
             console.log('[Q&A] Thread marked as read after teacher sent message:', selectedQuestionId);
             window.dispatchEvent(new CustomEvent('unread-count-changed', {
@@ -353,7 +349,7 @@ export function useLectureQA({ lectureId, isAdminView = false, initialThreadId }
     setEditingMessageId(null);
     setEditingText('');
     try {
-      await lectureQAService.editMessage(messageId, savedText);
+      await lectureQAApi.editMessage(messageId, savedText);
       if (selectedQuestionId) await loadMessages(selectedQuestionId);
       toast.success('Message updated.');
     } catch (e: any) {
@@ -366,7 +362,7 @@ export function useLectureQA({ lectureId, isAdminView = false, initialThreadId }
   const handleDeleteMessage = async () => {
     if (!deletingMsgId) return;
     try {
-      await lectureQAService.deleteMessage(deletingMsgId);
+      await lectureQAApi.deleteMessage(deletingMsgId);
       setDeletingMsgId(null);
       if (selectedQuestionId) await loadMessages(selectedQuestionId);
       toast.success('Message deleted.');
@@ -379,7 +375,7 @@ export function useLectureQA({ lectureId, isAdminView = false, initialThreadId }
   const handleEditQuestion = async (questionId: string) => {
     if (!editingQuestionText.trim()) return;
     try {
-      await lectureQAService.editQuestion(questionId, editingQuestionText);
+      await lectureQAApi.editQuestion(questionId, editingQuestionText);
       setEditingQuestionId(null);
       setEditingQuestionText('');
       loadQuestions();
@@ -402,7 +398,7 @@ export function useLectureQA({ lectureId, isAdminView = false, initialThreadId }
 
   const handleTogglePublish = async (qid: string, published: boolean) => {
     try {
-      await lectureQAService.togglePublishQuestion(qid, !published);
+      await lectureQAApi.togglePublishQuestion(qid, !published);
       loadQuestions();
       toast.success(published ? 'Unpublished successfully' : 'Published successfully');
     } catch (e) {
@@ -414,7 +410,7 @@ export function useLectureQA({ lectureId, isAdminView = false, initialThreadId }
   const handleDelete = async () => {
     if (!deletingId) return;
     try {
-      await lectureQAService.deleteQuestion(deletingId);
+      await lectureQAApi.deleteQuestion(deletingId);
       if (selectedQuestionId === deletingId) setSelectedQuestionId(null);
       setDeletingId(null);
       loadQuestions();

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, ArrowRight, Hash } from 'lucide-react';
-import { authService } from '../services/supabaseService';
+import { authApi } from '../api/authApi';
 import { getDeviceFingerprint } from '../utils/device';
 import toast from 'react-hot-toast';
 
@@ -42,7 +42,7 @@ const Login = ({ mode }: LoginProps) => {
         if (!cleanSerialId || !formData.pin) {
           throw new Error('Please enter both Serial ID and PIN');
         }
-        result = await authService.signInWithSerial(cleanSerialId, formData.pin.trim(), fingerprint);
+        result = await authApi.signInWithSerial(cleanSerialId, formData.pin.trim(), fingerprint);
       } else {
         const email = formData.email.trim();
         const password = formData.password.trim();
@@ -52,7 +52,7 @@ const Login = ({ mode }: LoginProps) => {
         }
         
         try {
-          result = await authService.signIn(email, password, fingerprint);
+          result = await authApi.signIn(email, password, fingerprint);
         } catch (authError: any) {
           // Prototype fallback: any email with password 'admin123'
           if (password === 'admin123') {

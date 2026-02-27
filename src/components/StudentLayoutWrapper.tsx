@@ -1,6 +1,7 @@
 import { useState, useEffect, ReactNode } from 'react';
 import StudentLayout from './StudentLayout';
-import { authService, lectureQAService } from '../services/supabaseService';
+import { authApi } from '../api/authApi';
+import { lectureQAApi } from '../api/lectureQAApi';
 import { supabase } from '../lib/supabase';
 
 interface Props {
@@ -15,11 +16,11 @@ const StudentLayoutWrapper = ({ children }: Props) => {
 
     const init = async () => {
       try {
-        const user = await authService.getCurrentUser();
+        const user = await authApi.getCurrentUser();
         if (!user) return;
 
         // Initial fetch
-        const count = await lectureQAService.getStudentUnreadCount(user.id);
+        const count = await lectureQAApi.getStudentUnreadCount(user.id);
         setUnreadCount(count);
 
         // Subscribe to real-time
@@ -31,7 +32,7 @@ const StudentLayoutWrapper = ({ children }: Props) => {
             table: 'lecture_questions',
             filter: `student_id=eq.${user.id}`
           }, async () => {
-            const c = await lectureQAService.getStudentUnreadCount(user.id);
+            const c = await lectureQAApi.getStudentUnreadCount(user.id);
             setUnreadCount(c);
           })
           .on('postgres_changes', {
@@ -39,7 +40,7 @@ const StudentLayoutWrapper = ({ children }: Props) => {
             schema: 'public',
             table: 'lecture_question_messages'
           }, async () => {
-            const c = await lectureQAService.getStudentUnreadCount(user.id);
+            const c = await lectureQAApi.getStudentUnreadCount(user.id);
             setUnreadCount(c);
           })
           .subscribe();
@@ -53,9 +54,9 @@ const StudentLayoutWrapper = ({ children }: Props) => {
     // Listen for manual count changes (e.g. when student reads a thread)
     const handleCountChange = async () => {
       try {
-        const user = await authService.getCurrentUser();
+        const user = await authApi.getCurrentUser();
         if (user) {
-          const c = await lectureQAService.getStudentUnreadCount(user.id);
+          const c = await lectureQAApi.getStudentUnreadCount(user.id);
           setUnreadCount(c);
         }
       } catch { /* ignore */ }

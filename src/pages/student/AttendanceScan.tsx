@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle, Loader2, QrCode } from 'lucide-react';
-import { attendanceService } from '../../services/supabaseService';
+import { attendanceApi } from '../../api/attendanceApi';
 
 const AttendanceScan = () => {
   const { token } = useParams<{ token: string }>();
@@ -18,7 +18,7 @@ const AttendanceScan = () => {
       }
 
       try {
-        const result = await attendanceService.verifyAndJoin(token);
+        const result = await attendanceApi.verifyAndJoin(token);
         if (result.success) {
           setStatus('success');
           setMessage(result.message || 'Attendance recorded successfully!');

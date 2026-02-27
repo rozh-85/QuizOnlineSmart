@@ -8,7 +8,8 @@ import {
   MessageCircle,
   Clock
 } from 'lucide-react';
-import { lectureService, materialService } from '../../services/supabaseService';
+import { lectureApi } from '../../api/lectureApi';
+import { materialApi } from '../../api/materialApi';
 import LectureQA from '../../components/LectureQA';
 import toast from 'react-hot-toast';
 
@@ -50,8 +51,8 @@ const LectureDetail = () => {
     try {
       setLoading(true);
       const [lectureData, materialData] = await Promise.all([
-        lectureService.getById(lectureId),
-        materialService.getByLecture(lectureId)
+        lectureApi.getById(lectureId),
+        materialApi.getByLecture(lectureId)
       ]);
       setLecture(lectureData);
       setMaterials(materialData);

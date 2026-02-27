@@ -17,7 +17,8 @@ import {
   BarChart3
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { lectureQAService, subscribeToAllQuestions } from '../services/supabaseService';
+import { lectureQAApi } from '../api/lectureQAApi';
+import { subscribeToAllQuestions } from '../services/realtimeService';
 import { supabase } from '../lib/supabase';
 
 interface AdminLayoutProps {
@@ -37,7 +38,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
     const fetchUnread = async () => {
       try {
-        const count = await lectureQAService.getUnreadCount();
+        const count = await lectureQAApi.getUnreadCount();
         setUnreadCount(count);
       } catch (e) {
         console.error('Error fetching unread count:', e);

@@ -12,7 +12,7 @@ import {
   BookOpen,
   ArrowRightLeft
 } from 'lucide-react';
-import { classService } from '../../services/supabaseService';
+import { classApi } from '../../api/classApi';
 import toast from 'react-hot-toast';
 import { PageHeader, EmptyState, DataTable, FormField } from '../../components/ui';
 
@@ -47,7 +47,7 @@ const ClassManager = () => {
   const fetchClasses = async () => {
     try {
       setLoading(true);
-      const data = await classService.getAll();
+      const data = await classApi.getAll();
       setClasses(data);
     } catch (error) {
       toast.error('Failed to load classes');
@@ -59,7 +59,7 @@ const ClassManager = () => {
   const fetchClassStudents = async (id: string) => {
     try {
       setStudentsLoading(true);
-      const data = await classService.getClassStudents(id);
+      const data = await classApi.getClassStudents(id);
       setStudents(data);
     } catch (error) {
       toast.error('Failed to load students');
@@ -75,7 +75,7 @@ const ClassManager = () => {
     if (!newClassName.trim()) return;
     try {
       setLoading(true);
-      const created = await classService.create(newClassName);
+      const created = await classApi.create(newClassName);
       toast.success('Class created!');
       setNewClassName('');
       setIsCreateModalOpen(false);
@@ -94,7 +94,7 @@ const ClassManager = () => {
       return;
     }
     try {
-      await classService.update(selectedClassId, editedName);
+      await classApi.update(selectedClassId, editedName);
       toast.success('Renamed successfully');
       setIsEditingName(false);
       fetchClasses();
@@ -109,7 +109,7 @@ const ClassManager = () => {
     
     try {
       setLoading(true);
-      await classService.delete(selectedClassId);
+      await classApi.delete(selectedClassId);
       toast.success('Class deleted');
       setSelectedClassId('');
       fetchClasses();
@@ -123,7 +123,7 @@ const ClassManager = () => {
   const handleRemoveStudent = async (studentId: string) => {
     try {
       if (!window.confirm('Remove this student from the class?')) return;
-      await classService.removeStudentFromClass(selectedClassId, studentId);
+      await classApi.removeStudentFromClass(selectedClassId, studentId);
       toast.success('Student removed');
       fetchClassStudents(selectedClassId);
     } catch (error) {
@@ -141,8 +141,8 @@ const ClassManager = () => {
     
     try {
       setIsMoving(true);
-      await classService.removeStudentFromClass(selectedClassId, movingStudent.id);
-      await classService.addStudentToClass(targetClassId, movingStudent.id);
+      await classApi.removeStudentFromClass(selectedClassId, movingStudent.id);
+      await classApi.addStudentToClass(targetClassId, movingStudent.id);
       
       toast.success(`Moved ${movingStudent.full_name} successfully`);
       setMovingStudent(null);

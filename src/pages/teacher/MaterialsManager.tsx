@@ -4,8 +4,8 @@ import { toast } from 'react-hot-toast';
 import { Button, Card, Modal, Input, TextArea } from '../../components/ui';
 import MaterialFileIcon from '../../components/MaterialFileIcon';
 import { useQuiz } from '../../context/QuizContext';
-import { materialService } from '../../services/supabaseService';
-import { Material, MaterialFileType } from '../../types';
+import { materialApi } from '../../api/materialApi';
+import { Material, MaterialFileType } from '../../types/app';
 
 const MaterialsManager = () => {
   const { lectures, materials, addMaterial, updateMaterial, deleteMaterial } = useQuiz();
@@ -58,7 +58,7 @@ const MaterialsManager = () => {
 
     setIsUploading(true);
     try {
-      const { publicUrl, fileName } = await materialService.uploadFile(file);
+      const { publicUrl, fileName } = await materialApi.uploadFile(file);
       setFormData(prev => ({
         ...prev,
         fileUrl: publicUrl,

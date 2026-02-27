@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, CheckCircle, XCircle, MinusCircle, LogOut, TrendingUp, Award } from 'lucide-react';
-import { authService, attendanceService } from '../../services/supabaseService';
+import { authApi } from '../../api/authApi';
+import { attendanceApi } from '../../api/attendanceApi';
 import toast from 'react-hot-toast';
 
 const StudentProfile = () => {
@@ -16,11 +17,11 @@ const StudentProfile = () => {
 
   const fetchData = async () => {
     try {
-      const user = await authService.getCurrentUser();
+      const user = await authApi.getCurrentUser();
       if (!user) { navigate('/login', { replace: true }); return; }
       const [p, r] = await Promise.all([
-        authService.getProfile(user.id),
-        attendanceService.getStudentAttendanceHistory(user.id)
+        authApi.getProfile(user.id),
+        attendanceApi.getStudentAttendanceHistory(user.id)
       ]);
       setProfile(p);
       setRecords(r);
@@ -33,7 +34,7 @@ const StudentProfile = () => {
 
   const handleLogout = async () => {
     try {
-      await authService.signOut();
+      await authApi.signOut();
       Object.keys(localStorage).forEach(key => {
         if (key.startsWith('sb-')) localStorage.removeItem(key);
       });

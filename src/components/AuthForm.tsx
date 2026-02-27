@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { authService } from '../services/supabaseService';
+import { authApi } from '../api/authApi';
 import { Button, Input, Card } from './ui';
 import { LogIn, UserPlus, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -24,7 +24,7 @@ export const AuthForm = ({ onSuccess }: AuthFormProps) => {
 
     try {
       if (mode === 'signup') {
-        await authService.signUp(
+        await authApi.signUp(
           formData.email,
           formData.password,
           formData.fullName,
@@ -32,7 +32,7 @@ export const AuthForm = ({ onSuccess }: AuthFormProps) => {
         );
         toast.success('Account created! Please check your email to verify.');
       } else {
-        await authService.signIn(formData.email, formData.password);
+        await authApi.signIn(formData.email, formData.password);
         toast.success('Welcome back!');
         onSuccess?.();
       }

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Beaker } from 'lucide-react';
-import { authService } from '../services/supabaseService';
+import { authApi } from '../api/authApi';
 
 const SplashScreen = ({ defaultMode = 'student' }: { defaultMode?: 'student' | 'teacher' }) => {
   const navigate = useNavigate();
@@ -12,12 +12,12 @@ const SplashScreen = ({ defaultMode = 'student' }: { defaultMode?: 'student' | '
         // Minimum view time for better UX
         const minTime = new Promise(resolve => setTimeout(resolve, 1500));
         
-        const user = await authService.getCurrentUser();
+        const user = await authApi.getCurrentUser();
         
         await minTime;
 
         if (user) {
-          const profile = await authService.getProfile(user.id);
+          const profile = await authApi.getProfile(user.id);
           if (profile?.role === 'teacher' || profile?.role === 'admin') {
             navigate('/admin', { replace: true });
           } else {

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { BookOpen, ArrowRight, Beaker, Play } from 'lucide-react';
 import { useQuiz } from '../../context/QuizContext';
-import { authService } from '../../services/supabaseService';
+import { authApi } from '../../api/authApi';
 
 const StudentDashboard = () => {
   const [profile, setProfile] = useState<any>(null);
@@ -15,12 +15,12 @@ const StudentDashboard = () => {
 
   const fetchProfile = async () => {
     try {
-      const user = await authService.getCurrentUser();
+      const user = await authApi.getCurrentUser();
       if (!user) {
         navigate('/login', { replace: true });
         return;
       }
-      const profileData = await authService.getProfile(user.id);
+      const profileData = await authApi.getProfile(user.id);
       setProfile(profileData);
     } catch (error) {
       console.error('Dashboard fetch error:', error);

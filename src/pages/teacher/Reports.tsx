@@ -10,7 +10,10 @@ import {
   Loader2,
   User
 } from 'lucide-react';
-import { classService, lectureService, studentService, reportService } from '../../services/supabaseService';
+import { classApi } from '../../api/classApi';
+import { lectureApi } from '../../api/lectureApi';
+import { studentApi } from '../../api/studentApi';
+import { reportApi } from '../../api/reportApi';
 import toast from 'react-hot-toast';
 import { PageHeader, FormField, EmptyState } from '../../components/ui';
 import { SessionDetail, SessionCard, ReportSummaryCards } from '../../components/reports';
@@ -55,9 +58,9 @@ const Reports = () => {
     const init = async () => {
       try {
         const [cls, lecs, studs] = await Promise.all([
-          classService.getAll(),
-          lectureService.getAll(),
-          studentService.getAll()
+          classApi.getAll(),
+          lectureApi.getAll(),
+          studentApi.getAll()
         ]);
         setClasses(cls);
         setLectures(lecs);
@@ -81,7 +84,7 @@ const Reports = () => {
   const fetchSessions = async () => {
     setFetching(true);
     try {
-      const data = await reportService.getReportSessions({
+      const data = await reportApi.getReportSessions({
         studentId: selectedStudent?.id || undefined,
         classId: selectedClassId || undefined,
         lectureId: selectedLectureId || undefined,
@@ -91,7 +94,7 @@ const Reports = () => {
       setSessions(data);
 
       const classIds = [...new Set(data.map((s: any) => s.class_id))] as string[];
-      const counts = await reportService.getEnrolledCounts(classIds);
+      const counts = await reportApi.getEnrolledCounts(classIds);
       setEnrolledCounts(counts);
     } catch (e: any) {
       console.error('Failed to fetch reports:', e);
