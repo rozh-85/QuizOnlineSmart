@@ -63,12 +63,17 @@ const StudentNotifications = () => {
 
   const getLastTeacherMessage = (thread: any) => {
     if (!thread.messages || thread.messages.length === 0) return null;
-    const teacherMsgs = thread.messages.filter((m: any) => {
+    // Sort newest first
+    const sorted = [...thread.messages].sort(
+      (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+    // Find newest teacher message: sender_id !== student means it's from teacher
+    const teacherMsg = sorted.find((m: any) => {
+      if (thread.student_id && m.sender_id && m.sender_id !== thread.student_id) return true;
       const role = m.sender?.role || m.profiles?.role;
       return role === 'teacher' || role === 'admin';
     });
-    if (teacherMsgs.length === 0) return null;
-    return teacherMsgs[0];
+    return teacherMsg || null;
   };
 
   const handleNotificationClick = async (thread: any) => {
