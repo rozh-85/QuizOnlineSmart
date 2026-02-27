@@ -1027,8 +1027,8 @@ export const lectureQAService = {
 
   async markAsRead(questionId: string, forStudent = false): Promise<void> {
     const updateData = forStudent 
-      ? { is_read_by_student: true } 
-      : { is_read: true };
+      ? { is_read_by_student: true, updated_at: new Date().toISOString() } 
+      : { is_read: true, updated_at: new Date().toISOString() };
     
     const { data, error } = await supabase
       .from('lecture_questions')
@@ -1041,17 +1041,19 @@ export const lectureQAService = {
       throw error;
     }
     
-    // Verify the update actually succeeded
+    // Verify the update actually succeeded — throw if not
     if (data && data.length > 0) {
       const updated = data[0];
       const expectedRead = forStudent ? updated.is_read_by_student : updated.is_read;
       if (!expectedRead) {
-        console.warn('[markAsRead] Update returned but read flag is still false:', questionId, updated);
+        console.error('[markAsRead] Update returned but read flag is still false:', questionId, updated);
+        throw new Error('markAsRead verification failed: flag still false');
       } else {
         console.log('[markAsRead] Successfully marked as read:', questionId, forStudent ? 'student' : 'teacher');
       }
     } else {
-      console.warn('[markAsRead] Update returned no rows - thread may not exist:', questionId);
+      console.error('[markAsRead] Update returned no rows - thread may not exist:', questionId);
+      throw new Error('markAsRead failed: no rows returned');
     }
   },
 
