@@ -24,6 +24,8 @@ const StudentNotifications = () => {
     let sub: any = null;
     let mounted = true;
 
+    let pollInterval: ReturnType<typeof setInterval> | null = null;
+
     const init = async () => {
       try {
         const user = await authApi.getCurrentUser();
@@ -40,6 +42,11 @@ const StudentNotifications = () => {
         sub = subscribeToStudentQuestions(user.id, channelName, () => {
           if (mounted) fetchUnread(user.id);
         });
+
+        // 3-second polling fallback in case realtime misses an event
+        pollInterval = setInterval(() => {
+          if (mounted) fetchUnread(user.id);
+        }, 3000);
       } catch (e) {
         console.error('Notifications fetch error:', e);
       } finally {
@@ -58,6 +65,7 @@ const StudentNotifications = () => {
       mounted = false;
       window.removeEventListener('unread-count-changed', handleCountChange);
       if (sub) sub.unsubscribe();
+      if (pollInterval) clearInterval(pollInterval);
     };
   }, [navigate, fetchUnread]);
 

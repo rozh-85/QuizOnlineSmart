@@ -185,6 +185,16 @@ export function useLectureQA({ lectureId, isAdminView = false, initialThreadId }
             }
           }
         });
+
+        // 3-second polling fallback so messages appear even if realtime misses an event
+        const msgPollInterval = setInterval(() => {
+          loadMessages(selectedQuestionId);
+        }, 3000);
+
+        return () => {
+          if (mSub) mSub.unsubscribe();
+          clearInterval(msgPollInterval);
+        };
       } else {
         setMessages([]);
       }
