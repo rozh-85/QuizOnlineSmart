@@ -1120,8 +1120,7 @@ export const lectureQAService = {
         *,
         lectures(id, title),
         messages:lecture_question_messages(
-          message_text, created_at, sender_id,
-          sender:profiles!lecture_question_messages_sender_id_fkey(role)
+          message_text, created_at, sender_id
         )
       `)
       .eq('student_id', studentId)
@@ -1146,12 +1145,6 @@ export const lectureQAService = {
       lecture: thread.lectures || { id: thread.lecture_id, title: 'Lecture' },
       messages: (thread.messages || [])
         .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        .slice(0, 3)
-        .map((m: any) => ({
-          ...m,
-          sender: m.sender || null,
-          profiles: m.sender || null
-        }))
     }));
   }
 };
