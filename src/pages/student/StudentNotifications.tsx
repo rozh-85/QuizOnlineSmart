@@ -83,8 +83,10 @@ const StudentNotifications = () => {
     } catch (e) {
       console.error('Failed to mark chat as read:', e);
     }
+    // Instant badge decrement (synchronous, no DB wait)
+    window.dispatchEvent(new Event('unread-count-decrement'));
     navigate(`/quiz?lectureId=${thread.lecture_id}&threadId=${thread.id}`);
-    // Dispatch after navigate so the new layout wrapper's event listener is active
+    // Backup: sync with DB after navigation settles
     setTimeout(() => {
       window.dispatchEvent(new Event('unread-count-changed'));
     }, 500);

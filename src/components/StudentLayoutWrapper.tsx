@@ -60,10 +60,16 @@ const StudentLayoutWrapper = ({ children }: Props) => {
         }
       } catch { /* ignore */ }
     };
+    // Optimistic instant decrement (no DB round-trip needed)
+    const handleDecrement = () => {
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    };
     window.addEventListener('unread-count-changed', handleCountChange);
+    window.addEventListener('unread-count-decrement', handleDecrement);
 
     return () => {
       window.removeEventListener('unread-count-changed', handleCountChange);
+      window.removeEventListener('unread-count-decrement', handleDecrement);
       if (sub) sub.unsubscribe();
     };
   }, []);
