@@ -61,19 +61,19 @@ const StudentNotifications = () => {
     return new Date(d).toLocaleDateString([], { month: 'short', day: 'numeric' });
   };
 
-  const getLastTeacherMessage = (thread: any) => {
+  const getLastMessage = (thread: any) => {
     if (!thread.messages || thread.messages.length === 0) return null;
-    // Sort newest first
+    // Sort newest first, return the very latest message
     const sorted = [...thread.messages].sort(
       (a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
-    // Find newest teacher message: sender_id !== student means it's from teacher
-    const teacherMsg = sorted.find((m: any) => {
-      if (thread.student_id && m.sender_id && m.sender_id !== thread.student_id) return true;
-      const role = m.sender?.role || m.profiles?.role;
-      return role === 'teacher' || role === 'admin';
-    });
-    return teacherMsg || null;
+    return sorted[0];
+  };
+
+  const isTeacherMessage = (msg: any, thread: any) => {
+    if (thread.student_id && msg.sender_id && msg.sender_id !== thread.student_id) return true;
+    const role = msg.sender?.role || msg.profiles?.role;
+    return role === 'teacher' || role === 'admin';
   };
 
   const handleNotificationClick = async (thread: any) => {
@@ -153,7 +153,8 @@ const StudentNotifications = () => {
         ) : (
           <div className="space-y-3">
             {unreadThreads.map((thread) => {
-              const lastMsg = getLastTeacherMessage(thread);
+              const lastMsg = getLastMessage(thread);
+              const fromTeacher = lastMsg ? isTeacherMessage(lastMsg, thread) : false;
               return (
                 <button
                   key={thread.id}
@@ -176,7 +177,7 @@ const StudentNotifications = () => {
                       </div>
                       <p className="text-xs text-slate-500 font-medium truncate leading-relaxed mb-2">
                         {lastMsg
-                          ? `Teacher replied: "${lastMsg.message_text.substring(0, 80)}${lastMsg.message_text.length > 80 ? '...' : ''}"`
+                          ? `${fromTeacher ? 'Teacher replied' : 'You'}: "${lastMsg.message_text.substring(0, 80)}${lastMsg.message_text.length > 80 ? '...' : ''}"`
                           : `Your question: "${thread.question_text.substring(0, 80)}${thread.question_text.length > 80 ? '...' : ''}"`
                         }
                       </p>

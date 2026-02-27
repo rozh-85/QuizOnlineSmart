@@ -10,14 +10,14 @@
 -- =====================================================
 
 -- Enable pgcrypto if not already enabled (needed for crypt/gen_salt)
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA extensions;
 
 -- Create or replace the function
 CREATE OR REPLACE FUNCTION change_user_password(target_user_id UUID, new_password TEXT)
 RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = auth, public
+SET search_path = extensions, auth, public
 AS $$
 BEGIN
   -- Validate password length
@@ -28,7 +28,7 @@ BEGIN
   -- Update the password in auth.users
   UPDATE auth.users
   SET
-    encrypted_password = crypt(new_password, gen_salt('bf')),
+    encrypted_password = extensions.crypt(new_password, extensions.gen_salt('bf')),
     updated_at = now()
   WHERE id = target_user_id;
 
