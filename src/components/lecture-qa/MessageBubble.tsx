@@ -28,8 +28,8 @@ const MessageBubble = ({
   onMenuToggle, onStartEdit, onCancelEdit, onSaveEdit, onEditTextChange,
   onDeleteRequest, onViewImage, parseImageUrls, fmtFullDate,
 }: MessageBubbleProps) => {
-  const canEdit = isMentor;
-  const canDelete = isMentor;
+  const canEdit = (isMentor && isTeacherMessage) || (!isMentor && isStudentMessage);
+  const canDelete = (isMentor && isTeacherMessage) || (!isMentor && isStudentMessage);
   const hasActions = canEdit || canDelete;
 
   return (

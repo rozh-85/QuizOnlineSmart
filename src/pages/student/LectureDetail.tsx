@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   ArrowLeft, 
@@ -23,6 +23,24 @@ const LectureDetail = () => {
   const [activeTab, setActiveTab] = useState<'content' | 'qa'>(
     searchParams.get('tab') === 'qa' ? 'qa' : 'content'
   );
+  const qaSectionRef = useRef<HTMLDivElement>(null);
+
+  // Sync activeTab with URL search params (handles re-navigation from notifications)
+  useEffect(() => {
+    if (searchParams.get('tab') === 'qa') {
+      setActiveTab('qa');
+    }
+  }, [searchParams]);
+
+  // Auto-scroll to QA chat section when coming from a notification
+  useEffect(() => {
+    if (activeTab === 'qa' && threadId) {
+      const timer = setTimeout(() => {
+        qaSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, threadId]);
 
   useEffect(() => {
     if (id) fetchData(id);
@@ -246,7 +264,7 @@ const LectureDetail = () => {
             </div>
           </div>
         ) : (
-          <div className="animate-fade-in bg-white p-8 sm:p-14 rounded-3xl border border-slate-100 shadow-sm min-h-[600px]">
+          <div ref={qaSectionRef} id="qa-section" className="animate-fade-in bg-white p-8 sm:p-14 rounded-3xl border border-slate-100 shadow-sm min-h-[600px]">
              <div className="flex items-center gap-4 px-2 mb-10">
                 <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">Communication Center</h3>
                 <div className="h-px flex-1 bg-slate-100"></div>

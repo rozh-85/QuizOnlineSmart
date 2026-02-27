@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useSearchParams, Navigate } from 'react-router-dom';
 import { Play, BookOpen, ArrowLeft, ArrowUp } from 'lucide-react';
 import { Button, Card } from '../../components/ui';
@@ -10,6 +10,8 @@ const QuizStart = () => {
   const [searchParams] = useSearchParams();
   const lectureId = searchParams.get('lectureId');
   const sectionName = searchParams.get('section');
+  const threadId = searchParams.get('threadId') || undefined;
+  const qaSectionRef = useRef<HTMLDivElement>(null);
   const { getQuestionsByLecture, getLecture, getMaterialsByLecture } = useQuiz();
   const [showScrollTop, setShowScrollTop] = useState(false);
 
@@ -22,6 +24,16 @@ const QuizStart = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Auto-scroll to Q&A chat section when coming from a notification
+  useEffect(() => {
+    if (threadId && qaSectionRef.current) {
+      const timer = setTimeout(() => {
+        qaSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [threadId]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -158,7 +170,9 @@ const QuizStart = () => {
         <MaterialsView materials={materials} />
 
         {/* Q&A Section */}
-        <LectureQA lectureId={lectureId} />
+        <div ref={qaSectionRef}>
+          <LectureQA lectureId={lectureId} initialThreadId={threadId} />
+        </div>
 
         {/* Empty State */}
         {questions.length === 0 && !sectionName && (

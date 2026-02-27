@@ -77,7 +77,7 @@ const StudentNotifications = () => {
       setUnreadThreads(prev => prev.filter(t => t.id !== thread.id));
       window.dispatchEvent(new Event('unread-count-changed'));
     } catch { /* ignore */ }
-    navigate(`/lecture/${thread.lecture_id}?tab=qa&threadId=${thread.id}`);
+    navigate(`/quiz?lectureId=${thread.lecture_id}&threadId=${thread.id}`);
   };
 
   return (

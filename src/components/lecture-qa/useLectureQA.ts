@@ -44,6 +44,7 @@ export function useLectureQA({ lectureId, isAdminView = false, initialThreadId }
   const [editingQuestionText, setEditingQuestionText] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const initialThreadApplied = useRef(false);
 
   // Precise mentor detection
   const isMentor = isAdminView || (profile
@@ -72,17 +73,18 @@ export function useLectureQA({ lectureId, isAdminView = false, initialThreadId }
 
       setQuestions(adjusted);
 
-      // Auto-select thread from notification click
-      if (initialThreadId && !selectedQuestionId) {
+      // Auto-select thread from notification click (only once)
+      if (initialThreadId && !initialThreadApplied.current) {
         const found = sorted.find(q => q.id === initialThreadId);
         if (found) {
           setSelectedQuestionId(initialThreadId);
+          initialThreadApplied.current = true;
         }
       }
     } catch (e) {
       console.error('Error loading questions:', e);
     }
-  }, [lectureId, initialThreadId, selectedQuestionId]);
+  }, [lectureId, initialThreadId]);
 
   const loadMessages = useCallback(async (qid: string) => {
     try {
