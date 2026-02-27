@@ -75,9 +75,14 @@ const StudentNotifications = () => {
     try {
       await lectureQAService.markAsRead(thread.id, true);
       setUnreadThreads(prev => prev.filter(t => t.id !== thread.id));
-      window.dispatchEvent(new Event('unread-count-changed'));
-    } catch { /* ignore */ }
+    } catch (e) {
+      console.error('Failed to mark chat as read:', e);
+    }
     navigate(`/quiz?lectureId=${thread.lecture_id}&threadId=${thread.id}`);
+    // Dispatch after navigate so the new layout wrapper's event listener is active
+    setTimeout(() => {
+      window.dispatchEvent(new Event('unread-count-changed'));
+    }, 500);
   };
 
   return (
