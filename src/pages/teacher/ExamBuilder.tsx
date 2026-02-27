@@ -1,31 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import {
-  FileText,
-  Filter,
-  Settings2,
-  Printer,
-  CheckSquare,
-  Square,
-  ToggleLeft,
-  ToggleRight,
-  Search,
-  BookOpen,
-  Layers,
-  Type,
-  Calendar,
-  Clock,
-  Building2,
-  GraduationCap,
-  ChevronDown,
-  ChevronUp,
-  ChevronLeft,
-  ChevronRight,
-  Hash,
-} from 'lucide-react';
+import { FileText, Printer, BookOpen } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useQuiz } from '../../context/QuizContext';
 import { supabase } from '../../lib/supabase';
 import { Card, Button } from '../../components/ui';
+import {
+  ExamFilters,
+  QuestionListItem,
+  QuestionPagination,
+  ExamSettingsPanel,
+  SelectionSummary,
+} from '../../components/exam-builder';
 import type { Question, QuestionType } from '../../types';
 
 interface ExamSettings {
@@ -46,12 +31,6 @@ const TYPE_LABELS: Record<QuestionType, string> = {
 };
 
 const TYPE_ORDER: QuestionType[] = ['true-false', 'multiple-choice', 'blank'];
-
-const TYPE_COLORS: Record<QuestionType, string> = {
-  'true-false': 'bg-sky-50 text-sky-700 border-sky-200',
-  'multiple-choice': 'bg-violet-50 text-violet-700 border-violet-200',
-  'blank': 'bg-amber-50 text-amber-700 border-amber-200',
-};
 
 function escapeHtml(text: string): string {
   return text
@@ -85,84 +64,6 @@ function formatTimeAllowed(raw: string): string {
   }
   return trimmed;
 }
-
-// --- Extracted sub-components (must live OUTSIDE ExamBuilder to avoid remount on every render) ---
-
-const Toggle = ({ on, onToggle, label }: { on: boolean; onToggle: () => void; label: string }) => (
-  <button
-    onClick={onToggle}
-    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all border ${
-      on
-        ? 'bg-primary-50 text-primary-700 border-primary-200'
-        : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-slate-200'
-    }`}
-  >
-    {on ? <ToggleRight size={16} className="text-primary-500" /> : <ToggleLeft size={16} />}
-    {label}
-  </button>
-);
-
-const HeaderField = ({ icon: Icon, label, value, onChange, placeholder, type = 'text' }: {
-  icon: any;
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  placeholder: string;
-  type?: string;
-}) => {
-  const hiddenDateRef = useRef<HTMLInputElement>(null);
-
-  if (type === 'date') {
-    return (
-      <div>
-        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5 flex items-center gap-1.5">
-          <Icon size={11} />
-          {label}
-        </label>
-        <div className="relative">
-          <input
-            type="text"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={placeholder}
-            className="w-full h-9 px-3 pr-9 rounded-lg border-2 border-slate-100 focus:border-primary-400 outline-none transition-all text-xs font-semibold text-slate-700 bg-white"
-          />
-          <input
-            ref={hiddenDateRef}
-            type="date"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="absolute inset-0 opacity-0 w-0 h-0 pointer-events-none"
-            tabIndex={-1}
-          />
-          <button
-            type="button"
-            onClick={() => hiddenDateRef.current?.showPicker?.()}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 hover:text-primary-500 transition-colors"
-          >
-            <Calendar size={14} />
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1.5 flex items-center gap-1.5">
-        <Icon size={11} />
-        {label}
-      </label>
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full h-9 px-3 rounded-lg border-2 border-slate-100 focus:border-primary-400 outline-none transition-all text-xs font-semibold text-slate-700 bg-white"
-      />
-    </div>
-  );
-};
 
 const ExamBuilder = () => {
   const { questions, lectures } = useQuiz();
@@ -657,111 +558,30 @@ const ExamBuilder = () => {
       <div className="grid lg:grid-cols-12 gap-6 items-start">
         {/* LEFT COLUMN: Filters + Question List */}
         <div className="lg:col-span-7 xl:col-span-8 space-y-4">
-
-          {/* Filters */}
-          <Card className="!p-4 shadow-sm border border-slate-100">
-            <div className="flex items-center gap-2 mb-3">
-              <Filter size={15} className="text-primary-600" />
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Filters</span>
-            </div>
-
-            <div className="space-y-3">
-              {/* Lecture Filter */}
-              <div className="flex items-start gap-3">
-                <Toggle on={lectureFilterOn} onToggle={() => {
-                  setLectureFilterOn(!lectureFilterOn);
-                  if (lectureFilterOn) { setSelectedLecture(''); setSectionFilterOn(false); setSelectedSection(''); }
-                }} label="Lecture" />
-                {lectureFilterOn && (
-                  <select
-                    value={selectedLecture}
-                    onChange={(e) => { setSelectedLecture(e.target.value); setSelectedSection(''); }}
-                    className="flex-1 h-8 px-2 rounded-lg border-2 border-slate-100 focus:border-primary-400 outline-none transition-all text-xs font-semibold text-slate-700 bg-white"
-                  >
-                    <option value="">All Lectures</option>
-                    {lectures.map(l => (
-                      <option key={l.id} value={l.id}>{l.title}</option>
-                    ))}
-                  </select>
-                )}
-              </div>
-
-              {/* Section Filter */}
-              <div className="flex items-start gap-3">
-                <Toggle on={sectionFilterOn} onToggle={() => {
-                  if (!lectureFilterOn || !selectedLecture) {
-                    toast.error('Select a lecture first to filter by section');
-                    return;
-                  }
-                  setSectionFilterOn(!sectionFilterOn);
-                  if (sectionFilterOn) setSelectedSection('');
-                }} label="Section" />
-                {sectionFilterOn && (
-                  <select
-                    value={selectedSection}
-                    onChange={(e) => setSelectedSection(e.target.value)}
-                    className="flex-1 h-8 px-2 rounded-lg border-2 border-slate-100 focus:border-primary-400 outline-none transition-all text-xs font-semibold text-slate-700 bg-white"
-                  >
-                    <option value="">All Sections</option>
-                    {sections.map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
-                )}
-              </div>
-
-              {/* Type Filter */}
-              <div className="flex items-start gap-3">
-                <Toggle on={typeFilterOn} onToggle={() => {
-                  setTypeFilterOn(!typeFilterOn);
-                  if (typeFilterOn) setSelectedType('');
-                }} label="Type" />
-                {typeFilterOn && (
-                  <select
-                    value={selectedType}
-                    onChange={(e) => setSelectedType(e.target.value as QuestionType | '')}
-                    className="flex-1 h-8 px-2 rounded-lg border-2 border-slate-100 focus:border-primary-400 outline-none transition-all text-xs font-semibold text-slate-700 bg-white"
-                  >
-                    <option value="">All Types</option>
-                    {TYPE_ORDER.map(t => (
-                      <option key={t} value={t}>{TYPE_LABELS[t]}</option>
-                    ))}
-                  </select>
-                )}
-              </div>
-            </div>
-          </Card>
-
-          {/* Search + Bulk Actions */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-            <div className="relative flex-1">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search questions..."
-                className="w-full h-9 pl-9 pr-3 rounded-xl border-2 border-slate-100 focus:border-primary-400 outline-none transition-all text-xs font-semibold text-slate-700 bg-white"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={allFilteredSelected ? deselectAllFiltered : selectAllFiltered}
-                className="h-9 px-3 rounded-xl border-2 border-slate-100 hover:border-primary-200 text-xs font-bold text-slate-500 hover:text-primary-600 transition-all bg-white flex items-center gap-1.5"
-              >
-                {allFilteredSelected ? <Square size={13} /> : <CheckSquare size={13} />}
-                {allFilteredSelected ? 'Deselect All' : 'Select All'}
-              </button>
-              {selectedIds.size > 0 && (
-                <button
-                  onClick={deselectAll}
-                  className="h-9 px-3 rounded-xl border-2 border-rose-100 text-xs font-bold text-rose-500 hover:bg-rose-50 transition-all bg-white"
-                >
-                  Clear ({selectedIds.size})
-                </button>
-              )}
-            </div>
-          </div>
+          <ExamFilters
+            lectures={lectures}
+            sections={sections}
+            lectureFilterOn={lectureFilterOn}
+            setLectureFilterOn={setLectureFilterOn}
+            selectedLecture={selectedLecture}
+            setSelectedLecture={setSelectedLecture}
+            sectionFilterOn={sectionFilterOn}
+            setSectionFilterOn={setSectionFilterOn}
+            selectedSection={selectedSection}
+            setSelectedSection={setSelectedSection}
+            typeFilterOn={typeFilterOn}
+            setTypeFilterOn={setTypeFilterOn}
+            selectedType={selectedType}
+            setSelectedType={setSelectedType}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            allFilteredSelected={allFilteredSelected}
+            selectAllFiltered={selectAllFiltered}
+            deselectAllFiltered={deselectAllFiltered}
+            deselectAll={deselectAll}
+            selectedCount={selectedIds.size}
+            onToastError={(msg) => toast.error(msg)}
+          />
 
           {/* Question List */}
           <div className="space-y-2">
@@ -772,247 +592,42 @@ const ExamBuilder = () => {
                 <p className="text-xs text-slate-300 mt-1">Try adjusting your filters or search query</p>
               </Card>
             ) : (
-              paginatedQuestions.map((q) => {
-                const isSelected = selectedIds.has(q.id);
-                const lectureName = lectures.find(l => l.id === q.lectureId)?.title;
-                return (
-                  <div
-                    key={q.id}
-                    onClick={() => toggleQuestion(q.id)}
-                    className={`group flex items-start gap-3 p-3.5 rounded-xl border-2 transition-all cursor-pointer ${
-                      isSelected
-                        ? 'bg-primary-50/50 border-primary-200 shadow-sm'
-                        : 'bg-white border-slate-100 hover:border-slate-200 hover:shadow-sm'
-                    }`}
-                  >
-                    {/* Checkbox */}
-                    <div className={`flex-shrink-0 w-6 h-6 rounded-md flex items-center justify-center mt-0.5 transition-all border-2 ${
-                      isSelected
-                        ? 'bg-primary-600 border-primary-600 text-white'
-                        : 'border-slate-200 text-transparent group-hover:border-slate-300'
-                    }`}>
-                      <CheckSquare size={14} />
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-semibold leading-snug mb-1.5 ${
-                        isSelected ? 'text-slate-900' : 'text-slate-700'
-                      }`}>
-                        {q.text.length > 150 ? q.text.slice(0, 150) + '...' : q.text}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border ${TYPE_COLORS[q.type]}`}>
-                          {TYPE_LABELS[q.type]}
-                        </span>
-                        {lectureName && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold text-slate-400 bg-slate-50 border border-slate-100">
-                            <BookOpen size={9} />
-                            {lectureName}
-                          </span>
-                        )}
-                        {q.sectionId && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold text-slate-400 bg-slate-50 border border-slate-100">
-                            <Layers size={9} />
-                            {q.sectionId}
-                          </span>
-                        )}
-                        {q.type === 'multiple-choice' && q.options && (
-                          <span className="text-[10px] font-bold text-slate-300">
-                            {q.options.length} options
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
+              paginatedQuestions.map((q) => (
+                <QuestionListItem
+                  key={q.id}
+                  question={q}
+                  isSelected={selectedIds.has(q.id)}
+                  lectureName={lectures.find(l => l.id === q.lectureId)?.title}
+                  onToggle={() => toggleQuestion(q.id)}
+                />
+              ))
             )}
           </div>
 
           {filteredQuestions.length > 0 && (
-            <div className="flex flex-col items-center gap-2 py-2">
-              <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">
-                Showing {(safeCurrentPage - 1) * QUESTIONS_PER_PAGE + 1}–{Math.min(safeCurrentPage * QUESTIONS_PER_PAGE, filteredQuestions.length)} of {filteredQuestions.length} question{filteredQuestions.length !== 1 ? 's' : ''}
-              </p>
-              {totalPages > 1 && (
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={safeCurrentPage <= 1}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg border-2 border-slate-100 text-slate-400 hover:border-primary-200 hover:text-primary-600 transition-all disabled:opacity-30 disabled:cursor-not-allowed bg-white"
-                  >
-                    <ChevronLeft size={14} />
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all ${
-                        page === safeCurrentPage
-                          ? 'bg-primary-600 text-white shadow-sm'
-                          : 'border-2 border-slate-100 text-slate-500 hover:border-primary-200 hover:text-primary-600 bg-white'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={safeCurrentPage >= totalPages}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg border-2 border-slate-100 text-slate-400 hover:border-primary-200 hover:text-primary-600 transition-all disabled:opacity-30 disabled:cursor-not-allowed bg-white"
-                  >
-                    <ChevronRight size={14} />
-                  </button>
-                </div>
-              )}
-            </div>
+            <QuestionPagination
+              currentPage={safeCurrentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              startIndex={(safeCurrentPage - 1) * QUESTIONS_PER_PAGE}
+              endIndex={safeCurrentPage * QUESTIONS_PER_PAGE}
+              totalItems={filteredQuestions.length}
+            />
           )}
         </div>
 
         {/* RIGHT COLUMN: Settings + Generate */}
         <div className="lg:col-span-5 xl:col-span-4 space-y-4">
           <div className="lg:sticky lg:top-24">
+            <SelectionSummary selectedIds={selectedIds} questions={questions} />
 
-            {/* Selection Summary */}
-            {selectedIds.size > 0 && (
-              <Card className="!p-4 shadow-sm border border-primary-100 mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Hash size={14} className="text-primary-600" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-primary-600">
-                    Selected: {selectedIds.size} question{selectedIds.size !== 1 ? 's' : ''}
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {TYPE_ORDER.map(t => {
-                    const count = selectedByType[t] || 0;
-                    if (count === 0) return null;
-                    return (
-                      <span key={t} className={`px-2 py-0.5 rounded-md text-[10px] font-black border ${TYPE_COLORS[t]}`}>
-                        {TYPE_LABELS[t]}: {count}
-                      </span>
-                    );
-                  })}
-                </div>
-              </Card>
-            )}
+            <ExamSettingsPanel
+              settings={settings}
+              settingsOpen={settingsOpen}
+              setSettingsOpen={setSettingsOpen}
+              updateSetting={updateSetting}
+            />
 
-            {/* Header Settings */}
-            <Card className="!p-4 shadow-sm border border-slate-100 mb-4">
-              <button
-                onClick={() => setSettingsOpen(!settingsOpen)}
-                className="w-full flex items-center justify-between mb-0"
-              >
-                <div className="flex items-center gap-2">
-                  <Settings2 size={15} className="text-primary-600" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-                    Exam Settings
-                  </span>
-                </div>
-                {settingsOpen ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
-              </button>
-
-              {settingsOpen && (
-                <div className="mt-4 space-y-4">
-                  {/* Header Toggle */}
-                  <div>
-                    <button
-                      onClick={() => updateSetting('header_enabled', !settings.header_enabled)}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border-2 transition-all ${
-                        settings.header_enabled
-                          ? 'border-emerald-200 bg-emerald-50/50'
-                          : 'border-slate-100 bg-slate-50/50'
-                      }`}
-                    >
-                      <span className={`text-xs font-black ${settings.header_enabled ? 'text-emerald-700' : 'text-slate-400'}`}>
-                        Exam Header
-                      </span>
-                      <div className={`w-9 h-5 rounded-full p-0.5 transition-colors ${
-                        settings.header_enabled ? 'bg-emerald-500' : 'bg-slate-200'
-                      }`}>
-                        <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
-                          settings.header_enabled ? 'translate-x-4' : 'translate-x-0'
-                        }`} />
-                      </div>
-                    </button>
-                  </div>
-
-                  {settings.header_enabled && (
-                    <div className="space-y-3 pl-1">
-                      <HeaderField
-                        icon={Building2}
-                        label="College"
-                        value={settings.college}
-                        onChange={(v) => updateSetting('college', v)}
-                        placeholder="e.g. College of Science"
-                      />
-                      <HeaderField
-                        icon={GraduationCap}
-                        label="Department"
-                        value={settings.department}
-                        onChange={(v) => updateSetting('department', v)}
-                        placeholder="e.g. Chemistry Dept."
-                      />
-                      <HeaderField
-                        icon={Type}
-                        label="Subject"
-                        value={settings.subject}
-                        onChange={(v) => updateSetting('subject', v)}
-                        placeholder="e.g. Organic Chemistry"
-                      />
-                      <HeaderField
-                        icon={Calendar}
-                        label="Date"
-                        value={settings.date}
-                        onChange={(v) => updateSetting('date', v)}
-                        placeholder="e.g. 2025-02-17"
-                        type="date"
-                      />
-                      <HeaderField
-                        icon={Clock}
-                        label="Time Allowed"
-                        value={settings.time_allowed}
-                        onChange={(v) => updateSetting('time_allowed', v)}
-                        placeholder="e.g. 2 Hours"
-                      />
-                      <p className="text-[10px] text-slate-400 font-medium italic">
-                        Only filled fields will appear in the PDF header. Settings auto-save.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Footer Toggle */}
-                  <div>
-                    <button
-                      onClick={() => updateSetting('footer_enabled', !settings.footer_enabled)}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border-2 transition-all ${
-                        settings.footer_enabled
-                          ? 'border-emerald-200 bg-emerald-50/50'
-                          : 'border-slate-100 bg-slate-50/50'
-                      }`}
-                    >
-                      <span className={`text-xs font-black ${settings.footer_enabled ? 'text-emerald-700' : 'text-slate-400'}`}>
-                        Page Footer
-                      </span>
-                      <div className={`w-9 h-5 rounded-full p-0.5 transition-colors ${
-                        settings.footer_enabled ? 'bg-emerald-500' : 'bg-slate-200'
-                      }`}>
-                        <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
-                          settings.footer_enabled ? 'translate-x-4' : 'translate-x-0'
-                        }`} />
-                      </div>
-                    </button>
-                    {settings.footer_enabled && (
-                      <p className="text-[10px] text-slate-400 font-medium italic mt-2 pl-1">
-                        Enable "Headers and footers" in the print dialog to include page numbers.
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </Card>
-
-            {/* Generate Button */}
             <Button
               onClick={generatePDF}
               variant="primary"
