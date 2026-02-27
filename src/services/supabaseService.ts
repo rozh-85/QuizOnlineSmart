@@ -482,6 +482,22 @@ export const studentService = {
     if (error) throw error;
   },
 
+  async changeStudentPassword(studentId: string, newPassword: string): Promise<void> {
+    // Update auth password via database function
+    const { error: rpcError } = await supabase.rpc('change_user_password', {
+      target_user_id: studentId,
+      new_password: newPassword
+    });
+    if (rpcError) throw rpcError;
+
+    // Also update pin_display in profiles so it stays in sync
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ pin_display: newPassword })
+      .eq('id', studentId);
+    if (profileError) throw profileError;
+  },
+
   async deleteStudent(id: string): Promise<void> {
     const { error } = await supabase
       .from('profiles')

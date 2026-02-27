@@ -17,7 +17,10 @@ import {
   Loader2,
   X,
   Trash2,
-  Unlock
+  Unlock,
+  KeyRound,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { studentService, classService } from '../../services/supabaseService';
 import toast from 'react-hot-toast';
@@ -51,6 +54,13 @@ const StudentManager = () => {
   const [studentToDelete, setStudentToDelete] = useState<any>(null);
   const [isResetDeviceOpen, setIsResetDeviceOpen] = useState(false);
   const [studentToReset, setStudentToReset] = useState<any>(null);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [studentToChangePassword, setStudentToChangePassword] = useState<any>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -147,6 +157,49 @@ const StudentManager = () => {
       toast.error('Failed to reset device lock');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleChangePassword = (student: any) => {
+    setStudentToChangePassword(student);
+    setNewPassword('');
+    setConfirmPassword('');
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
+    setIsPasswordModalOpen(true);
+  };
+
+  const confirmChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!studentToChangePassword || changingPassword) return;
+
+    if (!newPassword) {
+      toast.error('Please enter a new password');
+      return;
+    }
+    if (newPassword.length < 4) {
+      toast.error('Password must be at least 4 characters');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    try {
+      setChangingPassword(true);
+      await studentService.changeStudentPassword(studentToChangePassword.id, newPassword);
+      toast.success(`Password updated for ${studentToChangePassword.full_name}`);
+      setIsPasswordModalOpen(false);
+      setStudentToChangePassword(null);
+      setNewPassword('');
+      setConfirmPassword('');
+      fetchData();
+    } catch (error: any) {
+      console.error('Password change error:', error);
+      toast.error(error.message || 'Failed to change password');
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -363,6 +416,13 @@ const StudentManager = () => {
                   title="Assign to class"
                 >
                   <LinkIcon size={15} />
+                </button>
+                <button 
+                  onClick={() => handleChangePassword(s)}
+                  className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-all"
+                  title="Change password"
+                >
+                  <KeyRound size={15} />
                 </button>
                 <button 
                   onClick={() => handleDeleteStudent(s)}
@@ -599,6 +659,94 @@ const StudentManager = () => {
             <button onClick={() => setIsAssignModalOpen(false)} className="w-full mt-4 py-2.5 text-slate-400 hover:text-slate-900 font-bold text-sm transition-colors">
               Cancel
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Change Password Modal */}
+      {isPasswordModalOpen && studentToChangePassword && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 sm:p-8 animate-scale-in relative">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center">
+                  <KeyRound size={18} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-slate-900 tracking-tight">Change Password</h2>
+                  <p className="text-xs text-slate-400 font-medium mt-0.5">{studentToChangePassword.full_name}</p>
+                </div>
+              </div>
+              <button onClick={() => setIsPasswordModalOpen(false)} className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all">
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={confirmChangePassword} className="space-y-4">
+              <FormField label="New Password">
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    required
+                    className="w-full px-4 py-3 pr-10 bg-slate-50 border border-slate-200 focus:border-violet-500 focus:bg-white rounded-xl outline-none font-bold tracking-widest text-sm transition-all focus:ring-4 focus:ring-violet-50"
+                    placeholder="Enter new password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </FormField>
+
+              <FormField label="Confirm Password">
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required
+                    className={`w-full px-4 py-3 pr-10 bg-slate-50 border focus:bg-white rounded-xl outline-none font-bold tracking-widest text-sm transition-all focus:ring-4 ${
+                      confirmPassword && confirmPassword !== newPassword
+                        ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-50'
+                        : 'border-slate-200 focus:border-violet-500 focus:ring-violet-50'
+                    }`}
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                {confirmPassword && confirmPassword !== newPassword && (
+                  <p className="text-xs text-rose-500 font-medium mt-1.5 flex items-center gap-1">
+                    <AlertCircle size={10} /> Passwords do not match
+                  </p>
+                )}
+              </FormField>
+
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setIsPasswordModalOpen(false)} className="flex-1 py-3 text-slate-500 font-bold text-sm hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-colors">
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={changingPassword || !newPassword || newPassword !== confirmPassword}
+                  className="flex-1 py-3 bg-violet-600 text-white font-bold rounded-xl shadow-md shadow-violet-200 text-sm flex items-center justify-center gap-2 transition-all active:scale-95 hover:bg-violet-700 disabled:opacity-50"
+                >
+                  {changingPassword ? (
+                    <><Loader2 className="animate-spin" size={14} /> Updating...</>
+                  ) : 'Update Password'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
