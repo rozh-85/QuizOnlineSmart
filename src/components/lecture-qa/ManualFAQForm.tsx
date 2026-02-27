@@ -1,4 +1,4 @@
-import { UserPlus, Pencil } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import { Button, Card, Input, TextArea } from '../ui';
 
 interface ManualFAQFormProps {
