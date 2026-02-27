@@ -4,6 +4,7 @@ import { materialApi } from '../api/materialApi';
 import { whatsNewApi } from '../api/whatsNewApi';
 import { subscribeToMaterials } from '../services/realtimeService';
 import { adaptMaterial } from '../utils/adapters';
+import toast from 'react-hot-toast';
 
 interface MaterialContextType {
   materials: Material[];
@@ -56,7 +57,10 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
       reference_id: created.id,
       title: created.title,
       description: `New ${created.file_type} material`,
-    }).catch(err => console.error('Failed to create what\'s new entry:', err));
+    }).catch(err => {
+      console.error('Failed to create what\'s new entry:', err);
+      toast.error('What\'s New: ' + (err?.message || 'Failed to track material'));
+    });
     await loadMaterials();
   }, [loadMaterials]);
 

@@ -4,6 +4,7 @@ import { questionApi } from '../api/questionApi';
 import { whatsNewApi } from '../api/whatsNewApi';
 import { subscribeToQuestions } from '../services/realtimeService';
 import { adaptQuestion } from '../utils/adapters';
+import toast from 'react-hot-toast';
 
 interface QuestionContextType {
   questions: Question[];
@@ -61,7 +62,10 @@ export const QuestionProvider = ({ children }: { children: ReactNode }) => {
       reference_id: created.id,
       title: created.text.length > 80 ? created.text.slice(0, 80) + '…' : created.text,
       description: `New ${created.difficulty} ${created.type} question`,
-    }).catch(err => console.error('Failed to create what\'s new entry:', err));
+    }).catch(err => {
+      console.error('Failed to create what\'s new entry:', err);
+      toast.error('What\'s New: ' + (err?.message || 'Failed to track question'));
+    });
   }, []);
 
   const updateQuestion = useCallback(async (id: string, q: Omit<Question, 'id'>) => {

@@ -4,6 +4,7 @@ import { lectureApi } from '../api/lectureApi';
 import { whatsNewApi } from '../api/whatsNewApi';
 import { subscribeToLectures } from '../services/realtimeService';
 import { adaptLecture } from '../utils/adapters';
+import toast from 'react-hot-toast';
 
 interface LectureContextType {
   lectures: Lecture[];
@@ -54,7 +55,10 @@ export const LectureProvider = ({ children }: { children: ReactNode }) => {
       reference_id: created.id,
       title: created.title,
       description: created.description,
-    }).catch(err => console.error('Failed to create what\'s new entry:', err));
+    }).catch(err => {
+      console.error('Failed to create what\'s new entry:', err);
+      toast.error('What\'s New: ' + (err?.message || 'Failed to track lecture'));
+    });
   }, []);
 
   const updateLecture = useCallback(async (id: string, l: Omit<Lecture, 'id' | 'createdAt'>) => {
