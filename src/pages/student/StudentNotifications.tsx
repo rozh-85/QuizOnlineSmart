@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, MessageSquare, Clock, ChevronRight } from 'lucide-react';
+import { MessageSquare, Clock, ChevronRight } from 'lucide-react';
 import { authService, lectureQAService } from '../../services/supabaseService';
 import { supabase } from '../../lib/supabase';
 
@@ -87,8 +87,8 @@ const StudentNotifications = () => {
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-3 mb-2">
             <div className="relative">
-              <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center">
-                <Bell size={20} />
+              <div className="w-10 h-10 rounded-xl bg-primary-100 text-primary-600 flex items-center justify-center">
+                <MessageSquare size={20} />
               </div>
               {unreadThreads.length > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-rose-500 rounded-full text-[8px] font-black text-white flex items-center justify-center border-2 border-rose-50">
@@ -97,9 +97,9 @@ const StudentNotifications = () => {
               )}
             </div>
             <div>
-              <h1 className="text-2xl font-black text-slate-900 tracking-tight">Notifications</h1>
+              <h1 className="text-2xl font-black text-slate-900 tracking-tight">Chat</h1>
               <p className="text-xs text-slate-400 font-medium">
-                {unreadThreads.length > 0 ? `${unreadThreads.length} unread notification${unreadThreads.length > 1 ? 's' : ''}` : 'You\'re all caught up!'}
+                {unreadThreads.length > 0 ? `${unreadThreads.length} unread message${unreadThreads.length > 1 ? 's' : ''}` : 'You\'re all caught up!'}
               </p>
             </div>
           </div>
@@ -125,9 +125,9 @@ const StudentNotifications = () => {
         ) : unreadThreads.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
             <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Bell size={28} className="text-slate-200" />
+              <MessageSquare size={28} className="text-slate-200" />
             </div>
-            <p className="text-sm font-bold text-slate-400 mb-1">No new notifications</p>
+            <p className="text-sm font-bold text-slate-400 mb-1">No new messages</p>
             <p className="text-xs text-slate-300">When your teacher replies to your questions, they'll appear here</p>
           </div>
         ) : (

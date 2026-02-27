@@ -64,7 +64,7 @@ function App() {
               element={<ProtectedRoute allowedRoles={['student']}><StudentLayoutWrapper><StudentQRScan /></StudentLayoutWrapper></ProtectedRoute>} 
             />
             <Route 
-              path="/notifications" 
+              path="/chat" 
               element={<ProtectedRoute allowedRoles={['student']}><StudentLayoutWrapper><StudentNotifications /></StudentLayoutWrapper></ProtectedRoute>} 
             />
             <Route 

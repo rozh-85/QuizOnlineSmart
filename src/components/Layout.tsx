@@ -49,7 +49,7 @@ const Layout = ({ children, showFooter = false }: LayoutProps) => {
               </Link>
             </div>
 
-            {/* Right Side: Desktop Nav & Notification Icon */}
+            {/* Right Side: Desktop Nav & Chat Icon */}
             <div className="flex items-center gap-6">
               <nav className="hidden md:flex items-center gap-8">
                 <Link 
@@ -80,11 +80,11 @@ const Layout = ({ children, showFooter = false }: LayoutProps) => {
                 </a>
               </nav>
 
-              {/* Mobile Notification Icon - Far Right (Visual Only) */}
+              {/* Mobile Chat Icon - Far Right (Visual Only) */}
               <div className="sm:hidden flex items-center">
                 <div 
                   className="p-2 -mr-2 text-slate-400 opacity-50 transition-colors"
-                  aria-label="Notifications"
+                  aria-label="Chat"
                 >
                   <Bell size={24} />
                 </div>

@@ -25,7 +25,7 @@ const QuizStart = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Auto-scroll to Q&A chat section when coming from a notification
+  // Auto-scroll to Q&A chat section when coming from chat page
   useEffect(() => {
     if (threadId && qaSectionRef.current) {
       const timer = setTimeout(() => {

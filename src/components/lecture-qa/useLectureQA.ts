@@ -73,7 +73,7 @@ export function useLectureQA({ lectureId, isAdminView = false, initialThreadId }
 
       setQuestions(adjusted);
 
-      // Auto-select thread from notification click (only once)
+      // Auto-select thread from chat page click (only once)
       if (initialThreadId && !initialThreadApplied.current) {
         const found = sorted.find(q => q.id === initialThreadId);
         if (found) {

@@ -1,6 +1,6 @@
 import { ReactNode, useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Sparkles, QrCode, Bell, User, Beaker, LogOut, BookOpen, X, CheckCircle, XCircle, Loader2, RefreshCw } from 'lucide-react';
+import { Home, Sparkles, QrCode, MessageSquare, User, Beaker, LogOut, BookOpen, X, CheckCircle, XCircle, Loader2, RefreshCw } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { useQuiz } from '../context/QuizContext';
 import { authService, attendanceService } from '../services/supabaseService';
@@ -113,7 +113,7 @@ const StudentLayout = ({ children, unreadCount = 0 }: StudentLayoutProps) => {
     { path: '/dashboard', icon: Home, label: 'Home' },
     { path: '/news', icon: Sparkles, label: 'News' },
     { path: '/scan', icon: QrCode, label: 'QR' },
-    { path: '/notifications', icon: Bell, label: 'Alerts', badge: unreadCount },
+    { path: '/chat', icon: MessageSquare, label: 'Chat', badge: unreadCount },
     { path: '/profile', icon: User, label: 'Profile' },
   ];
 

@@ -25,14 +25,14 @@ const LectureDetail = () => {
   );
   const qaSectionRef = useRef<HTMLDivElement>(null);
 
-  // Sync activeTab with URL search params (handles re-navigation from notifications)
+  // Sync activeTab with URL search params (handles re-navigation from chat)
   useEffect(() => {
     if (searchParams.get('tab') === 'qa') {
       setActiveTab('qa');
     }
   }, [searchParams]);
 
-  // Auto-scroll to QA chat section when coming from a notification
+  // Auto-scroll to QA chat section when coming from chat page
   useEffect(() => {
     if (activeTab === 'qa' && threadId) {
       const timer = setTimeout(() => {
