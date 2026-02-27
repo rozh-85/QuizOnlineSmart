@@ -1,15 +1,6 @@
 import { Settings2, ChevronUp, ChevronDown, Building2, GraduationCap, Type, Calendar, Clock } from 'lucide-react';
 import { Card } from '../ui';
-
-interface ExamSettings {
-  header_enabled: boolean;
-  footer_enabled: boolean;
-  college: string;
-  department: string;
-  subject: string;
-  date: string;
-  time_allowed: string;
-}
+import type { ExamSettings } from '../../types/examBuilder';
 
 const HeaderField = ({
   icon: Icon,
@@ -47,7 +38,7 @@ interface ExamSettingsPanelProps {
   settings: ExamSettings;
   settingsOpen: boolean;
   setSettingsOpen: (v: boolean) => void;
-  updateSetting: (key: string, value: any) => void;
+  updateSetting: <K extends keyof ExamSettings>(key: K, value: ExamSettings[K]) => void;
 }
 
 const ExamSettingsPanel = ({ settings, settingsOpen, setSettingsOpen, updateSetting }: ExamSettingsPanelProps) => {
@@ -138,4 +129,3 @@ const ExamSettingsPanel = ({ settings, settingsOpen, setSettingsOpen, updateSett
 };
 
 export default ExamSettingsPanel;
-export type { ExamSettings };

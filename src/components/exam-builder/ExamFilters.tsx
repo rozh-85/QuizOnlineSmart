@@ -1,14 +1,8 @@
 import { Filter, ToggleLeft, ToggleRight, Search, CheckSquare, Square } from 'lucide-react';
 import { Card } from '../ui';
-import type { QuestionType } from '../../types';
-
-const TYPE_LABELS: Record<QuestionType, string> = {
-  'true-false': 'True / False',
-  'multiple-choice': 'Multiple Choice',
-  'blank': 'Fill in the Blank',
-};
-
-const TYPE_ORDER: QuestionType[] = ['true-false', 'multiple-choice', 'blank'];
+import { TYPE_LABELS, TYPE_ORDER } from '../../constants/examBuilder';
+import type { Lecture, QuestionType } from '../../types';
+import type { ExamFilterState, ExamFilterActions, ExamBulkActions } from '../../types/examBuilder';
 
 const Toggle = ({ on, onToggle, label }: { on: boolean; onToggle: () => void; label: string }) => (
   <button
@@ -25,42 +19,26 @@ const Toggle = ({ on, onToggle, label }: { on: boolean; onToggle: () => void; la
 );
 
 interface ExamFiltersProps {
-  lectures: any[];
+  lectures: Lecture[];
   sections: string[];
-  lectureFilterOn: boolean;
-  setLectureFilterOn: (v: boolean) => void;
-  selectedLecture: string;
-  setSelectedLecture: (v: string) => void;
-  sectionFilterOn: boolean;
-  setSectionFilterOn: (v: boolean) => void;
-  selectedSection: string;
-  setSelectedSection: (v: string) => void;
-  typeFilterOn: boolean;
-  setTypeFilterOn: (v: boolean) => void;
-  selectedType: QuestionType | '';
-  setSelectedType: (v: QuestionType | '') => void;
-  searchQuery: string;
-  setSearchQuery: (v: string) => void;
-  allFilteredSelected: boolean;
-  selectAllFiltered: () => void;
-  deselectAllFiltered: () => void;
-  deselectAll: () => void;
-  selectedCount: number;
+  filters: ExamFilterState;
+  filterActions: ExamFilterActions;
+  bulkActions: ExamBulkActions;
   onToastError: (msg: string) => void;
 }
 
 const ExamFilters = ({
-  lectures, sections,
-  lectureFilterOn, setLectureFilterOn,
-  selectedLecture, setSelectedLecture,
-  sectionFilterOn, setSectionFilterOn,
-  selectedSection, setSelectedSection,
-  typeFilterOn, setTypeFilterOn,
-  selectedType, setSelectedType,
-  searchQuery, setSearchQuery,
-  allFilteredSelected, selectAllFiltered, deselectAllFiltered,
-  deselectAll, selectedCount, onToastError,
+  lectures, sections, filters, filterActions, bulkActions, onToastError,
 }: ExamFiltersProps) => {
+  const {
+    lectureFilterOn, sectionFilterOn, typeFilterOn,
+    selectedLecture, selectedSection, selectedType, searchQuery,
+  } = filters;
+  const {
+    setLectureFilterOn, setSectionFilterOn, setTypeFilterOn,
+    setSelectedLecture, setSelectedSection, setSelectedType, setSearchQuery,
+  } = filterActions;
+  const { allFilteredSelected, selectedCount, selectAllFiltered, deselectAllFiltered, deselectAll } = bulkActions;
   return (
     <>
       <Card className="!p-4 shadow-sm border border-slate-100">
@@ -171,4 +149,3 @@ const ExamFilters = ({
 };
 
 export default ExamFilters;
-export { TYPE_LABELS, TYPE_ORDER };

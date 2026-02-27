@@ -3,6 +3,9 @@
 // App types (camelCase, used in components) — exported as-is
 export * from './app';
 
+// Exam builder types
+export * from './examBuilder';
+
 // Database types (snake_case, matches DB schema) — re-export with Db prefix for clashing names
 export type {
   Profile,
