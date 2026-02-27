@@ -10,3 +10,4 @@ export { default as LectureManager } from './LectureManager';
 export { default as MaterialsManager } from './MaterialsManager';
 export { default as QAManager } from './QAManager';
 export { default as TeacherLogin } from './TeacherLogin';
+export { default as WhatsNewPublisher } from './WhatsNewPublisher';

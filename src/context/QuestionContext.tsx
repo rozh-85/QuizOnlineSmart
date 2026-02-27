@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import type { Question } from '../types/app';
 import { questionApi } from '../api/questionApi';
+import { whatsNewApi } from '../api/whatsNewApi';
 import { subscribeToQuestions } from '../services/realtimeService';
 import { adaptQuestion } from '../utils/adapters';
 
@@ -42,7 +43,7 @@ export const QuestionProvider = ({ children }: { children: ReactNode }) => {
   }, [loadQuestions]);
 
   const addQuestion = useCallback(async (q: Omit<Question, 'id'>) => {
-    await questionApi.create({
+    const created = await questionApi.create({
       text: q.text,
       type: q.type as any,
       difficulty: q.difficulty as any,
@@ -54,6 +55,13 @@ export const QuestionProvider = ({ children }: { children: ReactNode }) => {
       section_id: q.sectionId ?? null,
       is_visible: q.isVisible ?? true,
     });
+    whatsNewApi.createPending({
+      item_type: 'question',
+      lecture_id: created.lecture_id,
+      reference_id: created.id,
+      title: created.text.length > 80 ? created.text.slice(0, 80) + '…' : created.text,
+      description: `New ${created.difficulty} ${created.type} question`,
+    }).catch(err => console.error('Failed to create what\'s new entry:', err));
   }, []);
 
   const updateQuestion = useCallback(async (id: string, q: Omit<Question, 'id'>) => {

@@ -14,7 +14,8 @@ import {
   ShieldCheck,
   FileText,
   ClipboardCheck,
-  BarChart3
+  BarChart3,
+  Megaphone
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { authApi } from '../api/authApi';
@@ -60,6 +61,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     { path: '/admin/exam-builder', icon: FileText, label: 'Exam Builder' },
     { path: '/admin/attendance', icon: ClipboardCheck, label: 'Attendance' },
     { path: '/admin/reports', icon: BarChart3, label: 'Reports' },
+    { path: '/admin/whats-new', icon: Megaphone, label: "What's New" },
   ];
 
   return (

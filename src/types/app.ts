@@ -49,6 +49,22 @@ export interface Material {
   createdAt: string;
 }
 
+export type WhatsNewItemType = 'lecture' | 'material' | 'question';
+export type WhatsNewStatus = 'pending' | 'published' | 'declined';
+
+export interface WhatsNewItem {
+  id: string;
+  itemType: WhatsNewItemType;
+  lectureId: string | null;
+  referenceId: string;
+  title: string;
+  description: string | null;
+  status: WhatsNewStatus;
+  teacherId: string | null;
+  createdAt: string;
+  publishedAt: string | null;
+}
+
 export interface QuizContextType {
   questions: Question[];
   lectures: Lecture[];

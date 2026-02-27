@@ -33,4 +33,5 @@ export const ROUTES = {
   ADMIN_EXAM_BUILDER: '/admin/exam-builder',
   ADMIN_ATTENDANCE: '/admin/attendance',
   ADMIN_REPORTS: '/admin/reports',
+  ADMIN_WHATS_NEW: '/admin/whats-new',
 } as const;

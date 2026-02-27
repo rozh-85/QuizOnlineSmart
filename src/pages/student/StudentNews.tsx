@@ -1,11 +1,37 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sparkles, BookOpen, Clock, ArrowRight, Search } from 'lucide-react';
+import { Sparkles, BookOpen, FileText, HelpCircle, Clock, ArrowRight, Search, Loader2 } from 'lucide-react';
 import { useQuiz } from '../../context/QuizContext';
 import { authApi } from '../../api/authApi';
+import { whatsNewApi } from '../../api/whatsNewApi';
+import type { WhatsNewItem } from '../../types/app';
+import { adaptWhatsNewItem } from '../../utils/adapters';
+
+const ICON_MAP: Record<string, typeof BookOpen> = {
+  lecture: BookOpen,
+  material: FileText,
+  question: HelpCircle,
+};
+
+const COLOR_MAP: Record<string, { gradient: string; badge: string; badgeText: string }> = {
+  lecture: { gradient: 'from-primary-500 to-primary-600', badge: 'bg-primary-100 text-primary-700', badgeText: 'New Lecture' },
+  material: { gradient: 'from-emerald-500 to-emerald-600', badge: 'bg-emerald-100 text-emerald-700', badgeText: 'New Materials' },
+  question: { gradient: 'from-violet-500 to-violet-600', badge: 'bg-violet-100 text-violet-700', badgeText: 'New Questions' },
+};
+
+// Group published items by (itemType, lectureId, same publishedAt batch)
+interface NewsGroup {
+  key: string;
+  itemType: string;
+  lectureId: string | null;
+  items: WhatsNewItem[];
+  publishedAt: string;
+}
 
 const StudentNews = () => {
   const [search, setSearch] = useState('');
+  const [newsGroups, setNewsGroups] = useState<NewsGroup[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { lectures } = useQuiz();
 
@@ -14,10 +40,37 @@ const StudentNews = () => {
       try {
         const user = await authApi.getCurrentUser();
         if (!user) { navigate('/login', { replace: true }); return; }
+
+        const raw = await whatsNewApi.getPublished();
+        const items = raw.map(adaptWhatsNewItem);
+
+        // Group by itemType + lectureId + publishedAt (same batch)
+        const groupMap = new Map<string, NewsGroup>();
+        for (const item of items) {
+          const batchKey = `${item.itemType}::${item.lectureId || 'null'}::${item.publishedAt || ''}`;
+          if (!groupMap.has(batchKey)) {
+            groupMap.set(batchKey, {
+              key: batchKey,
+              itemType: item.itemType,
+              lectureId: item.lectureId,
+              items: [],
+              publishedAt: item.publishedAt || item.createdAt,
+            });
+          }
+          groupMap.get(batchKey)!.items.push(item);
+        }
+
+        setNewsGroups(Array.from(groupMap.values()));
       } catch { /* ignore */ }
+      finally { setLoading(false); }
     };
     init();
   }, []);
+
+  const getLectureName = (lectureId: string | null) => {
+    if (!lectureId) return 'General';
+    return lectures.find(l => l.id === lectureId)?.title || 'Unknown Lecture';
+  };
 
   const fmtRelative = (d: string) => {
     const diff = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
@@ -32,9 +85,14 @@ const StudentNews = () => {
     return new Date(d).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const recentLectures = [...lectures]
-    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
-    .filter(l => !search || l.title.toLowerCase().includes(search.toLowerCase()));
+  const filteredGroups = newsGroups.filter(g => {
+    if (!search) return true;
+    const s = search.toLowerCase();
+    return (
+      getLectureName(g.lectureId).toLowerCase().includes(s) ||
+      g.items.some(i => i.title.toLowerCase().includes(s))
+    );
+  });
 
   return (
     <div className="animate-fade-in">
@@ -47,7 +105,7 @@ const StudentNews = () => {
             </div>
             <div>
               <h1 className="text-2xl font-black text-slate-900 tracking-tight">What's New</h1>
-              <p className="text-xs text-slate-400 font-medium">Latest lectures and updates</p>
+              <p className="text-xs text-slate-400 font-medium">Latest updates from your teacher</p>
             </div>
           </div>
         </div>
@@ -59,7 +117,7 @@ const StudentNews = () => {
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search lectures..."
+            placeholder="Search updates..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-11 pr-4 py-3 bg-white rounded-xl border border-slate-200 text-sm font-medium text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-300 transition-all shadow-sm"
@@ -68,56 +126,83 @@ const StudentNews = () => {
 
         {/* Timeline */}
         <div className="space-y-4">
-          {recentLectures.length === 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="animate-spin text-slate-400" size={28} />
+            </div>
+          ) : filteredGroups.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
               <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Sparkles size={24} className="text-amber-300" />
               </div>
-              <p className="text-slate-400 font-bold text-sm">No new lectures yet</p>
+              <p className="text-slate-400 font-bold text-sm">No updates yet</p>
               <p className="text-slate-300 text-xs mt-1">Check back soon!</p>
             </div>
           ) : (
-            recentLectures.map((lecture, idx) => (
-              <Link
-                key={lecture.id}
-                to={`/quiz?lectureId=${lecture.id}`}
-                className="group block bg-white rounded-2xl border border-slate-100 hover:border-primary-200 hover:shadow-lg hover:shadow-primary-50 transition-all p-5 sm:p-6"
-              >
-                <div className="flex items-start gap-4">
-                  {/* Icon */}
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 text-white flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-105 transition-transform">
-                    <BookOpen size={20} />
+            filteredGroups.map((group, idx) => {
+              const Icon = ICON_MAP[group.itemType] || BookOpen;
+              const colors = COLOR_MAP[group.itemType] || COLOR_MAP.lecture;
+              const lectureName = getLectureName(group.lectureId);
+              const linkTo = group.lectureId ? `/lecture/${group.lectureId}` : '/dashboard';
+
+              return (
+                <Link
+                  key={group.key}
+                  to={linkTo}
+                  className="group block bg-white rounded-2xl border border-slate-100 hover:border-primary-200 hover:shadow-lg hover:shadow-primary-50 transition-all p-5 sm:p-6"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colors.gradient} text-white flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-105 transition-transform`}>
+                      <Icon size={20} />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        {idx === 0 && (
+                          <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[9px] font-black uppercase tracking-wider rounded-md">Latest</span>
+                        )}
+                        <span className={`px-2 py-0.5 ${colors.badge} text-[9px] font-black uppercase tracking-wider rounded-md`}>
+                          {colors.badgeText}
+                        </span>
+                        {group.items.length > 1 && (
+                          <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[9px] font-black rounded-md">
+                            ×{group.items.length}
+                          </span>
+                        )}
+                        <span className="text-[10px] font-bold text-slate-300 flex items-center gap-1">
+                          <Clock size={10} />
+                          {fmtRelative(group.publishedAt)}
+                        </span>
+                      </div>
+
+                      <h3 className="text-base font-black text-slate-900 tracking-tight group-hover:text-primary-600 transition-colors mb-1 truncate">
+                        {lectureName}
+                      </h3>
+
+                      {/* Show individual item titles */}
+                      <div className="space-y-0.5 mt-1">
+                        {group.items.slice(0, 5).map(item => (
+                          <p key={item.id} className="text-xs text-slate-400 font-medium truncate">
+                            {item.title}
+                          </p>
+                        ))}
+                        {group.items.length > 5 && (
+                          <p className="text-xs text-slate-300 font-bold">+{group.items.length - 5} more</p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 mt-3 text-[10px] font-black text-primary-600 uppercase tracking-wider group-hover:gap-3 transition-all">
+                        View Details <ArrowRight size={12} />
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      {idx === 0 && (
-                        <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[9px] font-black uppercase tracking-wider rounded-md">Latest</span>
-                      )}
-                      <span className="text-[10px] font-bold text-slate-300 flex items-center gap-1">
-                        <Clock size={10} />
-                        {fmtRelative(lecture.createdAt)}
-                      </span>
-                    </div>
-                    <h3 className="text-base font-black text-slate-900 tracking-tight group-hover:text-primary-600 transition-colors mb-1 truncate">
-                      {lecture.title}
-                    </h3>
-                    <p className="text-xs text-slate-400 font-medium line-clamp-2 leading-relaxed">
-                      {lecture.description || 'A new lecture has been added to the course.'}
-                    </p>
-                    <div className="flex items-center gap-2 mt-3 text-[10px] font-black text-primary-600 uppercase tracking-wider group-hover:gap-3 transition-all">
-                      Start Learning <ArrowRight size={12} />
-                    </div>
+                  <div className="mt-4 pt-3 border-t border-slate-50 text-[10px] font-bold text-slate-300">
+                    Published {fmtDate(group.publishedAt)}
                   </div>
-                </div>
-
-                {/* Date footer */}
-                <div className="mt-4 pt-3 border-t border-slate-50 text-[10px] font-bold text-slate-300">
-                  Added {fmtDate(lecture.createdAt)}
-                </div>
-              </Link>
-            ))
+                </Link>
+              );
+            })
           )}
         </div>
       </div>

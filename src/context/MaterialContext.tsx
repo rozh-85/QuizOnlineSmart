@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import type { Material } from '../types/app';
 import { materialApi } from '../api/materialApi';
+import { whatsNewApi } from '../api/whatsNewApi';
 import { subscribeToMaterials } from '../services/realtimeService';
 import { adaptMaterial } from '../utils/adapters';
 
@@ -40,7 +41,7 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
   }, [loadMaterials]);
 
   const addMaterial = useCallback(async (m: Omit<Material, 'id' | 'createdAt'>) => {
-    await materialApi.create({
+    const created = await materialApi.create({
       title: m.title,
       content: m.content || null,
       file_url: m.fileUrl || null,
@@ -49,6 +50,13 @@ export const MaterialProvider = ({ children }: { children: ReactNode }) => {
       lecture_id: m.lectureId || null,
       section_id: m.sectionId || null,
     });
+    whatsNewApi.createPending({
+      item_type: 'material',
+      lecture_id: created.lecture_id,
+      reference_id: created.id,
+      title: created.title,
+      description: `New ${created.file_type} material`,
+    }).catch(err => console.error('Failed to create what\'s new entry:', err));
     await loadMaterials();
   }, [loadMaterials]);
 

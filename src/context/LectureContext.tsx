@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import type { Lecture } from '../types/app';
 import { lectureApi } from '../api/lectureApi';
+import { whatsNewApi } from '../api/whatsNewApi';
 import { subscribeToLectures } from '../services/realtimeService';
 import { adaptLecture } from '../utils/adapters';
 
@@ -41,12 +42,19 @@ export const LectureProvider = ({ children }: { children: ReactNode }) => {
   }, [loadLectures]);
 
   const addLecture = useCallback(async (l: Omit<Lecture, 'id' | 'createdAt'>) => {
-    await lectureApi.create({
+    const created = await lectureApi.create({
       title: l.title,
       description: l.description || null,
       sections: l.sections || [],
       order_index: l.order || 0,
     });
+    whatsNewApi.createPending({
+      item_type: 'lecture',
+      lecture_id: created.id,
+      reference_id: created.id,
+      title: created.title,
+      description: created.description,
+    }).catch(err => console.error('Failed to create what\'s new entry:', err));
   }, []);
 
   const updateLecture = useCallback(async (id: string, l: Omit<Lecture, 'id' | 'createdAt'>) => {

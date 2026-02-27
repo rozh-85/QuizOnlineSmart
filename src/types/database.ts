@@ -108,6 +108,19 @@ export type LectureQuestion = {
   messages?: LectureQuestionMessage[];
 };
 
+export type WhatsNewItem = {
+  id: string;
+  item_type: 'lecture' | 'material' | 'question';
+  lecture_id: string | null;
+  reference_id: string;
+  title: string;
+  description: string | null;
+  status: 'pending' | 'published' | 'declined';
+  teacher_id: string | null;
+  created_at: string;
+  published_at: string | null;
+};
+
 export type LectureQuestionMessage = {
   id: string;
   question_id: string;

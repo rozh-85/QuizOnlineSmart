@@ -1,5 +1,5 @@
-import type { Lecture as DbLecture, Question as DbQuestion, LectureMaterial as DbMaterial } from '../types/database';
-import type { Lecture, Question, Material } from '../types/app';
+import type { Lecture as DbLecture, Question as DbQuestion, LectureMaterial as DbMaterial, WhatsNewItem as DbWhatsNewItem } from '../types/database';
+import type { Lecture, Question, Material, WhatsNewItem } from '../types/app';
 
 // =====================================================
 // Type adapters: Supabase (snake_case) <-> App (camelCase)
@@ -38,4 +38,17 @@ export const adaptMaterial = (material: DbMaterial): Material => ({
   lectureId: material.lecture_id || undefined,
   sectionId: material.section_id || undefined,
   createdAt: material.created_at,
+});
+
+export const adaptWhatsNewItem = (item: DbWhatsNewItem): WhatsNewItem => ({
+  id: item.id,
+  itemType: item.item_type,
+  lectureId: item.lecture_id,
+  referenceId: item.reference_id,
+  title: item.title,
+  description: item.description,
+  status: item.status,
+  teacherId: item.teacher_id,
+  createdAt: item.created_at,
+  publishedAt: item.published_at,
 });

@@ -14,6 +14,7 @@ const Reports = lazy(() => import('./pages/teacher/Reports'));
 const LectureManager = lazy(() => import('./pages/teacher/LectureManager'));
 const MaterialsManager = lazy(() => import('./pages/teacher/MaterialsManager'));
 const QAManager = lazy(() => import('./pages/teacher/QAManager'));
+const WhatsNewPublisher = lazy(() => import('./pages/teacher/WhatsNewPublisher'));
 const AttendanceScan = lazy(() => import('./pages/student/AttendanceScan'));
 const StudentDashboard = lazy(() => import('./pages/student/StudentDashboard'));
 const StudentNews = lazy(() => import('./pages/student/StudentNews'));
@@ -68,6 +69,7 @@ export const adminRoutes: AppRoute[] = [
   { path: ROUTES.ADMIN_EXAM_BUILDER, element: <ExamBuilder />, roles: ['teacher', 'admin'] },
   { path: ROUTES.ADMIN_ATTENDANCE, element: <Attendance />, roles: ['teacher', 'admin'] },
   { path: ROUTES.ADMIN_REPORTS, element: <Reports />, roles: ['teacher', 'admin'] },
+  { path: ROUTES.ADMIN_WHATS_NEW, element: <WhatsNewPublisher />, roles: ['teacher', 'admin'] },
 ];
 
 // ── Public routes (no layout wrapper) ───────────────────
