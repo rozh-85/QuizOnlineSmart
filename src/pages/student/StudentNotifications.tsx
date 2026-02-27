@@ -78,18 +78,26 @@ const StudentNotifications = () => {
 
   const handleNotificationClick = async (thread: any) => {
     try {
+      // 1. Update database first
       await lectureQAService.markAsRead(thread.id, true);
+      // 2. DB succeeded → update local list
       setUnreadThreads(prev => prev.filter(t => t.id !== thread.id));
+      // 3. Instant nav bar badge decrement
+      window.dispatchEvent(new Event('unread-count-decrement'));
+      // 4. Navigate to lecture chat
+      navigate(`/quiz?lectureId=${thread.lecture_id}&threadId=${thread.id}`);
+      // 5. Backup: re-sync badge with DB after navigation
+      setTimeout(() => {
+        window.dispatchEvent(new Event('unread-count-changed'));
+      }, 500);
     } catch (e) {
       console.error('Failed to mark chat as read:', e);
+      // DB failed → still navigate but force a re-sync so badge stays accurate
+      navigate(`/quiz?lectureId=${thread.lecture_id}&threadId=${thread.id}`);
+      setTimeout(() => {
+        window.dispatchEvent(new Event('unread-count-changed'));
+      }, 500);
     }
-    // Instant badge decrement (synchronous, no DB wait)
-    window.dispatchEvent(new Event('unread-count-decrement'));
-    navigate(`/quiz?lectureId=${thread.lecture_id}&threadId=${thread.id}`);
-    // Backup: sync with DB after navigation settles
-    setTimeout(() => {
-      window.dispatchEvent(new Event('unread-count-changed'));
-    }, 500);
   };
 
   return (
