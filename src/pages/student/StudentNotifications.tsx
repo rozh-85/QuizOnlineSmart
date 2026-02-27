@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageSquare, Clock, ChevronRight } from 'lucide-react';
 import { authApi } from '../../api/authApi';
@@ -9,36 +9,57 @@ const StudentNotifications = () => {
   const [unreadThreads, setUnreadThreads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const userIdRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      const user = await authApi.getCurrentUser();
-      if (!user) { navigate('/login', { replace: true }); return; }
-      await fetchUnread(user.id);
-
-      // Subscribe to real-time via service layer
-      const sub = subscribeToStudentQuestions(user.id, 'student-notif-page-' + user.id, () => fetchUnread(user.id));
-
-      return () => { sub.unsubscribe(); };
-    } catch (e) {
-      console.error('Notifications fetch error:', e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchUnread = async (userId: string) => {
+  const fetchUnread = useCallback(async (userId: string) => {
     try {
       const threads = await lectureQAApi.getStudentUnreadThreads(userId);
       setUnreadThreads(threads);
     } catch (e) {
       console.error('Error fetching unread:', e);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    let sub: any = null;
+    let mounted = true;
+
+    const init = async () => {
+      try {
+        const user = await authApi.getCurrentUser();
+        if (!mounted) return;
+        if (!user) { navigate('/login', { replace: true }); return; }
+
+        userIdRef.current = user.id;
+        await fetchUnread(user.id);
+
+        // Remove any stale channel with the same name before subscribing
+        const channelName = 'student-notif-page-' + user.id;
+        try { (await import('../../lib/supabase')).supabase.removeChannel((await import('../../lib/supabase')).supabase.channel(channelName)); } catch { /* ignore */ }
+
+        sub = subscribeToStudentQuestions(user.id, channelName, () => {
+          if (mounted) fetchUnread(user.id);
+        });
+      } catch (e) {
+        console.error('Notifications fetch error:', e);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    init();
+
+    // Also refresh when other components signal unread-count changes
+    const handleCountChange = () => {
+      if (userIdRef.current) fetchUnread(userIdRef.current);
+    };
+    window.addEventListener('unread-count-changed', handleCountChange);
+
+    return () => {
+      mounted = false;
+      window.removeEventListener('unread-count-changed', handleCountChange);
+      if (sub) sub.unsubscribe();
+    };
+  }, [navigate, fetchUnread]);
 
   const fmtRelative = (d: string) => {
     const diff = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
