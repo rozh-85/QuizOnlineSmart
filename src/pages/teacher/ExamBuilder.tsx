@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { FileText, Printer, BookOpen } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useQuiz } from '../../context/QuizContext';
-import { supabase } from '../../lib/supabase';
+import { examSettingsApi } from '../../api/examSettingsApi';
 import { Card, Button } from '../../components/ui';
 import {
   ExamFilters,
@@ -100,14 +100,8 @@ const ExamBuilder = () => {
   useEffect(() => {
     (async () => {
       try {
-        const { data, error } = await supabase
-          .from('exam_settings')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (!error && data && data.length > 0) {
-          const d = data[0];
+        const d = await examSettingsApi.getLatest();
+        if (d) {
           setSettings({
             id: d.id,
             subject: d.subject || '',
@@ -132,27 +126,9 @@ const ExamBuilder = () => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(async () => {
       try {
-        const payload = {
-          subject: newSettings.subject,
-          department: newSettings.department,
-          college: newSettings.college,
-          date: newSettings.date,
-          time_allowed: newSettings.time_allowed,
-          header_enabled: newSettings.header_enabled,
-          footer_enabled: newSettings.footer_enabled,
-        };
-
-        if (newSettings.id) {
-          await supabase.from('exam_settings').update(payload).eq('id', newSettings.id);
-        } else {
-          const { data } = await supabase
-            .from('exam_settings')
-            .insert([payload])
-            .select()
-            .single();
-          if (data) {
-            setSettings(prev => ({ ...prev, id: data.id }));
-          }
+        const result = await examSettingsApi.upsert(newSettings);
+        if (result && !newSettings.id) {
+          setSettings(prev => ({ ...prev, id: result.id }));
         }
       } catch (e) {
         console.error('Failed to save settings:', e);

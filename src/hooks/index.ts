@@ -5,3 +5,4 @@ export { useLectures } from './useLectures';
 export { useAttendanceSession, useQrTokenRefresh } from './useAttendance';
 export type { SessionStatus } from './useAttendance';
 export { useTimer } from './useTimer';
+export { useTeacherUnreadCount, useTeacherUnreadByLecture, useStudentUnreadCount } from './useUnreadCount';

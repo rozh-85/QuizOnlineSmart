@@ -1,0 +1,12 @@
+export { default as TeacherDashboard } from './Dashboard';
+export { default as ClassManager } from './ClassManager';
+export { default as StudentManager } from './StudentManager';
+export { default as QuestionEditor } from './QuestionEditor';
+export { default as AIGenerator } from './AIGenerator';
+export { default as ExamBuilder } from './ExamBuilder';
+export { default as Attendance } from './Attendance';
+export { default as Reports } from './Reports';
+export { default as LectureManager } from './LectureManager';
+export { default as MaterialsManager } from './MaterialsManager';
+export { default as QAManager } from './QAManager';
+export { default as TeacherLogin } from './TeacherLogin';

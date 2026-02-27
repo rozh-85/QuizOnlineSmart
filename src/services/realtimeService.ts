@@ -71,3 +71,31 @@ export const subscribeToAttendanceRecords = (sessionId: string, callback: (paylo
     }, callback)
     .subscribe();
 };
+
+export const subscribeToAllMessages = (channelName: string, callback: (payload: any) => void) => {
+  return supabase
+    .channel(channelName)
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'lecture_question_messages'
+    }, callback)
+    .subscribe();
+};
+
+export const subscribeToStudentQuestions = (studentId: string, channelName: string, callback: (payload: any) => void) => {
+  return supabase
+    .channel(channelName)
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'lecture_questions',
+      filter: `student_id=eq.${studentId}`
+    }, callback)
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'lecture_question_messages'
+    }, callback)
+    .subscribe();
+};

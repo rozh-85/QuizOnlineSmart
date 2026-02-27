@@ -1,79 +1,13 @@
-import { useState, useEffect, ReactNode } from 'react';
+import { ReactNode } from 'react';
 import StudentLayout from './StudentLayout';
-import { authApi } from '../api/authApi';
-import { lectureQAApi } from '../api/lectureQAApi';
-import { supabase } from '../lib/supabase';
+import { useStudentUnreadCount } from '../hooks/useUnreadCount';
 
 interface Props {
   children: ReactNode;
 }
 
 const StudentLayoutWrapper = ({ children }: Props) => {
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  useEffect(() => {
-    let sub: any = null;
-
-    const init = async () => {
-      try {
-        const user = await authApi.getCurrentUser();
-        if (!user) return;
-
-        // Initial fetch
-        const count = await lectureQAApi.getStudentUnreadCount(user.id);
-        setUnreadCount(count);
-
-        // Subscribe to real-time
-        sub = supabase
-          .channel('layout-notif-' + user.id)
-          .on('postgres_changes', {
-            event: '*',
-            schema: 'public',
-            table: 'lecture_questions',
-            filter: `student_id=eq.${user.id}`
-          }, async () => {
-            const c = await lectureQAApi.getStudentUnreadCount(user.id);
-            setUnreadCount(c);
-          })
-          .on('postgres_changes', {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'lecture_question_messages'
-          }, async () => {
-            const c = await lectureQAApi.getStudentUnreadCount(user.id);
-            setUnreadCount(c);
-          })
-          .subscribe();
-      } catch (e) {
-        console.error('Layout notif init error:', e);
-      }
-    };
-
-    init();
-
-    // Listen for manual count changes (e.g. when student reads a thread)
-    const handleCountChange = async () => {
-      try {
-        const user = await authApi.getCurrentUser();
-        if (user) {
-          const c = await lectureQAApi.getStudentUnreadCount(user.id);
-          setUnreadCount(c);
-        }
-      } catch { /* ignore */ }
-    };
-    // Optimistic instant decrement (no DB round-trip needed)
-    const handleDecrement = () => {
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    };
-    window.addEventListener('unread-count-changed', handleCountChange);
-    window.addEventListener('unread-count-decrement', handleDecrement);
-
-    return () => {
-      window.removeEventListener('unread-count-changed', handleCountChange);
-      window.removeEventListener('unread-count-decrement', handleDecrement);
-      if (sub) sub.unsubscribe();
-    };
-  }, []);
+  const { unreadCount } = useStudentUnreadCount();
 
   return (
     <StudentLayout unreadCount={unreadCount}>

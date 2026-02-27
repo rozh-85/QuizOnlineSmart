@@ -1,4 +1,4 @@
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   GraduationCap, 
@@ -17,9 +17,9 @@ import {
   BarChart3
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { lectureQAApi } from '../api/lectureQAApi';
-import { subscribeToAllQuestions } from '../services/realtimeService';
-import { supabase } from '../lib/supabase';
+import { authApi } from '../api/authApi';
+import { useTeacherUnreadCount } from '../hooks/useUnreadCount';
+import { ROUTES } from '../constants/routes';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -29,103 +29,17 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  useEffect(() => {
-    let pendingTimeouts: ReturnType<typeof setTimeout>[] = [];
-    const lastManualUpdate = { current: 0 };
-    const processedIds = new Set<string>();
-
-    const fetchUnread = async () => {
-      try {
-        const count = await lectureQAApi.getUnreadCount();
-        setUnreadCount(count);
-      } catch (e) {
-        console.error('Error fetching unread count:', e);
-      }
-    };
-    fetchUnread();
-
-    const clearPending = () => {
-      pendingTimeouts.forEach(clearTimeout);
-      pendingTimeouts = [];
-    };
-
-    // Schedule a fetch with an initial delay, canceling any previous pending fetches
-    const scheduleFetch = (delay: number) => {
-      // Don't fetch if we just did a manual update (prevents the "bounce" from stale DB state)
-      if (Date.now() - lastManualUpdate.current < 4000) return;
-      
-      clearPending();
-      pendingTimeouts.push(setTimeout(fetchUnread, delay));
-      // Follow-up to catch any missed updates
-      pendingTimeouts.push(setTimeout(fetchUnread, delay + 2000));
-    };
-
-    // Subscribe to question changes (INSERT, UPDATE, DELETE)
-    const questionsSub = subscribeToAllQuestions(() => {
-      scheduleFetch(300);
-    });
-
-    // Subscribe to new messages — delay so is_read update commits before we query
-    const messagesSub = supabase
-      .channel('admin-messages-channel')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'lecture_question_messages'
-      }, () => {
-        scheduleFetch(600);
-      })
-      .subscribe();
-
-    // Safety polling every 15s
-    const interval = setInterval(() => {
-      // Only poll if we haven't manually changed recently
-      if (Date.now() - lastManualUpdate.current > 5000) {
-        fetchUnread();
-      }
-    }, 15000);
-
-    // Track processed IDs locally to prevent double-decrements within one session
-    const handleManualChange = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      const threadId = detail?.id;
-      const role = detail?.role;
-
-      if (role === 'teacher' && threadId && !processedIds.has(threadId)) {
-        processedIds.add(threadId);
-        setUnreadCount(prev => Math.max(0, prev - 1));
-        lastManualUpdate.current = Date.now();
-      } else if (!threadId && role === 'teacher') {
-        // Fallback for generic teacher events
-        lastManualUpdate.current = Date.now();
-        scheduleFetch(2000);
-      }
-      
-      if (threadId) scheduleFetch(3000); // Wait longer for DB consistency
-    };
-    window.addEventListener('unread-count-changed', handleManualChange);
-
-    return () => {
-      questionsSub.unsubscribe();
-      messagesSub.unsubscribe();
-      clearInterval(interval);
-      clearPending();
-      window.removeEventListener('unread-count-changed', handleManualChange);
-    };
-  }, []);
+  const { unreadCount } = useTeacherUnreadCount({ channelPrefix: 'admin-layout' });
 
   const handleLogout = async () => {
-    // Clear all Supabase related keys
     Object.keys(localStorage).forEach(key => {
       if (key.startsWith('sb-')) localStorage.removeItem(key);
     });
     localStorage.removeItem('teacher_auth');
     try {
-      await supabase.auth.signOut();
+      await authApi.signOut();
       toast.success('Logged out');
-      navigate('/admin/login', { replace: true });
+      navigate(ROUTES.ADMIN_LOGIN, { replace: true });
     } catch (error) {
       console.error('Logout error:', error);
       toast.error('Failed to log out');

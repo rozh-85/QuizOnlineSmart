@@ -1,5 +1,5 @@
 import { Star, Bell } from 'lucide-react';
-import { LectureQuestion } from '../../lib/supabase';
+import type { LectureQuestion } from '../../types/database';
 
 /* ─────────── Helpers ─────────── */
 const fmtTime = (d: string) => {

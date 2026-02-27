@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../ui';
 import MessageBubble from './MessageBubble';
-import { LectureQuestion, LectureQuestionMessage } from '../../lib/supabase';
+import type { LectureQuestion, LectureQuestionMessage } from '../../types/database';
 
 /* ─────────── Helpers ─────────── */
 const fmtFullDate = (d: string) => {

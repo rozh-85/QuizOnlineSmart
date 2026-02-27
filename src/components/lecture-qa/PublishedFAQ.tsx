@@ -3,7 +3,7 @@ import {
   Pencil, EyeOff, Trash2
 } from 'lucide-react';
 import { Button } from '../ui';
-import { LectureQuestion } from '../../lib/supabase';
+import type { LectureQuestion } from '../../types/database';
 
 interface PublishedFAQProps {
   publishedQs: LectureQuestion[];

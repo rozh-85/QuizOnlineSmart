@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import {
   ChevronDown,
   Play,
@@ -11,7 +11,6 @@ import {
   GraduationCap,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import { supabase } from '../../lib/supabase';
 import { classApi } from '../../api/classApi';
 import { attendanceApi } from '../../api/attendanceApi';
 import { authApi } from '../../api/authApi';
@@ -20,9 +19,11 @@ import toast from 'react-hot-toast';
 import { PageHeader, FormField, EmptyState } from '../../components/ui';
 import { StopSessionModal, StudentRow } from '../../components/attendance';
 import type { AttendanceRecord } from '../../components/attendance';
+import { useTimer } from '../../hooks/useTimer';
+import { useAttendanceSession, useQrTokenRefresh } from '../../hooks/useAttendance';
+import { formatTime } from '../../utils/format';
 
 type SessionStatus = 'idle' | 'pending' | 'active' | 'completed';
-
 
 const Attendance = () => {
   // Core state
@@ -39,21 +40,16 @@ const Attendance = () => {
   const [sessionStatus, setSessionStatus] = useState<SessionStatus>('idle');
   const [startedAt, setStartedAt] = useState<Date | null>(null);
 
-  // Timer
-  const [elapsed, setElapsed] = useState(0);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
   // QR state
   const [qrVisible, setQrVisible] = useState(true);
-  const [currentToken, setCurrentToken] = useState<string | null>(null);
-  const qrIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // Attendance records
-  const [records, setRecords] = useState<AttendanceRecord[]>([]);
 
   // Stop modal
   const [showStopModal, setShowStopModal] = useState(false);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Delegate to hooks
+  const { elapsed, reset: resetTimer } = useTimer(sessionStatus === 'active', startedAt);
+  const { records, setRecords } = useAttendanceSession(sessionId, sessionStatus);
+  const { currentToken, setCurrentToken } = useQrTokenRefresh(sessionId, sessionStatus, qrVisible);
 
   // Initialize: fetch teacher info + classes + restore active session
   useEffect(() => {
@@ -63,7 +59,6 @@ const Attendance = () => {
         if (user) {
           setTeacherId(user.id);
 
-          // Check for an active or pending session to restore
           const activeSession = await attendanceApi.getActiveSessionForTeacher(user.id);
           if (activeSession) {
             setSessionId(activeSession.id);
@@ -93,105 +88,6 @@ const Attendance = () => {
     };
     init();
   }, []);
-
-  // Timer effect
-  useEffect(() => {
-    if (sessionStatus === 'active' && startedAt) {
-      timerRef.current = setInterval(() => {
-        setElapsed(Math.floor((Date.now() - startedAt.getTime()) / 1000));
-      }, 1000);
-    }
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [sessionStatus, startedAt]);
-
-  // QR token refresh effect
-  const refreshQrToken = useCallback(async () => {
-    if (!sessionId) return;
-    try {
-      // Deactivate old tokens
-      await attendanceApi.deactivateSessionTokens(sessionId);
-      // Create new one
-      const tokenData = await attendanceApi.createToken(sessionId);
-      setCurrentToken(tokenData.token);
-    } catch (e) {
-      console.error('Failed to refresh QR token:', e);
-    }
-  }, [sessionId]);
-
-  useEffect(() => {
-    if (sessionStatus === 'active' && qrVisible && sessionId) {
-      // Generate immediately
-      refreshQrToken();
-      // Then every 5 seconds
-      qrIntervalRef.current = setInterval(refreshQrToken, 5000);
-    } else {
-      // Stop generating and deactivate current tokens
-      if (qrIntervalRef.current) {
-        clearInterval(qrIntervalRef.current);
-        qrIntervalRef.current = null;
-      }
-      if (sessionId && sessionStatus === 'active' && !qrVisible) {
-        attendanceApi.deactivateSessionTokens(sessionId);
-        setCurrentToken(null);
-      }
-    }
-    return () => {
-      if (qrIntervalRef.current) clearInterval(qrIntervalRef.current);
-    };
-  }, [sessionStatus, qrVisible, sessionId, refreshQrToken]);
-
-  // Poll attendance records
-  useEffect(() => {
-    if (sessionStatus === 'active' && sessionId) {
-      const fetchRecords = async () => {
-        try {
-          const data = await attendanceApi.getSessionRecords(sessionId);
-          setRecords(data);
-        } catch (e) {
-          console.error('Failed to fetch records:', e);
-        }
-      };
-      fetchRecords();
-      pollRef.current = setInterval(fetchRecords, 3000);
-
-      // Also subscribe to realtime
-      const channel = supabase
-        .channel(`attendance_records_${sessionId}`)
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'attendance_records',
-          filter: `session_id=eq.${sessionId}`
-        }, () => {
-          fetchRecords();
-        })
-        .subscribe();
-
-      return () => {
-        if (pollRef.current) clearInterval(pollRef.current);
-        channel.unsubscribe();
-      };
-    }
-  }, [sessionStatus, sessionId]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (qrIntervalRef.current) clearInterval(qrIntervalRef.current);
-      if (pollRef.current) clearInterval(pollRef.current);
-    };
-  }, []);
-
-  // Format elapsed seconds
-  const formatTime = (seconds: number): string => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
 
   // Build the QR URL that students will scan
   const getQrValue = (): string => {
@@ -223,7 +119,7 @@ const Attendance = () => {
       const session = await attendanceApi.startSession(sessionId);
       setSessionStatus('active');
       setStartedAt(new Date(session.started_at));
-      setElapsed(0);
+      resetTimer();
       setQrVisible(true);
       toast.success('Session started!');
     } catch (e: any) {
@@ -239,10 +135,7 @@ const Attendance = () => {
       setQrVisible(false);
       setCurrentToken(null);
       setShowStopModal(false);
-      if (timerRef.current) clearInterval(timerRef.current);
-      if (qrIntervalRef.current) clearInterval(qrIntervalRef.current);
-      if (pollRef.current) clearInterval(pollRef.current);
-      // Fetch final records
+      // Hooks auto-cleanup via deps; fetch final records
       const finalRecords = await attendanceApi.getSessionRecords(sessionId);
       setRecords(finalRecords);
       toast.success('Session completed!');
@@ -267,7 +160,7 @@ const Attendance = () => {
     setSessionId(null);
     setSessionStatus('idle');
     setStartedAt(null);
-    setElapsed(0);
+    resetTimer();
     setRecords([]);
     setCurrentToken(null);
     setQrVisible(true);

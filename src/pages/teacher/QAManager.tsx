@@ -9,111 +9,31 @@ import {
 } from 'lucide-react';
 import { Card } from '../../components/ui';
 import { lectureApi } from '../../api/lectureApi';
-import { lectureQAApi } from '../../api/lectureQAApi';
-import { subscribeToAllQuestions } from '../../services/realtimeService';
 import type { Lecture } from '../../types/database';
-import { supabase } from '../../lib/supabase';
 import LectureQA from '../../components/LectureQA';
+import { useTeacherUnreadByLecture } from '../../hooks/useUnreadCount';
 
 const QAManager = () => {
   const [lectures, setLectures] = useState<Lecture[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLectureId, setSelectedLectureId] = useState<string | null>(null);
-  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const { unreadCounts } = useTeacherUnreadByLecture('qa-manager', selectedLectureId);
 
   useEffect(() => {
+    const loadLectures = async () => {
+      try {
+        const data = await lectureApi.getAll();
+        setLectures(data);
+      } catch (e) {
+        console.error('Error loading lectures:', e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
     loadLectures();
   }, []);
-
-  const loadLectures = async () => {
-    try {
-      const data = await lectureApi.getAll();
-      setLectures(data);
-      const counts = await lectureQAApi.getUnreadCountsByLecture();
-      setUnreadCounts(counts);
-    } catch (e) {
-      console.error('Error loading lectures:', e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    let pendingTimeouts: ReturnType<typeof setTimeout>[] = [];
-    const lastManualUpdate = { current: 0 };
-    // Track processed IDs locally to prevent double-decrements within one session
-    const processedIds = new Set<string>();
-
-    const refreshCounts = () => {
-      lectureQAApi.getUnreadCountsByLecture().then(setUnreadCounts).catch(console.error);
-    };
-    refreshCounts();
-
-    const clearPending = () => {
-      pendingTimeouts.forEach(clearTimeout);
-      pendingTimeouts = [];
-    };
-
-    const scheduleFetch = (delay: number) => {
-      if (Date.now() - lastManualUpdate.current < 4000) return;
-      clearPending();
-      pendingTimeouts.push(setTimeout(refreshCounts, delay));
-      pendingTimeouts.push(setTimeout(refreshCounts, delay + 2000));
-    };
-
-    const questionsSub = subscribeToAllQuestions(() => {
-      scheduleFetch(300);
-    });
-
-    const messagesSub = supabase
-      .channel('qa-manager-messages-realtime')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'lecture_question_messages'
-      }, () => {
-        scheduleFetch(600);
-      })
-      .subscribe();
-
-    const interval = setInterval(() => {
-      if (Date.now() - lastManualUpdate.current > 5000) {
-        refreshCounts();
-      }
-    }, 15000);
-
-    const handleManualChange = (e: Event) => {
-      const detail = (e as CustomEvent).detail;
-      const threadId = detail?.id;
-      const role = detail?.role;
-
-      if (role === 'teacher' && selectedLectureId && threadId && !processedIds.has(threadId)) {
-        processedIds.add(threadId);
-        setUnreadCounts(prev => {
-          const updated = { ...prev };
-          if (updated[selectedLectureId] > 0) {
-            updated[selectedLectureId] = updated[selectedLectureId] - 1;
-            if (updated[selectedLectureId] <= 0) delete updated[selectedLectureId];
-          }
-          return updated;
-        });
-        lastManualUpdate.current = Date.now();
-      }
-
-      scheduleFetch(3000); // Increased delay for DB consistency
-    };
-    window.addEventListener('unread-count-changed', handleManualChange);
-
-    return () => {
-      questionsSub.unsubscribe();
-      messagesSub.unsubscribe();
-      clearInterval(interval);
-      clearPending();
-      window.removeEventListener('unread-count-changed', handleManualChange);
-    };
-  }, [selectedLectureId]);
 
   const filteredLectures = lectures.filter(l => 
     l.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

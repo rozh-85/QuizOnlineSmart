@@ -8,17 +8,3 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// Re-export database types for backward compatibility
-export type {
-  Profile,
-  Class,
-  ClassStudent,
-  Lecture,
-  Question,
-  QuizSession,
-  QuizAnswer,
-  LectureMaterial,
-  LectureQuestion,
-  LectureQuestionMessage,
-} from '../types/database';

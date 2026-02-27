@@ -7,3 +7,4 @@ export { questionApi } from './questionApi';
 export { materialApi } from './materialApi';
 export { lectureQAApi } from './lectureQAApi';
 export { reportApi } from './reportApi';
+export { examSettingsApi } from './examSettingsApi';

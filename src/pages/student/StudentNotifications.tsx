@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { MessageSquare, Clock, ChevronRight } from 'lucide-react';
 import { authApi } from '../../api/authApi';
 import { lectureQAApi } from '../../api/lectureQAApi';
-import { supabase } from '../../lib/supabase';
+import { subscribeToStudentQuestions } from '../../services/realtimeService';
 
 const StudentNotifications = () => {
   const [unreadThreads, setUnreadThreads] = useState<any[]>([]);
@@ -20,21 +20,8 @@ const StudentNotifications = () => {
       if (!user) { navigate('/login', { replace: true }); return; }
       await fetchUnread(user.id);
 
-      // Subscribe to real-time
-      const sub = supabase
-        .channel('student-notif-page-' + user.id)
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'lecture_questions',
-          filter: `student_id=eq.${user.id}`
-        }, () => fetchUnread(user.id))
-        .on('postgres_changes', {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'lecture_question_messages'
-        }, () => fetchUnread(user.id))
-        .subscribe();
+      // Subscribe to real-time via service layer
+      const sub = subscribeToStudentQuestions(user.id, 'student-notif-page-' + user.id, () => fetchUnread(user.id));
 
       return () => { sub.unsubscribe(); };
     } catch (e) {

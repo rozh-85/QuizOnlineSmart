@@ -17,6 +17,7 @@ import { reportApi } from '../../api/reportApi';
 import toast from 'react-hot-toast';
 import { PageHeader, FormField, EmptyState } from '../../components/ui';
 import { SessionDetail, SessionCard, ReportSummaryCards } from '../../components/reports';
+import { formatDuration, formatTimeOfDay, formatDateShort, getSessionDurationHours, getSessionEndTime } from '../../utils/format';
 
 const Reports = () => {
   // Filter states
@@ -104,45 +105,6 @@ const Reports = () => {
     }
   };
 
-  // Utility functions
-  const getSessionDurationHours = (session: any): number => {
-    if (!session.started_at || !session.ended_at) return 0;
-    const start = new Date(session.started_at).getTime();
-    const end = new Date(session.ended_at).getTime();
-    return Math.max(0, (end - start) / (1000 * 60 * 60));
-  };
-
-  const getSessionEndTime = (session: any): string | null => {
-    const records = session.records || [];
-    const timesLeft = records
-      .filter((r: any) => r.time_left)
-      .map((r: any) => new Date(r.time_left).getTime());
-    if (timesLeft.length === 0) return session.ended_at;
-    return new Date(Math.max(...timesLeft)).toISOString();
-  };
-
-  const formatDuration = (hours: number): string => {
-    if (!hours || hours <= 0) return '0m';
-    const h = Math.floor(hours);
-    const m = Math.round((hours - h) * 60);
-    if (h === 0) return `${m}m`;
-    if (m === 0) return `${h}h`;
-    return `${h}h ${m}m`;
-  };
-
-  const formatTime = (dateStr: string | null): string => {
-    if (!dateStr) return '—';
-    return new Date(dateStr).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const formatDate = (dateStr: string): string => {
-    return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
 
   // Summary calculation
   const summary = useMemo(() => {
@@ -245,7 +207,7 @@ const Reports = () => {
         session={selectedSession}
         onBack={() => setSelectedSession(null)}
         formatDuration={formatDuration}
-        formatTime={formatTime}
+        formatTime={formatTimeOfDay}
       />
     );
   }
@@ -421,8 +383,8 @@ const Reports = () => {
                 key={session.id}
                 session={session}
                 onClick={() => setSelectedSession(session)}
-                formatDate={formatDate}
-                formatTime={formatTime}
+                formatDate={formatDateShort}
+                formatTime={formatTimeOfDay}
                 formatDuration={formatDuration}
                 getSessionEndTime={getSessionEndTime}
                 getSessionDurationHours={getSessionDurationHours}

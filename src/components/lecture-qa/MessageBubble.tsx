@@ -1,5 +1,5 @@
 import { MoreVertical, Pencil, Trash2, Calendar } from 'lucide-react';
-import { LectureQuestionMessage } from '../../lib/supabase';
+import type { LectureQuestionMessage } from '../../types/database';
 
 interface MessageBubbleProps {
   message: LectureQuestionMessage;

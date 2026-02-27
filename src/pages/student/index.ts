@@ -1,0 +1,10 @@
+export { default as AttendanceScan } from './AttendanceScan';
+export { default as LectureDetail } from './LectureDetail';
+export { default as QuizQuestion } from './QuizQuestion';
+export { default as QuizResults } from './QuizResults';
+export { default as QuizStart } from './QuizStart';
+export { default as StudentDashboard } from './StudentDashboard';
+export { default as StudentNews } from './StudentNews';
+export { default as StudentNotifications } from './StudentNotifications';
+export { default as StudentProfile } from './StudentProfile';
+export { default as StudentQRScan } from './StudentQRScan';
