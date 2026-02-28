@@ -114,10 +114,8 @@ const StudentDashboard = () => {
               >
                 <div
                   ref={el => { cardRefs.current[lecture.id] = el; }}
-                  className={`h-full bg-white border transition-all p-5 sm:p-6 flex flex-col rounded-2xl shadow-sm hover:shadow-xl hover:shadow-primary-100/50 hover:-translate-y-0.5 duration-300 ${
-                    isHighlighted
-                      ? 'border-primary-400 ring-2 ring-primary-400/50 shadow-lg shadow-primary-200/60 animate-pulse-border'
-                      : 'border-slate-100 hover:border-primary-200'
+                  className={`h-full bg-white border border-slate-100 hover:border-primary-200 transition-all p-5 sm:p-6 flex flex-col rounded-2xl shadow-sm hover:shadow-xl hover:shadow-primary-100/50 hover:-translate-y-0.5 duration-300 ${
+                    isHighlighted ? 'animate-pulse-border' : ''
                   }`}
                 >
                   <div className="flex items-start justify-between mb-4">

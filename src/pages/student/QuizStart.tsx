@@ -41,7 +41,11 @@ const QuizStart = () => {
   useEffect(() => {
     if (scrollTo === 'materials') {
       const timer = setTimeout(() => {
-        materialsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const el = materialsSectionRef.current;
+        if (el) {
+          const top = el.getBoundingClientRect().top + window.scrollY - Math.max(80, window.innerHeight * 0.25);
+          window.scrollTo({ top, behavior: 'smooth' });
+        }
       }, 400);
       return () => clearTimeout(timer);
     }
