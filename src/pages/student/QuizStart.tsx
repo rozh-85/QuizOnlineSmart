@@ -12,6 +12,8 @@ const QuizStart = () => {
   const sectionName = searchParams.get('section');
   const threadId = searchParams.get('threadId') || undefined;
   const qaSectionRef = useRef<HTMLDivElement>(null);
+  const materialsSectionRef = useRef<HTMLDivElement>(null);
+  const scrollTo = searchParams.get('scrollTo');
   const { getQuestionsByLecture, getLecture, getMaterialsByLecture } = useQuiz();
   const [showScrollTop, setShowScrollTop] = useState(false);
 
@@ -34,6 +36,16 @@ const QuizStart = () => {
       return () => clearTimeout(timer);
     }
   }, [threadId]);
+
+  // Auto-scroll to Learning Materials section when coming from What's New
+  useEffect(() => {
+    if (scrollTo === 'materials') {
+      const timer = setTimeout(() => {
+        materialsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [scrollTo]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -167,7 +179,9 @@ const QuizStart = () => {
         )}
 
         {/* Learning Materials Section */}
-        <MaterialsView materials={materials} />
+        <div ref={materialsSectionRef}>
+          <MaterialsView materials={materials} />
+        </div>
 
         {/* Q&A Section */}
         <div ref={qaSectionRef}>
