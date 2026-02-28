@@ -27,6 +27,7 @@ const WhatsNewPublisher = () => {
   const [loading, setLoading] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
   const [processingKey, setProcessingKey] = useState<string | null>(null);
+  const [expandedGroupKey, setExpandedGroupKey] = useState<string | null>(null);
 
   const getLectureName = useCallback((lectureId: string | null) => {
     if (!lectureId) return 'General';
@@ -188,17 +189,49 @@ const WhatsNewPublisher = () => {
                         {group.lectureName}
                       </h3>
 
-                      {/* Item list */}
-                      <div className="space-y-1 mt-3">
-                        {group.items.map((item) => (
-                          <div key={item.id} className="flex items-center gap-2 text-xs text-slate-500">
-                            <div className="w-1.5 h-1.5 rounded-full bg-slate-300 flex-shrink-0" />
-                            <span className="font-semibold truncate">{item.title}</span>
-                            <span className="text-slate-300 flex items-center gap-1 flex-shrink-0">
-                              <Clock size={10} /> {fmtRelative(item.createdAt)}
-                            </span>
+                      {/* Item summary + expand toggle */}
+                      <div className="mt-3">
+                        <button
+                          onClick={() => setExpandedGroupKey(expandedGroupKey === key ? null : key)}
+                          className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                        >
+                          {expandedGroupKey === key ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          <span>View {group.items.length} item{group.items.length > 1 ? 's' : ''}</span>
+                        </button>
+
+                        {expandedGroupKey !== key && (
+                          <div className="space-y-1 mt-2">
+                            {group.items.slice(0, 3).map((item) => (
+                              <div key={item.id} className="flex items-center gap-2 text-xs text-slate-500">
+                                <div className="w-1.5 h-1.5 rounded-full bg-slate-300 flex-shrink-0" />
+                                <span className="font-semibold truncate">{item.title}</span>
+                              </div>
+                            ))}
+                            {group.items.length > 3 && (
+                              <p className="text-[10px] text-slate-300 font-bold pl-3.5">+{group.items.length - 3} more</p>
+                            )}
                           </div>
-                        ))}
+                        )}
+
+                        {expandedGroupKey === key && (
+                          <div className="mt-3 space-y-2">
+                            {group.items.map((item) => (
+                              <div key={item.id} className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-sm font-bold text-slate-800 break-words">{item.title}</p>
+                                    {item.description && (
+                                      <p className="text-xs text-slate-500 mt-1 break-words">{item.description}</p>
+                                    )}
+                                  </div>
+                                  <span className="text-[10px] text-slate-300 flex items-center gap-1 flex-shrink-0 pt-0.5">
+                                    <Clock size={10} /> {fmtRelative(item.createdAt)}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
 

@@ -23,20 +23,22 @@ create index if not exists idx_whats_new_lecture on whats_new_items(lecture_id, 
 -- RLS policies
 alter table whats_new_items enable row level security;
 
--- Teachers can do everything
-create policy "Teachers full access on whats_new_items"
-  on whats_new_items for all
-  using (
-    exists (select 1 from profiles where profiles.id = auth.uid() and profiles.role in ('teacher', 'admin'))
-  )
-  with check (
-    exists (select 1 from profiles where profiles.id = auth.uid() and profiles.role in ('teacher', 'admin'))
-  );
+-- Teachers can insert their own items
+create policy "Teachers can insert whats_new_items"
+  on whats_new_items for insert
+  with check (auth.uid() = teacher_id);
 
--- Students can read published items only
-create policy "Students read published whats_new_items"
+-- Teachers can view all items they created
+create policy "Teachers can select whats_new_items"
   on whats_new_items for select
-  using (
-    status = 'published'
-    and exists (select 1 from profiles where profiles.id = auth.uid() and profiles.role = 'student')
-  );
+  using (auth.uid() = teacher_id or status = 'published');
+
+-- Teachers can update their own items
+create policy "Teachers can update whats_new_items"
+  on whats_new_items for update
+  using (auth.uid() = teacher_id);
+
+-- Teachers can delete their own items
+create policy "Teachers can delete whats_new_items"
+  on whats_new_items for delete
+  using (auth.uid() = teacher_id);
