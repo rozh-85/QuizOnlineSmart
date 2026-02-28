@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sparkles, BookOpen, FileText, HelpCircle, Clock, ArrowRight, Search, Loader2 } from 'lucide-react';
+import { Sparkles, BookOpen, FileText, HelpCircle, Clock, ArrowRight, Search, Loader2, PenLine } from 'lucide-react';
 import { useQuiz } from '../../context/QuizContext';
 import { authApi } from '../../api/authApi';
 import { whatsNewApi } from '../../api/whatsNewApi';
@@ -11,12 +11,14 @@ const ICON_MAP: Record<string, typeof BookOpen> = {
   lecture: BookOpen,
   material: FileText,
   question: HelpCircle,
+  manual: PenLine,
 };
 
 const COLOR_MAP: Record<string, { gradient: string; badge: string; badgeText: string }> = {
   lecture: { gradient: 'from-primary-500 to-primary-600', badge: 'bg-primary-100 text-primary-700', badgeText: 'New Lecture' },
   material: { gradient: 'from-emerald-500 to-emerald-600', badge: 'bg-emerald-100 text-emerald-700', badgeText: 'New Materials' },
   question: { gradient: 'from-violet-500 to-violet-600', badge: 'bg-violet-100 text-violet-700', badgeText: 'New Questions' },
+  manual: { gradient: 'from-amber-500 to-orange-500', badge: 'bg-amber-100 text-amber-700', badgeText: 'Announcement' },
 };
 
 // Group published items by (itemType, lectureId, same publishedAt batch)
@@ -143,14 +145,11 @@ const StudentNews = () => {
               const Icon = ICON_MAP[group.itemType] || BookOpen;
               const colors = COLOR_MAP[group.itemType] || COLOR_MAP.lecture;
               const lectureName = getLectureName(group.lectureId);
-              const linkTo = group.lectureId ? `/lecture/${group.lectureId}` : '/dashboard';
+              const isManual = group.itemType === 'manual';
+              const linkTo = isManual ? undefined : (group.lectureId ? `/lecture/${group.lectureId}` : '/dashboard');
 
-              return (
-                <Link
-                  key={group.key}
-                  to={linkTo}
-                  className="group block bg-white rounded-2xl border border-slate-100 hover:border-primary-200 hover:shadow-lg hover:shadow-primary-50 transition-all p-5 sm:p-6"
-                >
+              const cardContent = (
+                <>
                   <div className="flex items-start gap-4">
                     <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colors.gradient} text-white flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-105 transition-transform`}>
                       <Icon size={20} />
@@ -175,31 +174,63 @@ const StudentNews = () => {
                         </span>
                       </div>
 
-                      <h3 className="text-base font-black text-slate-900 tracking-tight group-hover:text-primary-600 transition-colors mb-1 truncate">
-                        {lectureName}
-                      </h3>
-
-                      {/* Show individual item titles */}
-                      <div className="space-y-0.5 mt-1">
-                        {group.items.slice(0, 5).map(item => (
-                          <p key={item.id} className="text-xs text-slate-400 font-medium truncate">
-                            {item.title}
-                          </p>
-                        ))}
-                        {group.items.length > 5 && (
-                          <p className="text-xs text-slate-300 font-bold">+{group.items.length - 5} more</p>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2 mt-3 text-[10px] font-black text-primary-600 uppercase tracking-wider group-hover:gap-3 transition-all">
-                        View Details <ArrowRight size={12} />
-                      </div>
+                      {isManual ? (
+                        <>
+                          <h3 className="text-base font-black text-slate-900 tracking-tight mb-1">
+                            {group.items[0]?.title}
+                          </h3>
+                          {group.items[0]?.description && (
+                            <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                              {group.items[0].description}
+                            </p>
+                          )}
+                          {lectureName !== 'General' && (
+                            <p className="text-[10px] text-slate-300 font-bold mt-2">Related to: {lectureName}</p>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <h3 className="text-base font-black text-slate-900 tracking-tight group-hover:text-primary-600 transition-colors mb-1 truncate">
+                            {lectureName}
+                          </h3>
+                          <div className="space-y-0.5 mt-1">
+                            {group.items.slice(0, 5).map(item => (
+                              <p key={item.id} className="text-xs text-slate-400 font-medium truncate">
+                                {item.title}
+                              </p>
+                            ))}
+                            {group.items.length > 5 && (
+                              <p className="text-xs text-slate-300 font-bold">+{group.items.length - 5} more</p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 mt-3 text-[10px] font-black text-primary-600 uppercase tracking-wider group-hover:gap-3 transition-all">
+                            View Details <ArrowRight size={12} />
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
 
                   <div className="mt-4 pt-3 border-t border-slate-50 text-[10px] font-bold text-slate-300">
                     Published {fmtDate(group.publishedAt)}
                   </div>
+                </>
+              );
+
+              return isManual ? (
+                <div
+                  key={group.key}
+                  className="group block bg-white rounded-2xl border border-amber-100 hover:border-amber-200 hover:shadow-lg hover:shadow-amber-50 transition-all p-5 sm:p-6"
+                >
+                  {cardContent}
+                </div>
+              ) : (
+                <Link
+                  key={group.key}
+                  to={linkTo!}
+                  className="group block bg-white rounded-2xl border border-slate-100 hover:border-primary-200 hover:shadow-lg hover:shadow-primary-50 transition-all p-5 sm:p-6"
+                >
+                  {cardContent}
                 </Link>
               );
             })
