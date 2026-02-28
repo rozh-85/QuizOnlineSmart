@@ -25,6 +25,8 @@ const LectureDetail = () => {
     searchParams.get('tab') === 'qa' ? 'qa' : 'content'
   );
   const qaSectionRef = useRef<HTMLDivElement>(null);
+  const materialsSectionRef = useRef<HTMLDivElement>(null);
+  const scrollTo = searchParams.get('scrollTo');
 
   // Sync activeTab with URL search params (handles re-navigation from chat)
   useEffect(() => {
@@ -42,6 +44,16 @@ const LectureDetail = () => {
       return () => clearTimeout(timer);
     }
   }, [activeTab, threadId]);
+
+  // Auto-scroll to materials section when coming from What's New
+  useEffect(() => {
+    if (scrollTo === 'materials' && !loading) {
+      const timer = setTimeout(() => {
+        materialsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [scrollTo, loading]);
 
   useEffect(() => {
     if (id) fetchData(id);
@@ -207,7 +219,7 @@ const LectureDetail = () => {
             </div>
 
             {/* Materials Section */}
-            <div className="space-y-6 pt-4">
+            <div ref={materialsSectionRef} className="space-y-6 pt-4">
               <div className="flex items-center gap-4 px-2">
                 <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">Companion Materials</h3>
                 <div className="h-px flex-1 bg-slate-100"></div>

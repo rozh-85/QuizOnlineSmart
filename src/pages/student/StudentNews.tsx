@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sparkles, BookOpen, FileText, HelpCircle, Clock, ArrowRight, Search, Loader2, Megaphone, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react';
+import { Sparkles, BookOpen, FileText, HelpCircle, Clock, ArrowRight, Search, Loader2, Megaphone, ChevronDown, ChevronUp } from 'lucide-react';
 import { useQuiz } from '../../context/QuizContext';
 import { authApi } from '../../api/authApi';
 import { whatsNewApi } from '../../api/whatsNewApi';
@@ -36,7 +36,7 @@ const StudentNews = () => {
   const [loading, setLoading] = useState(true);
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
-  const { lectures, questions } = useQuiz();
+  const { lectures } = useQuiz();
 
   const toggleExpand = (key: string) => {
     setExpandedKeys(prev => {
@@ -211,49 +211,16 @@ const StudentNews = () => {
                       </div>
                     </div>
 
-                    {/* Question previews with full text + answer */}
-                    <div className="mt-3 space-y-2.5">
-                      {visibleItems.map((item, qi) => {
-                        const q = questions.find(qq => qq.id === item.referenceId);
-                        return (
-                          <div key={item.id} className="rounded-xl bg-violet-50/60 border border-violet-100/80 p-3.5">
-                            <p className="text-xs font-bold text-slate-700 leading-relaxed">
-                              <span className="text-violet-400 font-black mr-1.5">Q{qi + 1}.</span>
-                              {q?.text || item.title}
-                            </p>
-                            {q && q.type === 'multiple-choice' && q.options.length > 0 && (
-                              <div className="mt-2 space-y-1">
-                                {q.options.map((opt, oi) => (
-                                  <div key={oi} className={`flex items-center gap-2 px-2.5 py-1 rounded-lg text-[11px] ${
-                                    oi === q.correctIndex
-                                      ? 'bg-emerald-50 text-emerald-700 font-bold border border-emerald-200'
-                                      : 'text-slate-500'
-                                  }`}>
-                                    {oi === q.correctIndex && <CheckCircle2 size={11} className="shrink-0" />}
-                                    <span className="font-semibold shrink-0 text-slate-400 w-4">{String.fromCharCode(65 + oi)}.</span>
-                                    <span>{opt}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                            {q && q.type === 'true-false' && (
-                              <p className="mt-2 text-[11px] font-bold text-emerald-600 flex items-center gap-1.5">
-                                <CheckCircle2 size={11} /> Answer: {q.correctAnswer || (q.correctIndex === 0 ? 'True' : 'False')}
-                              </p>
-                            )}
-                            {q && q.type === 'blank' && q.correctAnswer && (
-                              <p className="mt-2 text-[11px] font-bold text-emerald-600 flex items-center gap-1.5">
-                                <CheckCircle2 size={11} /> Answer: {q.correctAnswer}
-                              </p>
-                            )}
-                            {q?.explanation && (
-                              <p className="mt-2 text-[10px] text-slate-400 italic leading-relaxed border-t border-violet-100 pt-2">
-                                {q.explanation}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
+                    {/* Question previews — questions only, no answers */}
+                    <div className="mt-3 space-y-2">
+                      {visibleItems.map((item, qi) => (
+                        <div key={item.id} className="rounded-xl bg-violet-50/60 border border-violet-100/80 px-3.5 py-2.5">
+                          <p className="text-xs font-bold text-slate-700 leading-relaxed">
+                            <span className="text-violet-400 font-black mr-1.5">Q{qi + 1}.</span>
+                            {item.title}
+                          </p>
+                        </div>
+                      ))}
                     </div>
 
                     {hasMore && (
@@ -273,9 +240,9 @@ const StudentNews = () => {
                 );
               }
 
-              // ── MATERIAL card: navigates to the lecture ──
+              // ── MATERIAL card: navigates to the lecture's materials section ──
               if (group.itemType === 'material') {
-                const linkTo = group.lectureId ? `/lecture/${group.lectureId}` : '/dashboard';
+                const linkTo = group.lectureId ? `/lecture/${group.lectureId}?scrollTo=materials` : '/dashboard';
                 return (
                   <Link
                     key={group.key}
@@ -302,7 +269,7 @@ const StudentNews = () => {
                           )}
                         </div>
                         <div className="flex items-center gap-2 mt-3 text-[10px] font-black text-emerald-600 uppercase tracking-wider group-hover:gap-3 transition-all">
-                          Go to Lecture <ArrowRight size={12} />
+                          View Materials <ArrowRight size={12} />
                         </div>
                       </div>
                     </div>
@@ -311,9 +278,9 @@ const StudentNews = () => {
                 );
               }
 
-              // ── LECTURE card: navigates to the lecture ──
+              // ── LECTURE card: navigates to dashboard with highlighted lecture card ──
               if (group.itemType === 'lecture') {
-                const linkTo = group.lectureId ? `/lecture/${group.lectureId}` : '/dashboard';
+                const linkTo = group.lectureId ? `/dashboard?highlight=${group.lectureId}` : '/dashboard';
                 return (
                   <Link
                     key={group.key}
@@ -335,7 +302,7 @@ const StudentNews = () => {
                           </p>
                         )}
                         <div className="flex items-center gap-2 mt-3 text-[10px] font-black text-primary-600 uppercase tracking-wider group-hover:gap-3 transition-all">
-                          Go to Lecture <ArrowRight size={12} />
+                          View Lecture <ArrowRight size={12} />
                         </div>
                       </div>
                     </div>

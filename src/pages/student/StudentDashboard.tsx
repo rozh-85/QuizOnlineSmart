@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { BookOpen, ArrowRight, Beaker, Play } from 'lucide-react';
 import { useQuiz } from '../../context/QuizContext';
 import { authApi } from '../../api/authApi';
@@ -7,7 +7,26 @@ import { authApi } from '../../api/authApi';
 const StudentDashboard = () => {
   const [profile, setProfile] = useState<any>(null);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const highlightId = searchParams.get('highlight');
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const { lectures, questions, getQuestionsByLecture } = useQuiz();
+
+  // Scroll to & highlight the lecture card coming from What's New
+  useEffect(() => {
+    if (!highlightId) return;
+    const timer = setTimeout(() => {
+      const el = cardRefs.current[highlightId];
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 300);
+    // Clear the param after 4 seconds so the animation doesn't persist on revisit
+    const cleanup = setTimeout(() => {
+      setSearchParams({}, { replace: true });
+    }, 4000);
+    return () => { clearTimeout(timer); clearTimeout(cleanup); };
+  }, [highlightId, setSearchParams]);
 
   useEffect(() => {
     fetchProfile();
@@ -85,13 +104,22 @@ const StudentDashboard = () => {
           {lectures.sort((a, b) => a.order - b.order).map((lecture) => {
             const questionCount = getQuestionsByLecture(lecture.id).filter(q => q.isVisible !== false).length;
 
+            const isHighlighted = highlightId === lecture.id;
+
             return (
               <Link
                 key={lecture.id}
                 to={`/quiz?lectureId=${lecture.id}`}
                 className="group"
               >
-                <div className="h-full bg-white border border-slate-100 hover:border-primary-200 transition-all p-5 sm:p-6 flex flex-col rounded-2xl shadow-sm hover:shadow-xl hover:shadow-primary-100/50 hover:-translate-y-0.5 duration-300">
+                <div
+                  ref={el => { cardRefs.current[lecture.id] = el; }}
+                  className={`h-full bg-white border transition-all p-5 sm:p-6 flex flex-col rounded-2xl shadow-sm hover:shadow-xl hover:shadow-primary-100/50 hover:-translate-y-0.5 duration-300 ${
+                    isHighlighted
+                      ? 'border-primary-400 ring-2 ring-primary-400/50 shadow-lg shadow-primary-200/60 animate-pulse-border'
+                      : 'border-slate-100 hover:border-primary-200'
+                  }`}
+                >
                   <div className="flex items-start justify-between mb-4">
                     <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 text-white flex items-center justify-center shadow-md shadow-primary-200 group-hover:scale-105 transition-transform">
                       <BookOpen size={18} />
