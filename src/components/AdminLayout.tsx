@@ -57,11 +57,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     { path: '/admin/materials', icon: ShieldCheck, label: 'Materials' },
     { path: '/admin/qa', icon: MessageSquare, label: 'Q&A Discussions', hasUnread: unreadCount > 0 },
     { path: '/admin/new', icon: Plus, label: 'New Question' },
+    { path: '/admin/whats-new', icon: Megaphone, label: "What's New" },
     { path: '/admin/ai-generator', icon: Sparkles, label: 'AI Generator' },
     { path: '/admin/exam-builder', icon: FileText, label: 'Exam Builder' },
     { path: '/admin/attendance', icon: ClipboardCheck, label: 'Attendance' },
     { path: '/admin/reports', icon: BarChart3, label: 'Reports' },
-    { path: '/admin/whats-new', icon: Megaphone, label: "What's New" },
   ];
 
   return (

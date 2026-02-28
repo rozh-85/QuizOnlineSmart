@@ -163,34 +163,35 @@ const WhatsNewPublisher = () => {
             return (
               <div
                 key={key}
-                className={`bg-white rounded-2xl border ${meta.borderColor} shadow-sm overflow-hidden transition-all hover:shadow-md`}
+                className={`bg-white rounded-2xl border ${meta.borderColor} shadow-sm overflow-hidden transition-all hover:shadow-md relative`}
               >
-                <div className="p-5 sm:p-6">
-                  <div className="flex items-start gap-4">
+                <div className="p-4 sm:p-6">
+                  {/* Top row: icon + labels + action buttons */}
+                  <div className="flex items-start gap-3 sm:gap-4">
                     {/* Icon */}
-                    <div className={`w-12 h-12 rounded-xl ${meta.bgColor} ${meta.color} flex items-center justify-center flex-shrink-0`}>
-                      <Icon size={22} />
+                    <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl ${meta.bgColor} ${meta.color} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                      <Icon size={20} />
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`px-2 py-0.5 ${meta.bgColor} ${meta.color} text-[9px] font-black uppercase tracking-wider rounded-md`}>
+                      <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                        <span className={`px-2 py-0.5 ${meta.bgColor} ${meta.color} text-[10px] font-black uppercase tracking-wider rounded-md`}>
                           {meta.label}
                         </span>
                         {group.items.length > 1 && (
-                          <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[9px] font-black rounded-md">
+                          <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-black rounded-md">
                             ×{group.items.length} stacked
                           </span>
                         )}
                       </div>
 
-                      <h3 className="text-base font-black text-slate-900 tracking-tight mb-1">
+                      <h3 className="text-base font-black text-slate-900 tracking-tight">
                         {group.lectureName}
                       </h3>
 
                       {/* Item summary + expand toggle */}
-                      <div className="mt-3">
+                      <div className="mt-2.5">
                         <button
                           onClick={() => setExpandedGroupKey(expandedGroupKey === key ? null : key)}
                           className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
@@ -200,15 +201,15 @@ const WhatsNewPublisher = () => {
                         </button>
 
                         {expandedGroupKey !== key && (
-                          <div className="space-y-1 mt-2">
+                          <div className="space-y-1.5 mt-2">
                             {group.items.slice(0, 3).map((item) => (
-                              <div key={item.id} className="flex items-center gap-2 text-xs text-slate-500">
-                                <div className="w-1.5 h-1.5 rounded-full bg-slate-300 flex-shrink-0" />
-                                <span className="font-semibold truncate">{item.title}</span>
+                              <div key={item.id} className="flex items-start gap-2 text-xs text-slate-500">
+                                <div className="w-1.5 h-1.5 rounded-full bg-slate-300 flex-shrink-0 mt-1.5" />
+                                <span className="font-semibold leading-relaxed">{item.title}</span>
                               </div>
                             ))}
                             {group.items.length > 3 && (
-                              <p className="text-[10px] text-slate-300 font-bold pl-3.5">+{group.items.length - 3} more</p>
+                              <p className="text-[11px] text-slate-300 font-bold pl-3.5">+{group.items.length - 3} more</p>
                             )}
                           </div>
                         )}
@@ -216,16 +217,16 @@ const WhatsNewPublisher = () => {
                         {expandedGroupKey === key && (
                           <div className="mt-3 space-y-2">
                             {group.items.map((item) => (
-                              <div key={item.id} className="bg-slate-50 rounded-xl p-3 border border-slate-100">
+                              <div key={item.id} className="bg-slate-50 rounded-xl p-3 sm:p-4 border border-slate-100">
                                 <div className="flex items-start justify-between gap-3">
                                   <div className="min-w-0 flex-1">
-                                    <p className="text-sm font-bold text-slate-800 break-words">{item.title}</p>
+                                    <p className="text-sm font-bold text-slate-800 break-words leading-snug">{item.title}</p>
                                     {item.description && (
-                                      <p className="text-xs text-slate-500 mt-1 break-words">{item.description}</p>
+                                      <p className="text-xs text-slate-500 mt-1 break-words leading-relaxed">{item.description}</p>
                                     )}
                                   </div>
-                                  <span className="text-[10px] text-slate-300 flex items-center gap-1 flex-shrink-0 pt-0.5">
-                                    <Clock size={10} /> {fmtRelative(item.createdAt)}
+                                  <span className="text-[11px] text-slate-300 flex items-center gap-1 flex-shrink-0 pt-0.5 whitespace-nowrap">
+                                    <Clock size={11} /> {fmtRelative(item.createdAt)}
                                   </span>
                                 </div>
                               </div>
@@ -234,26 +235,26 @@ const WhatsNewPublisher = () => {
                         )}
                       </div>
                     </div>
+                  </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <button
-                        onClick={() => handleDecline(group)}
-                        disabled={isProcessing}
-                        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-500 bg-slate-50 hover:bg-rose-50 hover:text-rose-600 border border-slate-200 hover:border-rose-200 transition-all disabled:opacity-50"
-                      >
-                        {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />}
-                        <span className="hidden sm:inline">Decline</span>
-                      </button>
-                      <button
-                        onClick={() => handlePublish(group)}
-                        disabled={isProcessing}
-                        className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-primary-600 hover:bg-primary-700 shadow-sm hover:shadow-md transition-all disabled:opacity-50"
-                      >
-                        {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
-                        <span className="hidden sm:inline">Publish</span>
-                      </button>
-                    </div>
+                  {/* Action buttons — full-width row on mobile, inline on sm+ */}
+                  <div className="flex items-center gap-2 mt-4 sm:mt-0 sm:absolute sm:top-5 sm:right-5">
+                    <button
+                      onClick={() => handleDecline(group)}
+                      disabled={isProcessing}
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-500 bg-slate-50 hover:bg-rose-50 hover:text-rose-600 border border-slate-200 hover:border-rose-200 transition-all disabled:opacity-50"
+                    >
+                      {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />}
+                      Decline
+                    </button>
+                    <button
+                      onClick={() => handlePublish(group)}
+                      disabled={isProcessing}
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-primary-600 hover:bg-primary-700 shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+                    >
+                      {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                      Publish
+                    </button>
                   </div>
                 </div>
               </div>
