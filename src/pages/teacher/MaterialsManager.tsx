@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Edit2, Trash2, FileText, Upload, Link as LinkIcon, File } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, Edit2, Trash2, FileText, Upload, Link as LinkIcon, File, Search, X, Filter } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Button, Card, Modal, Input, TextArea } from '../../components/ui';
 import MaterialFileIcon from '../../components/MaterialFileIcon';
@@ -12,6 +12,42 @@ const MaterialsManager = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterLecture, setFilterLecture] = useState('');
+  const [filterSection, setFilterSection] = useState('');
+  const [filterType, setFilterType] = useState('');
+
+  const allSections = useMemo(() => {
+    const secs = new Set<string>();
+    materials.forEach(m => { if (m.sectionId) secs.add(m.sectionId); });
+    return Array.from(secs).sort();
+  }, [materials]);
+
+  const filteredMaterials = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    return materials.filter(m => {
+      if (q) {
+        const titleMatch = m.title.toLowerCase().includes(q);
+        const contentMatch = m.content?.toLowerCase().includes(q);
+        const fileMatch = m.fileName?.toLowerCase().includes(q);
+        if (!titleMatch && !contentMatch && !fileMatch) return false;
+      }
+      if (filterLecture && m.lectureId !== filterLecture) return false;
+      if (filterSection && m.sectionId !== filterSection) return false;
+      if (filterType && m.fileType !== filterType) return false;
+      return true;
+    });
+  }, [materials, searchQuery, filterLecture, filterSection, filterType]);
+
+  const activeFilterCount = [filterLecture, filterSection, filterType].filter(Boolean).length;
+
+  const clearAllFilters = () => {
+    setSearchQuery('');
+    setFilterLecture('');
+    setFilterSection('');
+    setFilterType('');
+  };
 
   const [formData, setFormData] = useState({
     title: '',
@@ -109,9 +145,12 @@ const MaterialsManager = () => {
     }
   };
 
+  const selectClass = "h-9 px-3 pr-8 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 transition-all appearance-none cursor-pointer";
+
   return (
     <div className="animate-fade-in">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">Materials.</h1>
           <p className="text-slate-500 mt-1 font-medium">Manage lecture notes and resources</p>
@@ -122,61 +161,72 @@ const MaterialsManager = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {materials.map((material) => (
-          <Card key={material.id} className="p-6 hover:shadow-lg transition-all group border-slate-100">
-            <div className="flex items-start justify-between mb-4">
-              <MaterialFileIcon fileType={material.fileType} className="w-12 h-12 shadow-sm" iconSize={24} />
-              <div className="flex gap-1">
-                <button 
-                  onClick={() => handleOpenModal(material)}
-                  className="p-2 text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                >
-                  <Edit2 size={16} />
+      {/* Search & Filter Toolbar */}
+      {materials.length > 0 && (
+        <div className="mb-4 space-y-3">
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Search */}
+            <div className="relative flex-1 max-w-md">
+              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search title, content, or filename…"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full h-9 pl-9 pr-8 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-700 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 transition-all"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  <X size={14} />
                 </button>
-                <button 
-                  onClick={() => handleDelete(material.id)}
-                  className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
-
-            <h3 className="text-lg font-bold text-slate-900 mb-1 leading-tight">{material.title}</h3>
-            <div className="flex flex-wrap gap-2 mb-4">
-              <span className="px-2 py-0.5 rounded-md bg-slate-100 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                {lectures.find(l => l.id === material.lectureId)?.title || 'Unknown Lecture'}
-              </span>
-              {material.sectionId && (
-                <span className="px-2 py-0.5 rounded-md bg-primary-50 text-[10px] font-black uppercase tracking-wider text-primary-600">
-                  {material.sectionId}
-                </span>
               )}
             </div>
 
-            {material.content && (
-              <p className="text-slate-500 text-sm line-clamp-3 mb-4 leading-relaxed">
-                {material.content}
-              </p>
-            )}
+            {/* Filter dropdowns */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 text-slate-400">
+                <Filter size={13} />
+                <span className="text-[10px] font-bold uppercase tracking-wider">Filters</span>
+              </div>
+              <select value={filterLecture} onChange={e => { setFilterLecture(e.target.value); setFilterSection(''); }} className={selectClass}>
+                <option value="">All Lectures</option>
+                {lectures.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}
+              </select>
+              <select value={filterSection} onChange={e => setFilterSection(e.target.value)} className={selectClass}>
+                <option value="">All Sections</option>
+                {(filterLecture
+                  ? lectures.find(l => l.id === filterLecture)?.sections || []
+                  : allSections
+                ).map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+              <select value={filterType} onChange={e => setFilterType(e.target.value)} className={selectClass}>
+                <option value="">All Types</option>
+                <option value="note">Note</option>
+                <option value="pdf">PDF</option>
+                <option value="word">Word</option>
+              </select>
+              {(activeFilterCount > 0 || searchQuery) && (
+                <button onClick={clearAllFilters} className="h-9 px-3 rounded-lg text-xs font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-all flex items-center gap-1.5">
+                  <X size={12} />
+                  Clear
+                </button>
+              )}
+            </div>
+          </div>
 
-            {material.fileUrl && (
-              <a 
-                href={material.fileUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-sm font-bold text-primary-600 hover:text-primary-700 transition-colors mt-auto"
-              >
-                <LinkIcon size={14} />
-                <span className="truncate">{material.fileName || 'View Attachment'}</span>
-              </a>
-            )}
-          </Card>
-        ))}
+          {/* Result count */}
+          {(searchQuery || activeFilterCount > 0) && (
+            <p className="text-xs font-semibold text-slate-400">
+              Showing <span className="text-slate-700">{filteredMaterials.length}</span> of {materials.length} materials
+            </p>
+          )}
+        </div>
+      )}
 
-        {materials.length === 0 && (
-          <div className="col-span-full py-20 text-center">
+      {/* Table */}
+      {materials.length === 0 ? (
+        <Card className="border-slate-100">
+          <div className="py-20 text-center">
             <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-4">
               <FileText size={40} className="text-slate-300" />
             </div>
@@ -186,8 +236,99 @@ const MaterialsManager = () => {
               Create First Material
             </Button>
           </div>
-        )}
-      </div>
+        </Card>
+      ) : filteredMaterials.length === 0 ? (
+        <Card className="border-slate-100">
+          <div className="py-16 text-center">
+            <Search size={32} className="text-slate-200 mx-auto mb-3" />
+            <h3 className="text-base font-bold text-slate-900 mb-1">No matching materials</h3>
+            <p className="text-slate-400 text-sm mb-4">Try adjusting your search or filters.</p>
+            <button onClick={clearAllFilters} className="text-sm font-bold text-primary-600 hover:text-primary-700 transition-colors">
+              Clear all filters
+            </button>
+          </div>
+        </Card>
+      ) : (
+        <div className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-slate-50/80">
+                  <th className="text-left pl-5 pr-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Title</th>
+                  <th className="text-left px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Type</th>
+                  <th className="text-left px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Lecture</th>
+                  <th className="text-left px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Section</th>
+                  <th className="text-left px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Content / File</th>
+                  <th className="w-20 px-3 py-2.5"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredMaterials.map((material) => (
+                  <tr key={material.id} className="group border-t border-slate-100 hover:bg-primary-50/40 transition-colors">
+                    <td className="pl-5 pr-3 py-2.5">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <MaterialFileIcon fileType={material.fileType} className="w-7 h-7 shrink-0" iconSize={14} />
+                        <span className="font-semibold text-[13px] text-slate-800 truncate max-w-[180px]">{material.title}</span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                        material.fileType === 'note'
+                          ? 'bg-amber-100/70 text-amber-700'
+                          : material.fileType === 'pdf'
+                            ? 'bg-rose-100/70 text-rose-700'
+                            : 'bg-blue-100/70 text-blue-700'
+                      }`}>
+                        {material.fileType}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <span className="text-[12px] text-slate-600 font-medium truncate block max-w-[150px]">
+                        {lectures.find(l => l.id === material.lectureId)?.title || '—'}
+                      </span>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      {material.sectionId ? (
+                        <span className="inline-block px-2 py-0.5 rounded bg-slate-100 text-[9px] font-black uppercase tracking-wider text-slate-600">
+                          {material.sectionId}
+                        </span>
+                      ) : (
+                        <span className="text-slate-300 text-xs">—</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2.5 max-w-[200px]">
+                      {material.fileType === 'note' && material.content ? (
+                        <p className="text-slate-500 text-[11px] line-clamp-1 leading-relaxed">{material.content}</p>
+                      ) : material.fileUrl ? (
+                        <a href={material.fileUrl} target="_blank" rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-primary-600 hover:text-primary-700 transition-colors"
+                        >
+                          <LinkIcon size={10} className="shrink-0" />
+                          <span className="truncate max-w-[140px]">{material.fileName || 'View Attachment'}</span>
+                        </a>
+                      ) : (
+                        <span className="text-slate-300 text-xs">—</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2.5 text-right">
+                      <div className="inline-flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => handleOpenModal(material)} title="Edit"
+                          className="p-1.5 rounded-md text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-all">
+                          <Edit2 size={13} />
+                        </button>
+                        <button onClick={() => handleDelete(material.id)} title="Delete"
+                          className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all">
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       <Modal
         isOpen={isModalOpen}

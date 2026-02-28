@@ -160,23 +160,18 @@ const WhatsNewPublisher = () => {
   return (
     <div className="animate-fade-in">
       {/* Header */}
-      <div className="mb-10">
-        <div className="flex items-center gap-4 mb-2">
-          <div className="w-16 h-16 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center shadow-sm flex-shrink-0">
-            <Megaphone size={32} />
-          </div>
-          <div className="flex-1">
-            <h1 className="text-3xl font-black text-slate-900 tracking-tight">What's New Publisher</h1>
-            <p className="text-base text-slate-400 font-medium mt-0.5">Review and publish updates for students</p>
-          </div>
-          <button
-            onClick={() => setShowManualModal(true)}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 shadow-sm hover:shadow-md transition-all"
-          >
-            <Plus size={18} />
-            Add Manual Update
-          </button>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">What's New.</h1>
+          <p className="text-slate-500 mt-1 font-medium">Review and publish updates for students</p>
         </div>
+        <button
+          onClick={() => setShowManualModal(true)}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 shadow-lg shadow-amber-200 transition-all"
+        >
+          <Plus size={18} />
+          Add Manual Update
+        </button>
       </div>
 
       {/* Manual Entry Modal */}
@@ -256,173 +251,202 @@ const WhatsNewPublisher = () => {
 
       {/* Pending Groups */}
       {pendingGroups.length === 0 ? (
-        <div className="text-center py-24 bg-white rounded-2xl border border-slate-100 shadow-sm">
-          <div className="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
-            <Check size={36} className="text-slate-300" />
+        <div className="text-center py-20 bg-white rounded-xl border border-slate-200 shadow-sm">
+          <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <Check size={32} className="text-slate-300" />
           </div>
           <p className="text-slate-500 font-bold text-lg">All caught up!</p>
-          <p className="text-slate-400 text-sm mt-2">No pending updates to review</p>
+          <p className="text-slate-400 text-sm mt-1">No pending updates to review</p>
         </div>
       ) : (
-        <div className="space-y-5 mb-10">
-          <p className="text-sm font-black uppercase tracking-widest text-slate-400 px-1">
-            Pending Review ({pendingGroups.reduce((sum, g) => sum + g.items.length, 0)} items)
+        <div className="mb-10">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 px-1">
+            Pending Review · {pendingGroups.reduce((sum, g) => sum + g.items.length, 0)} items
           </p>
-          {pendingGroups.map((group) => {
-            const meta = ITEM_TYPE_META[group.itemType];
-            const Icon = meta.icon;
-            const key = `${group.itemType}::${group.lectureId || 'null'}`;
-            const isProcessing = processingKey === key;
+          <div className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
+            {pendingGroups.map((group, idx) => {
+              const meta = ITEM_TYPE_META[group.itemType];
+              const Icon = meta.icon;
+              const key = `${group.itemType}::${group.lectureId || 'null'}`;
+              const isProcessing = processingKey === key;
+              const isExpanded = expandedGroupKey === key;
 
-            return (
-              <div
-                key={key}
-                className={`bg-white rounded-2xl border ${meta.borderColor} shadow-sm overflow-hidden transition-all hover:shadow-md relative`}
-              >
-                <div className="p-6 sm:p-8">
-                  {/* Top row: icon + content */}
-                  <div className="flex items-start gap-5">
+              return (
+                <div key={key} className={idx > 0 ? 'border-t border-slate-100' : ''}>
+                  {/* Main row */}
+                  <div className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50/60 transition-colors">
                     {/* Icon */}
-                    <div className={`w-14 h-14 rounded-2xl ${meta.bgColor} ${meta.color} flex items-center justify-center flex-shrink-0 mt-0.5`}>
-                      <Icon size={26} />
+                    <div className={`w-9 h-9 rounded-lg ${meta.bgColor} ${meta.color} flex items-center justify-center shrink-0`}>
+                      <Icon size={17} />
                     </div>
 
-                    {/* Content */}
-                    <div className="flex-1 min-w-0 pr-0 sm:pr-56">
-                      <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <span className={`px-3 py-1 ${meta.bgColor} ${meta.color} text-xs font-black uppercase tracking-wider rounded-lg`}>
-                          {meta.label}
-                        </span>
-                        {group.items.length > 1 && (
-                          <span className="px-3 py-1 bg-slate-100 text-slate-500 text-xs font-black rounded-lg">
-                            ×{group.items.length} stacked
+                    {/* Type badge */}
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider shrink-0 ${meta.bgColor} ${meta.color}`}>
+                      {meta.label}
+                    </span>
+
+                    {/* Lecture name */}
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[13px] font-bold text-slate-800 truncate block">{group.lectureName}</span>
+                    </div>
+
+                    {/* Item count */}
+                    {group.items.length > 1 && (
+                      <span className="px-2 py-0.5 rounded bg-slate-100 text-[9px] font-black text-slate-500 shrink-0">
+                        ×{group.items.length}
+                      </span>
+                    )}
+
+                    {/* Expand toggle */}
+                    <button
+                      onClick={() => setExpandedGroupKey(isExpanded ? null : key)}
+                      className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all shrink-0"
+                      title={isExpanded ? 'Collapse' : 'Expand'}
+                    >
+                      {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    </button>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-1.5 shrink-0 ml-1">
+                      <button
+                        onClick={() => handleDecline(group)}
+                        disabled={isProcessing}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 transition-all disabled:opacity-50"
+                      >
+                        {isProcessing ? <Loader2 size={12} className="animate-spin" /> : <X size={12} />}
+                        Decline
+                      </button>
+                      <button
+                        onClick={() => handlePublish(group)}
+                        disabled={isProcessing}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-white bg-primary-600 hover:bg-primary-700 transition-all disabled:opacity-50"
+                      >
+                        {isProcessing ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                        Publish
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Collapsed preview */}
+                  {!isExpanded && group.items.length > 0 && (
+                    <div className="px-5 pb-3 -mt-1 pl-[4.25rem]">
+                      <div className="flex flex-wrap gap-x-4 gap-y-1">
+                        {group.items.slice(0, 3).map((item) => (
+                          <span key={item.id} className="text-[11px] text-slate-400 font-medium flex items-center gap-1.5">
+                            <span className="w-1 h-1 rounded-full bg-slate-300 shrink-0" />
+                            {item.title}
                           </span>
-                        )}
-                      </div>
-
-                      <h3 className="text-xl font-black text-slate-900 tracking-tight">
-                        {group.lectureName}
-                      </h3>
-
-                      {/* Item summary + expand toggle */}
-                      <div className="mt-3">
-                        <button
-                          onClick={() => setExpandedGroupKey(expandedGroupKey === key ? null : key)}
-                          className="flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors"
-                        >
-                          {expandedGroupKey === key ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                          <span>View {group.items.length} item{group.items.length > 1 ? 's' : ''}</span>
-                        </button>
-
-                        {expandedGroupKey !== key && (
-                          <div className="space-y-2 mt-3">
-                            {group.items.slice(0, 3).map((item) => (
-                              <div key={item.id} className="flex items-start gap-2.5 text-sm text-slate-500">
-                                <div className="w-2 h-2 rounded-full bg-slate-300 flex-shrink-0 mt-1.5" />
-                                <span className="font-semibold leading-relaxed">{item.title}</span>
-                              </div>
-                            ))}
-                            {group.items.length > 3 && (
-                              <p className="text-xs text-slate-300 font-bold pl-4">+{group.items.length - 3} more</p>
-                            )}
-                          </div>
-                        )}
-
-                        {expandedGroupKey === key && (
-                          <div className="mt-4 space-y-3">
-                            {group.items.map((item) => (
-                              <div key={item.id} className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                                <div className="flex items-start justify-between gap-4">
-                                  <div className="min-w-0 flex-1">
-                                    <p className="text-base font-bold text-slate-800 break-words leading-snug">{item.title}</p>
-                                    {item.description && (
-                                      <p className="text-sm text-slate-500 mt-1.5 break-words leading-relaxed">{item.description}</p>
-                                    )}
-                                  </div>
-                                  <span className="text-xs text-slate-300 flex items-center gap-1.5 flex-shrink-0 pt-1 whitespace-nowrap">
-                                    <Clock size={13} /> {fmtRelative(item.createdAt)}
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
+                        ))}
+                        {group.items.length > 3 && (
+                          <span className="text-[11px] text-slate-300 font-bold">+{group.items.length - 3} more</span>
                         )}
                       </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Action buttons — full-width on mobile, absolute top-right on sm+ */}
-                  <div className="flex items-center gap-3 mt-5 sm:mt-0 sm:absolute sm:top-6 sm:right-7">
-                    <button
-                      onClick={() => handleDecline(group)}
-                      disabled={isProcessing}
-                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-slate-500 bg-slate-50 hover:bg-rose-50 hover:text-rose-600 border border-slate-200 hover:border-rose-200 transition-all disabled:opacity-50"
-                    >
-                      {isProcessing ? <Loader2 size={17} className="animate-spin" /> : <X size={17} />}
-                      Decline
-                    </button>
-                    <button
-                      onClick={() => handlePublish(group)}
-                      disabled={isProcessing}
-                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-white bg-primary-600 hover:bg-primary-700 shadow-sm hover:shadow-md transition-all disabled:opacity-50"
-                    >
-                      {isProcessing ? <Loader2 size={17} className="animate-spin" /> : <Check size={17} />}
-                      Publish
-                    </button>
-                  </div>
+                  {/* Expanded detail */}
+                  {isExpanded && (
+                    <div className="px-5 pb-4 pl-[4.25rem]">
+                      <div className="rounded-lg border border-slate-100 overflow-hidden">
+                        <table className="w-full text-sm">
+                          <tbody>
+                            {group.items.map((item, i) => (
+                              <tr key={item.id} className={`${i > 0 ? 'border-t border-slate-50' : ''} hover:bg-slate-50/50`}>
+                                <td className="px-3 py-2 max-w-[300px]">
+                                  <p className="text-[12px] font-semibold text-slate-700 leading-snug">{item.title}</p>
+                                  {item.description && (
+                                    <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1 leading-relaxed">{item.description}</p>
+                                  )}
+                                </td>
+                                <td className="px-3 py-2 text-right whitespace-nowrap">
+                                  <span className="text-[10px] text-slate-300 font-medium flex items-center gap-1 justify-end">
+                                    <Clock size={10} /> {fmtRelative(item.createdAt)}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
 
-      {/* History Toggle */}
-      <div className="mt-10">
+      {/* History */}
+      <div className="mt-8">
         <button
           onClick={() => setShowHistory(!showHistory)}
-          className="flex items-center gap-2.5 text-base font-bold text-slate-400 hover:text-slate-600 transition-colors"
+          className="flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors mb-3"
         >
-          <History size={18} />
+          <History size={15} />
           <span>Recent History</span>
-          {showHistory ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          {showHistory ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
 
         {showHistory && (
-          <div className="mt-5 space-y-3">
-            {history.length === 0 ? (
-              <p className="text-sm text-slate-400 py-6">No history yet</p>
-            ) : (
-              history.map((item) => {
-                const meta = ITEM_TYPE_META[item.itemType];
-                const Icon = meta.icon;
-                return (
-                  <div
-                    key={item.id}
-                    className={`flex items-center gap-4 p-4 rounded-xl bg-white border border-slate-100 ${
-                      item.status === 'declined' ? 'opacity-50' : ''
-                    }`}
-                  >
-                    <div className={`w-11 h-11 rounded-xl ${meta.bgColor} ${meta.color} flex items-center justify-center flex-shrink-0`}>
-                      <Icon size={18} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-slate-700 truncate">{item.title}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">{getLectureName(item.lectureId)}</p>
-                    </div>
-                    <span className={`px-3 py-1 rounded-lg text-xs font-black uppercase ${
-                      item.status === 'published'
-                        ? 'bg-emerald-50 text-emerald-600'
-                        : 'bg-slate-100 text-slate-400'
-                    }`}>
-                      {item.status}
-                    </span>
-                    <span className="text-xs text-slate-300 flex-shrink-0">{fmtRelative(item.createdAt)}</span>
-                  </div>
-                );
-              })
-            )}
-          </div>
+          history.length === 0 ? (
+            <p className="text-sm text-slate-400 py-6 px-1">No history yet</p>
+          ) : (
+            <div className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-slate-50/80">
+                    <th className="text-left pl-5 pr-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Title</th>
+                    <th className="text-left px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Type</th>
+                    <th className="text-left px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Lecture</th>
+                    <th className="text-left px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Status</th>
+                    <th className="text-right px-5 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">When</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {history.map((item) => {
+                    const meta = ITEM_TYPE_META[item.itemType];
+                    const Icon = meta.icon;
+                    return (
+                      <tr
+                        key={item.id}
+                        className={`border-t border-slate-100 hover:bg-slate-50/60 transition-colors ${item.status === 'declined' ? 'opacity-50' : ''}`}
+                      >
+                        <td className="pl-5 pr-3 py-2.5">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className={`w-7 h-7 rounded-md ${meta.bgColor} ${meta.color} flex items-center justify-center shrink-0`}>
+                              <Icon size={13} />
+                            </div>
+                            <span className="text-[12px] font-semibold text-slate-700 truncate max-w-[220px]">{item.title}</span>
+                          </div>
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${meta.bgColor} ${meta.color}`}>
+                            {meta.label}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <span className="text-[11px] text-slate-500 font-medium">{getLectureName(item.lectureId)}</span>
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                            item.status === 'published'
+                              ? 'bg-emerald-50 text-emerald-600'
+                              : 'bg-slate-100 text-slate-400'
+                          }`}>
+                            {item.status}
+                          </span>
+                        </td>
+                        <td className="px-5 py-2.5 text-right">
+                          <span className="text-[10px] text-slate-300 font-medium">{fmtRelative(item.createdAt)}</span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )
         )}
       </div>
     </div>
