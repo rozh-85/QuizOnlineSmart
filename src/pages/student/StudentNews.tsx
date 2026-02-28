@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sparkles, BookOpen, FileText, HelpCircle, Clock, ArrowRight, Search, Loader2, PenLine } from 'lucide-react';
+import { Sparkles, BookOpen, FileText, HelpCircle, Clock, ArrowRight, Search, Loader2, Megaphone } from 'lucide-react';
 import { useQuiz } from '../../context/QuizContext';
 import { authApi } from '../../api/authApi';
 import { whatsNewApi } from '../../api/whatsNewApi';
@@ -11,7 +11,7 @@ const ICON_MAP: Record<string, typeof BookOpen> = {
   lecture: BookOpen,
   material: FileText,
   question: HelpCircle,
-  manual: PenLine,
+  manual: Megaphone,
 };
 
 const COLOR_MAP: Record<string, { gradient: string; badge: string; badgeText: string }> = {
