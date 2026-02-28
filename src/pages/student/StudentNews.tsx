@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sparkles, BookOpen, FileText, HelpCircle, Clock, ArrowRight, Search, Loader2, Megaphone } from 'lucide-react';
+import { Sparkles, BookOpen, FileText, HelpCircle, Clock, ArrowRight, Search, Loader2, Megaphone, ChevronDown, ChevronUp } from 'lucide-react';
 import { useQuiz } from '../../context/QuizContext';
 import { authApi } from '../../api/authApi';
 import { whatsNewApi } from '../../api/whatsNewApi';
@@ -34,8 +34,17 @@ const StudentNews = () => {
   const [search, setSearch] = useState('');
   const [newsGroups, setNewsGroups] = useState<NewsGroup[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
   const { lectures } = useQuiz();
+
+  const toggleExpand = (key: string) => {
+    setExpandedKeys(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
 
   useEffect(() => {
     const init = async () => {
@@ -149,93 +158,207 @@ const StudentNews = () => {
               const Icon = ICON_MAP[group.itemType] || BookOpen;
               const colors = COLOR_MAP[group.itemType] || COLOR_MAP.lecture;
               const lectureName = getLectureName(group.lectureId);
-              const isManual = group.itemType === 'manual';
-              const linkTo = isManual ? undefined : (group.lectureId ? `/lecture/${group.lectureId}` : '/dashboard');
+              const isExpanded = expandedKeys.has(group.key);
+              const lecture = group.lectureId ? lectures.find(l => l.id === group.lectureId) : null;
 
-              const cardContent = (
-                <>
-                  <div className="flex items-start gap-4">
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colors.gradient} text-white flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-105 transition-transform`}>
-                      <Icon size={20} />
-                    </div>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        {idx === 0 && (
-                          <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[9px] font-black uppercase tracking-wider rounded-md">Latest</span>
-                        )}
-                        <span className={`px-2 py-0.5 ${colors.badge} text-[9px] font-black uppercase tracking-wider rounded-md`}>
-                          {colors.badgeText}
-                        </span>
-                        {group.items.length > 1 && (
-                          <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[9px] font-black rounded-md">
-                            ×{group.items.length}
-                          </span>
-                        )}
-                        <span className="text-[10px] font-bold text-slate-300 flex items-center gap-1">
-                          <Clock size={10} />
-                          {fmtRelative(group.publishedAt)}
-                        </span>
-                      </div>
-
-                      {isManual ? (
-                        <>
-                          <h3 className="text-base font-black text-slate-900 tracking-tight mb-1">
-                            {group.items[0]?.title}
-                          </h3>
-                          {group.items[0]?.description && (
-                            <p className="text-sm text-slate-500 font-medium leading-relaxed">
-                              {group.items[0].description}
-                            </p>
-                          )}
-                          {lectureName !== 'General' && (
-                            <p className="text-[10px] text-slate-300 font-bold mt-2">Related to: {lectureName}</p>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          <h3 className="text-base font-black text-slate-900 tracking-tight group-hover:text-primary-600 transition-colors mb-1 truncate">
-                            {lectureName}
-                          </h3>
-                          <div className="space-y-0.5 mt-1">
-                            {group.items.slice(0, 5).map(item => (
-                              <p key={item.id} className="text-xs text-slate-400 font-medium truncate">
-                                {item.title}
-                              </p>
-                            ))}
-                            {group.items.length > 5 && (
-                              <p className="text-xs text-slate-300 font-bold">+{group.items.length - 5} more</p>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 mt-3 text-[10px] font-black text-primary-600 uppercase tracking-wider group-hover:gap-3 transition-all">
-                            View Details <ArrowRight size={12} />
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="mt-4 pt-3 border-t border-slate-50 text-[10px] font-bold text-slate-300">
-                    Published {fmtDate(group.publishedAt)}
-                  </div>
-                </>
+              // ── Shared header badges ──
+              const headerBadges = (
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  {idx === 0 && (
+                    <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[9px] font-black uppercase tracking-wider rounded-md">Latest</span>
+                  )}
+                  <span className={`px-2 py-0.5 ${colors.badge} text-[9px] font-black uppercase tracking-wider rounded-md`}>
+                    {colors.badgeText}
+                  </span>
+                  {group.items.length > 1 && (
+                    <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[9px] font-black rounded-md">
+                      ×{group.items.length}
+                    </span>
+                  )}
+                  <span className="text-[10px] font-bold text-slate-300 flex items-center gap-1">
+                    <Clock size={10} />
+                    {fmtRelative(group.publishedAt)}
+                  </span>
+                </div>
               );
 
-              return isManual ? (
+              const footer = (
+                <div className="mt-4 pt-3 border-t border-slate-50 text-[10px] font-bold text-slate-300">
+                  Published {fmtDate(group.publishedAt)}
+                </div>
+              );
+
+              // ── QUESTION card: expandable preview, no navigation ──
+              if (group.itemType === 'question') {
+                const previewCount = 3;
+                const hasMore = group.items.length > previewCount;
+                return (
+                  <div
+                    key={group.key}
+                    className="group block bg-white rounded-2xl border border-violet-100 hover:border-violet-200 hover:shadow-lg hover:shadow-violet-50 transition-all p-5 sm:p-6"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colors.gradient} text-white flex items-center justify-center flex-shrink-0 shadow-md`}>
+                        <Icon size={20} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        {headerBadges}
+                        <h3 className="text-base font-black text-slate-900 tracking-tight mb-2 truncate">
+                          {lectureName}
+                        </h3>
+                        <div className="space-y-1.5">
+                          {group.items.slice(0, isExpanded ? undefined : previewCount).map(item => (
+                            <div key={item.id} className="flex items-start gap-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-violet-300 mt-1.5 flex-shrink-0" />
+                              <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                                {item.title}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                        {hasMore && (
+                          <button
+                            onClick={() => toggleExpand(group.key)}
+                            className="flex items-center gap-1.5 mt-3 text-[11px] font-bold text-violet-600 hover:text-violet-700 transition-colors"
+                          >
+                            {isExpanded ? (
+                              <>Show less <ChevronUp size={14} /></>
+                            ) : (
+                              <>Show all {group.items.length} questions <ChevronDown size={14} /></>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    {footer}
+                  </div>
+                );
+              }
+
+              // ── MATERIAL card: navigates to the lecture ──
+              if (group.itemType === 'material') {
+                const linkTo = group.lectureId ? `/lecture/${group.lectureId}` : '/dashboard';
+                return (
+                  <Link
+                    key={group.key}
+                    to={linkTo}
+                    className="group block bg-white rounded-2xl border border-emerald-100 hover:border-emerald-200 hover:shadow-lg hover:shadow-emerald-50 transition-all p-5 sm:p-6"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colors.gradient} text-white flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-105 transition-transform`}>
+                        <Icon size={20} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        {headerBadges}
+                        <h3 className="text-base font-black text-slate-900 tracking-tight group-hover:text-emerald-600 transition-colors mb-1 truncate">
+                          {lectureName}
+                        </h3>
+                        <div className="space-y-0.5 mt-1">
+                          {group.items.slice(0, 3).map(item => (
+                            <p key={item.id} className="text-xs text-slate-400 font-medium truncate">
+                              {item.title}
+                            </p>
+                          ))}
+                          {group.items.length > 3 && (
+                            <p className="text-xs text-slate-300 font-bold">+{group.items.length - 3} more</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-3 text-[10px] font-black text-emerald-600 uppercase tracking-wider group-hover:gap-3 transition-all">
+                          Go to Lecture <ArrowRight size={12} />
+                        </div>
+                      </div>
+                    </div>
+                    {footer}
+                  </Link>
+                );
+              }
+
+              // ── LECTURE card: smooth inline expand, no navigation ──
+              if (group.itemType === 'lecture') {
+                return (
+                  <div
+                    key={group.key}
+                    onClick={() => toggleExpand(group.key)}
+                    className="group block bg-white rounded-2xl border border-primary-100 hover:border-primary-200 hover:shadow-lg hover:shadow-primary-50 transition-all p-5 sm:p-6 cursor-pointer select-none"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colors.gradient} text-white flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-105 transition-transform`}>
+                        <Icon size={20} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        {headerBadges}
+                        <h3 className="text-base font-black text-slate-900 tracking-tight mb-1 truncate">
+                          {lectureName}
+                        </h3>
+                        {!isExpanded && (
+                          <p className="text-xs text-slate-400 font-medium mt-1">Tap to see details</p>
+                        )}
+                      </div>
+                      <div className="pt-1 text-slate-300">
+                        {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                      </div>
+                    </div>
+
+                    <div
+                      className="overflow-hidden transition-all duration-300 ease-in-out"
+                      style={{
+                        maxHeight: isExpanded ? '300px' : '0px',
+                        opacity: isExpanded ? 1 : 0,
+                      }}
+                    >
+                      <div className="mt-4 pt-4 border-t border-primary-50 space-y-3">
+                        {lecture?.description && (
+                          <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                            {lecture.description}
+                          </p>
+                        )}
+                        {lecture?.sections && lecture.sections.length > 0 && (
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {lecture.sections.map((s: string) => (
+                              <span key={s} className="px-2 py-0.5 rounded-md bg-primary-50 text-primary-600 text-[9px] font-black uppercase tracking-wider">
+                                {s}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {!lecture?.description && (!lecture?.sections || lecture.sections.length === 0) && (
+                          <p className="text-xs text-slate-300 font-medium">No additional details available.</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {footer}
+                  </div>
+                );
+              }
+
+              // ── MANUAL card: non-navigable announcement ──
+              return (
                 <div
                   key={group.key}
                   className="group block bg-white rounded-2xl border border-amber-100 hover:border-amber-200 hover:shadow-lg hover:shadow-amber-50 transition-all p-5 sm:p-6"
                 >
-                  {cardContent}
+                  <div className="flex items-start gap-4">
+                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colors.gradient} text-white flex items-center justify-center flex-shrink-0 shadow-md`}>
+                      <Icon size={20} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      {headerBadges}
+                      <h3 className="text-base font-black text-slate-900 tracking-tight mb-1">
+                        {group.items[0]?.title}
+                      </h3>
+                      {group.items[0]?.description && (
+                        <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                          {group.items[0].description}
+                        </p>
+                      )}
+                      {lectureName !== 'General' && (
+                        <p className="text-[10px] text-slate-300 font-bold mt-2">Related to: {lectureName}</p>
+                      )}
+                    </div>
+                  </div>
+                  {footer}
                 </div>
-              ) : (
-                <Link
-                  key={group.key}
-                  to={linkTo!}
-                  className="group block bg-white rounded-2xl border border-slate-100 hover:border-primary-200 hover:shadow-lg hover:shadow-primary-50 transition-all p-5 sm:p-6"
-                >
-                  {cardContent}
-                </Link>
               );
             })
           )}
