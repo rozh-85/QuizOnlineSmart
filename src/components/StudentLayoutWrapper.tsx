@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import StudentLayout from './StudentLayout';
-import { useStudentUnreadCount } from '../hooks/useUnreadCount';
+import { useStudentUnreadCount, useWhatsNewUnreadCount } from '../hooks/useUnreadCount';
 
 interface Props {
   children: ReactNode;
@@ -8,9 +8,10 @@ interface Props {
 
 const StudentLayoutWrapper = ({ children }: Props) => {
   const { unreadCount } = useStudentUnreadCount();
+  const { unreadNewsCount } = useWhatsNewUnreadCount();
 
   return (
-    <StudentLayout unreadCount={unreadCount}>
+    <StudentLayout unreadCount={unreadCount} unreadNewsCount={unreadNewsCount}>
       {children}
     </StudentLayout>
   );

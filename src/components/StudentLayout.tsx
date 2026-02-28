@@ -10,9 +10,10 @@ import toast from 'react-hot-toast';
 interface StudentLayoutProps {
   children: ReactNode;
   unreadCount?: number;
+  unreadNewsCount?: number;
 }
 
-const StudentLayout = ({ children, unreadCount = 0 }: StudentLayoutProps) => {
+const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: StudentLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { lectures } = useQuiz();
@@ -112,7 +113,7 @@ const StudentLayout = ({ children, unreadCount = 0 }: StudentLayoutProps) => {
 
   const navItems = [
     { path: '/dashboard', icon: Home, label: 'Home' },
-    { path: '/news', icon: Sparkles, label: 'News' },
+    { path: '/news', icon: Sparkles, label: 'News', badge: unreadNewsCount },
     { path: '/scan', icon: QrCode, label: 'QR' },
     { path: '/chat', icon: MessageSquare, label: 'Chat', badge: unreadCount },
     { path: '/profile', icon: User, label: 'Profile' },

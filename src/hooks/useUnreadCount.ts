@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { lectureQAApi } from '../api/lectureQAApi';
+import { whatsNewApi } from '../api/whatsNewApi';
 import { subscribeToAllQuestions, subscribeToAllMessages } from '../services/realtimeService';
 
 // =====================================================
@@ -204,4 +205,55 @@ export const useStudentUnreadCount = () => {
   }, []);
 
   return { unreadCount };
+};
+
+// =====================================================
+// What's New unread-count hook (student)
+// Uses localStorage to track last-seen timestamp
+// =====================================================
+
+const WHATS_NEW_LAST_SEEN_KEY = 'whats_new_last_seen';
+
+const getLastSeen = (): string | null => {
+  try { return localStorage.getItem(WHATS_NEW_LAST_SEEN_KEY); } catch { return null; }
+};
+
+const setLastSeen = (ts: string) => {
+  try { localStorage.setItem(WHATS_NEW_LAST_SEEN_KEY, ts); } catch { /* ignore */ }
+};
+
+export const useWhatsNewUnreadCount = () => {
+  const [unreadNewsCount, setUnreadNewsCount] = useState(0);
+
+  const refresh = useCallback(async () => {
+    try {
+      const since = getLastSeen();
+      const count = await whatsNewApi.getPublishedCountSince(since);
+      setUnreadNewsCount(count);
+    } catch (e) {
+      console.error('Error fetching whats-new unread count:', e);
+    }
+  }, []);
+
+  const markAllNewsSeen = useCallback(() => {
+    setLastSeen(new Date().toISOString());
+    setUnreadNewsCount(0);
+  }, []);
+
+  useEffect(() => {
+    refresh();
+    const interval = setInterval(refresh, 30000);
+
+    const handleSeen = () => {
+      setUnreadNewsCount(0);
+    };
+    window.addEventListener('whats-new-seen', handleSeen);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('whats-new-seen', handleSeen);
+    };
+  }, [refresh]);
+
+  return { unreadNewsCount, markAllNewsSeen };
 };

@@ -63,6 +63,10 @@ const StudentNews = () => {
         }
 
         setNewsGroups(Array.from(groupMap.values()));
+
+        // Mark all news as seen — update localStorage timestamp and reset badge
+        try { localStorage.setItem('whats_new_last_seen', new Date().toISOString()); } catch { /* ignore */ }
+        window.dispatchEvent(new Event('whats-new-seen'));
       } catch { /* ignore */ }
       finally { setLoading(false); }
     };

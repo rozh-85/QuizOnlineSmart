@@ -137,6 +137,22 @@ export const whatsNewApi = {
     if (error) throw error;
   },
 
+  /** Count published items since a given timestamp (for unread badge) */
+  async getPublishedCountSince(since: string | null): Promise<number> {
+    let query = supabase
+      .from('whats_new_items')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'published');
+
+    if (since) {
+      query = query.gt('published_at', since);
+    }
+
+    const { count, error } = await query;
+    if (error) throw error;
+    return count ?? 0;
+  },
+
   /** Publish a single item by id */
   async publishOne(id: string): Promise<void> {
     const { error } = await supabase
