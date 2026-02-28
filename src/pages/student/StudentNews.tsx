@@ -242,7 +242,7 @@ const StudentNews = () => {
 
               // ── MATERIAL card: navigates to the lecture's materials section ──
               if (group.itemType === 'material') {
-                const linkTo = group.lectureId ? `/lecture/${group.lectureId}?scrollTo=materials` : '/dashboard';
+                const linkTo = group.lectureId ? `/quiz?lectureId=${group.lectureId}` : '/dashboard';
                 return (
                   <Link
                     key={group.key}
