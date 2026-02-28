@@ -126,32 +126,32 @@ const WhatsNewPublisher = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto animate-fade-in">
+    <div className="animate-fade-in">
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center shadow-sm">
-            <Megaphone size={24} />
+      <div className="mb-10">
+        <div className="flex items-center gap-4 mb-2">
+          <div className="w-16 h-16 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center shadow-sm flex-shrink-0">
+            <Megaphone size={32} />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">What's New Publisher</h1>
-            <p className="text-sm text-slate-400 font-medium">Review and publish updates for students</p>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">What's New Publisher</h1>
+            <p className="text-base text-slate-400 font-medium mt-0.5">Review and publish updates for students</p>
           </div>
         </div>
       </div>
 
       {/* Pending Groups */}
       {pendingGroups.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-2xl border border-slate-100 shadow-sm">
-          <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <Check size={28} className="text-slate-300" />
+        <div className="text-center py-24 bg-white rounded-2xl border border-slate-100 shadow-sm">
+          <div className="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-5">
+            <Check size={36} className="text-slate-300" />
           </div>
-          <p className="text-slate-500 font-bold text-sm">All caught up!</p>
-          <p className="text-slate-400 text-xs mt-1">No pending updates to review</p>
+          <p className="text-slate-500 font-bold text-lg">All caught up!</p>
+          <p className="text-slate-400 text-sm mt-2">No pending updates to review</p>
         </div>
       ) : (
-        <div className="space-y-4 mb-8">
-          <p className="text-xs font-black uppercase tracking-widest text-slate-400 px-1">
+        <div className="space-y-5 mb-10">
+          <p className="text-sm font-black uppercase tracking-widest text-slate-400 px-1">
             Pending Review ({pendingGroups.reduce((sum, g) => sum + g.items.length, 0)} items)
           </p>
           {pendingGroups.map((group) => {
@@ -165,68 +165,68 @@ const WhatsNewPublisher = () => {
                 key={key}
                 className={`bg-white rounded-2xl border ${meta.borderColor} shadow-sm overflow-hidden transition-all hover:shadow-md relative`}
               >
-                <div className="p-4 sm:p-6">
-                  {/* Top row: icon + labels + action buttons */}
-                  <div className="flex items-start gap-3 sm:gap-4">
+                <div className="p-6 sm:p-8">
+                  {/* Top row: icon + content */}
+                  <div className="flex items-start gap-5">
                     {/* Icon */}
-                    <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl ${meta.bgColor} ${meta.color} flex items-center justify-center flex-shrink-0 mt-0.5`}>
-                      <Icon size={20} />
+                    <div className={`w-14 h-14 rounded-2xl ${meta.bgColor} ${meta.color} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                      <Icon size={26} />
                     </div>
 
                     {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-1.5 mb-1">
-                        <span className={`px-2 py-0.5 ${meta.bgColor} ${meta.color} text-[10px] font-black uppercase tracking-wider rounded-md`}>
+                    <div className="flex-1 min-w-0 pr-0 sm:pr-56">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <span className={`px-3 py-1 ${meta.bgColor} ${meta.color} text-xs font-black uppercase tracking-wider rounded-lg`}>
                           {meta.label}
                         </span>
                         {group.items.length > 1 && (
-                          <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-black rounded-md">
+                          <span className="px-3 py-1 bg-slate-100 text-slate-500 text-xs font-black rounded-lg">
                             ×{group.items.length} stacked
                           </span>
                         )}
                       </div>
 
-                      <h3 className="text-base font-black text-slate-900 tracking-tight">
+                      <h3 className="text-xl font-black text-slate-900 tracking-tight">
                         {group.lectureName}
                       </h3>
 
                       {/* Item summary + expand toggle */}
-                      <div className="mt-2.5">
+                      <div className="mt-3">
                         <button
                           onClick={() => setExpandedGroupKey(expandedGroupKey === key ? null : key)}
-                          className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                          className="flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors"
                         >
-                          {expandedGroupKey === key ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          {expandedGroupKey === key ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                           <span>View {group.items.length} item{group.items.length > 1 ? 's' : ''}</span>
                         </button>
 
                         {expandedGroupKey !== key && (
-                          <div className="space-y-1.5 mt-2">
+                          <div className="space-y-2 mt-3">
                             {group.items.slice(0, 3).map((item) => (
-                              <div key={item.id} className="flex items-start gap-2 text-xs text-slate-500">
-                                <div className="w-1.5 h-1.5 rounded-full bg-slate-300 flex-shrink-0 mt-1.5" />
+                              <div key={item.id} className="flex items-start gap-2.5 text-sm text-slate-500">
+                                <div className="w-2 h-2 rounded-full bg-slate-300 flex-shrink-0 mt-1.5" />
                                 <span className="font-semibold leading-relaxed">{item.title}</span>
                               </div>
                             ))}
                             {group.items.length > 3 && (
-                              <p className="text-[11px] text-slate-300 font-bold pl-3.5">+{group.items.length - 3} more</p>
+                              <p className="text-xs text-slate-300 font-bold pl-4">+{group.items.length - 3} more</p>
                             )}
                           </div>
                         )}
 
                         {expandedGroupKey === key && (
-                          <div className="mt-3 space-y-2">
+                          <div className="mt-4 space-y-3">
                             {group.items.map((item) => (
-                              <div key={item.id} className="bg-slate-50 rounded-xl p-3 sm:p-4 border border-slate-100">
-                                <div className="flex items-start justify-between gap-3">
+                              <div key={item.id} className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                <div className="flex items-start justify-between gap-4">
                                   <div className="min-w-0 flex-1">
-                                    <p className="text-sm font-bold text-slate-800 break-words leading-snug">{item.title}</p>
+                                    <p className="text-base font-bold text-slate-800 break-words leading-snug">{item.title}</p>
                                     {item.description && (
-                                      <p className="text-xs text-slate-500 mt-1 break-words leading-relaxed">{item.description}</p>
+                                      <p className="text-sm text-slate-500 mt-1.5 break-words leading-relaxed">{item.description}</p>
                                     )}
                                   </div>
-                                  <span className="text-[11px] text-slate-300 flex items-center gap-1 flex-shrink-0 pt-0.5 whitespace-nowrap">
-                                    <Clock size={11} /> {fmtRelative(item.createdAt)}
+                                  <span className="text-xs text-slate-300 flex items-center gap-1.5 flex-shrink-0 pt-1 whitespace-nowrap">
+                                    <Clock size={13} /> {fmtRelative(item.createdAt)}
                                   </span>
                                 </div>
                               </div>
@@ -237,22 +237,22 @@ const WhatsNewPublisher = () => {
                     </div>
                   </div>
 
-                  {/* Action buttons — full-width row on mobile, inline on sm+ */}
-                  <div className="flex items-center gap-2 mt-4 sm:mt-0 sm:absolute sm:top-5 sm:right-5">
+                  {/* Action buttons — full-width on mobile, absolute top-right on sm+ */}
+                  <div className="flex items-center gap-3 mt-5 sm:mt-0 sm:absolute sm:top-6 sm:right-7">
                     <button
                       onClick={() => handleDecline(group)}
                       disabled={isProcessing}
-                      className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold text-slate-500 bg-slate-50 hover:bg-rose-50 hover:text-rose-600 border border-slate-200 hover:border-rose-200 transition-all disabled:opacity-50"
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-slate-500 bg-slate-50 hover:bg-rose-50 hover:text-rose-600 border border-slate-200 hover:border-rose-200 transition-all disabled:opacity-50"
                     >
-                      {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <X size={16} />}
+                      {isProcessing ? <Loader2 size={17} className="animate-spin" /> : <X size={17} />}
                       Decline
                     </button>
                     <button
                       onClick={() => handlePublish(group)}
                       disabled={isProcessing}
-                      className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold text-white bg-primary-600 hover:bg-primary-700 shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+                      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-white bg-primary-600 hover:bg-primary-700 shadow-sm hover:shadow-md transition-all disabled:opacity-50"
                     >
-                      {isProcessing ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                      {isProcessing ? <Loader2 size={17} className="animate-spin" /> : <Check size={17} />}
                       Publish
                     </button>
                   </div>
@@ -264,20 +264,20 @@ const WhatsNewPublisher = () => {
       )}
 
       {/* History Toggle */}
-      <div className="mt-8">
+      <div className="mt-10">
         <button
           onClick={() => setShowHistory(!showHistory)}
-          className="flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors"
+          className="flex items-center gap-2.5 text-base font-bold text-slate-400 hover:text-slate-600 transition-colors"
         >
-          <History size={16} />
+          <History size={18} />
           <span>Recent History</span>
-          {showHistory ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          {showHistory ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
 
         {showHistory && (
-          <div className="mt-4 space-y-2">
+          <div className="mt-5 space-y-3">
             {history.length === 0 ? (
-              <p className="text-xs text-slate-400 py-4">No history yet</p>
+              <p className="text-sm text-slate-400 py-6">No history yet</p>
             ) : (
               history.map((item) => {
                 const meta = ITEM_TYPE_META[item.itemType];
@@ -285,25 +285,25 @@ const WhatsNewPublisher = () => {
                 return (
                   <div
                     key={item.id}
-                    className={`flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-100 ${
+                    className={`flex items-center gap-4 p-4 rounded-xl bg-white border border-slate-100 ${
                       item.status === 'declined' ? 'opacity-50' : ''
                     }`}
                   >
-                    <div className={`w-8 h-8 rounded-lg ${meta.bgColor} ${meta.color} flex items-center justify-center flex-shrink-0`}>
-                      <Icon size={14} />
+                    <div className={`w-11 h-11 rounded-xl ${meta.bgColor} ${meta.color} flex items-center justify-center flex-shrink-0`}>
+                      <Icon size={18} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-slate-700 truncate">{item.title}</p>
-                      <p className="text-[10px] text-slate-400">{getLectureName(item.lectureId)}</p>
+                      <p className="text-sm font-bold text-slate-700 truncate">{item.title}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{getLectureName(item.lectureId)}</p>
                     </div>
-                    <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase ${
+                    <span className={`px-3 py-1 rounded-lg text-xs font-black uppercase ${
                       item.status === 'published'
                         ? 'bg-emerald-50 text-emerald-600'
                         : 'bg-slate-100 text-slate-400'
                     }`}>
                       {item.status}
                     </span>
-                    <span className="text-[10px] text-slate-300 flex-shrink-0">{fmtRelative(item.createdAt)}</span>
+                    <span className="text-xs text-slate-300 flex-shrink-0">{fmtRelative(item.createdAt)}</span>
                   </div>
                 );
               })
