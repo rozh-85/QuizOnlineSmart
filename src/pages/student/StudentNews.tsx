@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sparkles, BookOpen, FileText, HelpCircle, Clock, ArrowRight, Search, Loader2, Megaphone, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sparkles, BookOpen, FileText, HelpCircle, Clock, ArrowRight, Search, Loader2, Megaphone, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react';
 import { useQuiz } from '../../context/QuizContext';
 import { authApi } from '../../api/authApi';
 import { whatsNewApi } from '../../api/whatsNewApi';
@@ -36,7 +36,7 @@ const StudentNews = () => {
   const [loading, setLoading] = useState(true);
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
-  const { lectures } = useQuiz();
+  const { lectures, questions } = useQuiz();
 
   const toggleExpand = (key: string) => {
     setExpandedKeys(prev => {
@@ -188,10 +188,12 @@ const StudentNews = () => {
                 </div>
               );
 
-              // ── QUESTION card: expandable preview, no navigation ──
+              // ── QUESTION card: expandable preview with full Q&A, NOT clickable ──
               if (group.itemType === 'question') {
-                const previewCount = 3;
+                const previewCount = 2;
                 const hasMore = group.items.length > previewCount;
+                const visibleItems = isExpanded ? group.items : group.items.slice(0, previewCount);
+
                 return (
                   <div
                     key={group.key}
@@ -203,33 +205,69 @@ const StudentNews = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         {headerBadges}
-                        <h3 className="text-base font-black text-slate-900 tracking-tight mb-2 truncate">
+                        <h3 className="text-base font-black text-slate-900 tracking-tight mb-3 truncate">
                           {lectureName}
                         </h3>
-                        <div className="space-y-1.5">
-                          {group.items.slice(0, isExpanded ? undefined : previewCount).map(item => (
-                            <div key={item.id} className="flex items-start gap-2">
-                              <span className="w-1.5 h-1.5 rounded-full bg-violet-300 mt-1.5 flex-shrink-0" />
-                              <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                                {item.title}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                        {hasMore && (
-                          <button
-                            onClick={() => toggleExpand(group.key)}
-                            className="flex items-center gap-1.5 mt-3 text-[11px] font-bold text-violet-600 hover:text-violet-700 transition-colors"
-                          >
-                            {isExpanded ? (
-                              <>Show less <ChevronUp size={14} /></>
-                            ) : (
-                              <>Show all {group.items.length} questions <ChevronDown size={14} /></>
-                            )}
-                          </button>
-                        )}
                       </div>
                     </div>
+
+                    {/* Question previews with full text + answer */}
+                    <div className="mt-3 space-y-2.5">
+                      {visibleItems.map((item, qi) => {
+                        const q = questions.find(qq => qq.id === item.referenceId);
+                        return (
+                          <div key={item.id} className="rounded-xl bg-violet-50/60 border border-violet-100/80 p-3.5">
+                            <p className="text-xs font-bold text-slate-700 leading-relaxed">
+                              <span className="text-violet-400 font-black mr-1.5">Q{qi + 1}.</span>
+                              {q?.text || item.title}
+                            </p>
+                            {q && q.type === 'multiple-choice' && q.options.length > 0 && (
+                              <div className="mt-2 space-y-1">
+                                {q.options.map((opt, oi) => (
+                                  <div key={oi} className={`flex items-center gap-2 px-2.5 py-1 rounded-lg text-[11px] ${
+                                    oi === q.correctIndex
+                                      ? 'bg-emerald-50 text-emerald-700 font-bold border border-emerald-200'
+                                      : 'text-slate-500'
+                                  }`}>
+                                    {oi === q.correctIndex && <CheckCircle2 size={11} className="shrink-0" />}
+                                    <span className="font-semibold shrink-0 text-slate-400 w-4">{String.fromCharCode(65 + oi)}.</span>
+                                    <span>{opt}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {q && q.type === 'true-false' && (
+                              <p className="mt-2 text-[11px] font-bold text-emerald-600 flex items-center gap-1.5">
+                                <CheckCircle2 size={11} /> Answer: {q.correctAnswer || (q.correctIndex === 0 ? 'True' : 'False')}
+                              </p>
+                            )}
+                            {q && q.type === 'blank' && q.correctAnswer && (
+                              <p className="mt-2 text-[11px] font-bold text-emerald-600 flex items-center gap-1.5">
+                                <CheckCircle2 size={11} /> Answer: {q.correctAnswer}
+                              </p>
+                            )}
+                            {q?.explanation && (
+                              <p className="mt-2 text-[10px] text-slate-400 italic leading-relaxed border-t border-violet-100 pt-2">
+                                {q.explanation}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {hasMore && (
+                      <button
+                        onClick={() => toggleExpand(group.key)}
+                        className="flex items-center gap-1.5 mt-3 text-[11px] font-bold text-violet-600 hover:text-violet-700 transition-colors"
+                      >
+                        {isExpanded ? (
+                          <>Show less <ChevronUp size={14} /></>
+                        ) : (
+                          <>See all {group.items.length} questions <ChevronDown size={14} /></>
+                        )}
+                      </button>
+                    )}
                     {footer}
                   </div>
                 );
@@ -273,13 +311,14 @@ const StudentNews = () => {
                 );
               }
 
-              // ── LECTURE card: smooth inline expand, no navigation ──
+              // ── LECTURE card: navigates to the lecture ──
               if (group.itemType === 'lecture') {
+                const linkTo = group.lectureId ? `/lecture/${group.lectureId}` : '/dashboard';
                 return (
-                  <div
+                  <Link
                     key={group.key}
-                    onClick={() => toggleExpand(group.key)}
-                    className="group block bg-white rounded-2xl border border-primary-100 hover:border-primary-200 hover:shadow-lg hover:shadow-primary-50 transition-all p-5 sm:p-6 cursor-pointer select-none"
+                    to={linkTo}
+                    className="group block bg-white rounded-2xl border border-primary-100 hover:border-primary-200 hover:shadow-lg hover:shadow-primary-50 transition-all p-5 sm:p-6"
                   >
                     <div className="flex items-start gap-4">
                       <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colors.gradient} text-white flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-105 transition-transform`}>
@@ -287,48 +326,21 @@ const StudentNews = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         {headerBadges}
-                        <h3 className="text-base font-black text-slate-900 tracking-tight mb-1 truncate">
+                        <h3 className="text-base font-black text-slate-900 tracking-tight group-hover:text-primary-600 transition-colors mb-1 truncate">
                           {lectureName}
                         </h3>
-                        {!isExpanded && (
-                          <p className="text-xs text-slate-400 font-medium mt-1">Tap to see details</p>
-                        )}
-                      </div>
-                      <div className="pt-1 text-slate-300">
-                        {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                      </div>
-                    </div>
-
-                    <div
-                      className="overflow-hidden transition-all duration-300 ease-in-out"
-                      style={{
-                        maxHeight: isExpanded ? '300px' : '0px',
-                        opacity: isExpanded ? 1 : 0,
-                      }}
-                    >
-                      <div className="mt-4 pt-4 border-t border-primary-50 space-y-3">
                         {lecture?.description && (
-                          <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                          <p className="text-xs text-slate-400 font-medium mt-1 line-clamp-2">
                             {lecture.description}
                           </p>
                         )}
-                        {lecture?.sections && lecture.sections.length > 0 && (
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            {lecture.sections.map((s: string) => (
-                              <span key={s} className="px-2 py-0.5 rounded-md bg-primary-50 text-primary-600 text-[9px] font-black uppercase tracking-wider">
-                                {s}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                        {!lecture?.description && (!lecture?.sections || lecture.sections.length === 0) && (
-                          <p className="text-xs text-slate-300 font-medium">No additional details available.</p>
-                        )}
+                        <div className="flex items-center gap-2 mt-3 text-[10px] font-black text-primary-600 uppercase tracking-wider group-hover:gap-3 transition-all">
+                          Go to Lecture <ArrowRight size={12} />
+                        </div>
                       </div>
                     </div>
-
                     {footer}
-                  </div>
+                  </Link>
                 );
               }
 
