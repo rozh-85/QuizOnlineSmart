@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Megaphone, Check, X, BookOpen, FileText, HelpCircle, Clock, ChevronDown, ChevronUp, History, Loader2, Plus, PenLine } from 'lucide-react';
+import { Megaphone, Check, X, BookOpen, FileText, HelpCircle, Clock, ChevronDown, ChevronUp, History, Loader2, Plus, PenLine, Eye, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { whatsNewApi } from '../../api/whatsNewApi';
 import { useQuiz } from '../../context/QuizContext';
@@ -22,7 +22,7 @@ const ITEM_TYPE_META: Record<string, { icon: typeof BookOpen; label: string; col
 };
 
 const WhatsNewPublisher = () => {
-  const { lectures } = useQuiz();
+  const { lectures, questions, materials } = useQuiz();
   const [pendingGroups, setPendingGroups] = useState<PendingGroup[]>([]);
   const [history, setHistory] = useState<WhatsNewItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,6 +34,7 @@ const WhatsNewPublisher = () => {
   const [manualDescription, setManualDescription] = useState('');
   const [manualLectureId, setManualLectureId] = useState<string>('');
   const [manualSubmitting, setManualSubmitting] = useState(false);
+  const [previewItemId, setPreviewItemId] = useState<string | null>(null);
 
   const getLectureName = useCallback((lectureId: string | null) => {
     if (!lectureId) return 'General';
@@ -348,25 +349,122 @@ const WhatsNewPublisher = () => {
                   {isExpanded && (
                     <div className="px-5 pb-4 pl-[4.25rem]">
                       <div className="rounded-lg border border-slate-100 overflow-hidden">
-                        <table className="w-full text-sm">
-                          <tbody>
-                            {group.items.map((item, i) => (
-                              <tr key={item.id} className={`${i > 0 ? 'border-t border-slate-50' : ''} hover:bg-slate-50/50`}>
-                                <td className="px-3 py-2 max-w-[300px]">
+                        {group.items.map((item, i) => {
+                          const isPreviewing = previewItemId === item.id;
+                          const question = item.itemType === 'question' ? questions.find(q => q.id === item.referenceId) : null;
+                          const material = item.itemType === 'material' ? materials.find(m => m.id === item.referenceId) : null;
+                          const lecture = item.itemType === 'lecture' ? lectures.find(l => l.id === item.referenceId) : null;
+                          const hasPreview = !!(question || material || lecture);
+
+                          return (
+                            <div key={item.id} className={i > 0 ? 'border-t border-slate-100' : ''}>
+                              <div className="flex items-center gap-2 px-3 py-2 hover:bg-slate-50/50 transition-colors">
+                                <div className="flex-1 min-w-0">
                                   <p className="text-[12px] font-semibold text-slate-700 leading-snug">{item.title}</p>
                                   {item.description && (
                                     <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-1 leading-relaxed">{item.description}</p>
                                   )}
-                                </td>
-                                <td className="px-3 py-2 text-right whitespace-nowrap">
-                                  <span className="text-[10px] text-slate-300 font-medium flex items-center gap-1 justify-end">
-                                    <Clock size={10} /> {fmtRelative(item.createdAt)}
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                                </div>
+                                <span className="text-[10px] text-slate-300 font-medium flex items-center gap-1 shrink-0">
+                                  <Clock size={10} /> {fmtRelative(item.createdAt)}
+                                </span>
+                                {hasPreview && (
+                                  <button
+                                    onClick={() => setPreviewItemId(isPreviewing ? null : item.id)}
+                                    className={`p-1 rounded-md transition-all shrink-0 ${isPreviewing ? 'text-primary-600 bg-primary-50' : 'text-slate-300 hover:text-slate-500 hover:bg-slate-100'}`}
+                                    title="Quick view"
+                                  >
+                                    <Eye size={13} />
+                                  </button>
+                                )}
+                              </div>
+
+                              {/* Quick view panel */}
+                              {isPreviewing && question && (
+                                <div className="mx-3 mb-2 p-3 rounded-lg bg-violet-50/50 border border-violet-100 space-y-2">
+                                  <p className="text-[12px] font-semibold text-slate-700 leading-snug">{question.text}</p>
+                                  {question.type === 'multiple-choice' && question.options.length > 0 && (
+                                    <div className="space-y-1">
+                                      {question.options.map((opt, oi) => (
+                                        <div key={oi} className={`flex items-center gap-2 px-2.5 py-1 rounded-md text-[11px] ${
+                                          oi === question.correctIndex
+                                            ? 'bg-emerald-50 text-emerald-700 font-bold border border-emerald-200'
+                                            : 'bg-white text-slate-500 border border-slate-100'
+                                        }`}>
+                                          {oi === question.correctIndex && <CheckCircle2 size={11} className="shrink-0" />}
+                                          <span className="font-semibold shrink-0 text-slate-400 w-4">{String.fromCharCode(65 + oi)}.</span>
+                                          <span>{opt}</span>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                  {question.type === 'true-false' && (
+                                    <p className="text-[11px] font-bold text-emerald-600 flex items-center gap-1.5">
+                                      <CheckCircle2 size={11} /> Answer: {question.correctAnswer || (question.correctIndex === 0 ? 'True' : 'False')}
+                                    </p>
+                                  )}
+                                  {question.type === 'blank' && question.correctAnswer && (
+                                    <p className="text-[11px] font-bold text-emerald-600 flex items-center gap-1.5">
+                                      <CheckCircle2 size={11} /> Answer: {question.correctAnswer}
+                                    </p>
+                                  )}
+                                  {question.explanation && (
+                                    <p className="text-[10px] text-slate-400 italic leading-relaxed border-t border-violet-100 pt-1.5 mt-1.5">{question.explanation}</p>
+                                  )}
+                                  <div className="flex items-center gap-2 pt-0.5">
+                                    <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
+                                      question.difficulty === 'easy' ? 'bg-emerald-100 text-emerald-600'
+                                        : question.difficulty === 'medium' ? 'bg-amber-100 text-amber-600'
+                                        : 'bg-rose-100 text-rose-600'
+                                    }`}>{question.difficulty}</span>
+                                    <span className="px-1.5 py-0.5 rounded bg-slate-100 text-[8px] font-black uppercase tracking-wider text-slate-500">{question.type}</span>
+                                  </div>
+                                </div>
+                              )}
+
+                              {isPreviewing && material && (
+                                <div className="mx-3 mb-2 p-3 rounded-lg bg-emerald-50/50 border border-emerald-100 space-y-1.5">
+                                  {material.fileType === 'note' && material.content ? (
+                                    <p className="text-[11px] text-slate-600 leading-relaxed whitespace-pre-wrap line-clamp-4">{material.content}</p>
+                                  ) : material.fileUrl ? (
+                                    <a href={material.fileUrl} target="_blank" rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1.5 text-[11px] font-bold text-primary-600 hover:text-primary-700">
+                                      <LinkIcon size={11} />
+                                      {material.fileName || 'Open file'}
+                                    </a>
+                                  ) : (
+                                    <p className="text-[11px] text-slate-400">No content preview available</p>
+                                  )}
+                                  <div className="flex items-center gap-2">
+                                    <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
+                                      material.fileType === 'note' ? 'bg-amber-100 text-amber-600'
+                                        : material.fileType === 'pdf' ? 'bg-rose-100 text-rose-600'
+                                        : 'bg-blue-100 text-blue-600'
+                                    }`}>{material.fileType}</span>
+                                    {material.sectionId && (
+                                      <span className="px-1.5 py-0.5 rounded bg-slate-100 text-[8px] font-black uppercase tracking-wider text-slate-500">{material.sectionId}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {isPreviewing && lecture && (
+                                <div className="mx-3 mb-2 p-3 rounded-lg bg-primary-50/50 border border-primary-100 space-y-1.5">
+                                  {lecture.description && (
+                                    <p className="text-[11px] text-slate-600 leading-relaxed">{lecture.description}</p>
+                                  )}
+                                  {lecture.sections.length > 0 && (
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      {lecture.sections.map(s => (
+                                        <span key={s} className="px-1.5 py-0.5 rounded bg-primary-100 text-[8px] font-black uppercase tracking-wider text-primary-600">{s}</span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
