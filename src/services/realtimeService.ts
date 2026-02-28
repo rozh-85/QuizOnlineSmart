@@ -83,6 +83,18 @@ export const subscribeToAllMessages = (channelName: string, callback: (payload: 
     .subscribe();
 };
 
+export const subscribeToWhatsNew = (callback: (payload: any) => void) => {
+  return supabase
+    .channel('whats-new-changes')
+    .on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'whats_new_items',
+      filter: 'status=eq.published',
+    }, callback)
+    .subscribe();
+};
+
 export const subscribeToStudentQuestions = (studentId: string, channelName: string, callback: (payload: any) => void) => {
   return supabase
     .channel(channelName)

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { lectureQAApi } from '../api/lectureQAApi';
 import { whatsNewApi } from '../api/whatsNewApi';
-import { subscribeToAllQuestions, subscribeToAllMessages } from '../services/realtimeService';
+import { subscribeToAllQuestions, subscribeToAllMessages, subscribeToWhatsNew } from '../services/realtimeService';
 
 // =====================================================
 // Shared teacher unread-count hook
@@ -244,6 +244,8 @@ export const useWhatsNewUnreadCount = () => {
     refresh();
     const interval = setInterval(refresh, 30000);
 
+    const newsSub = subscribeToWhatsNew(() => refresh());
+
     const handleSeen = () => {
       setUnreadNewsCount(0);
     };
@@ -251,6 +253,7 @@ export const useWhatsNewUnreadCount = () => {
 
     return () => {
       clearInterval(interval);
+      newsSub.unsubscribe();
       window.removeEventListener('whats-new-seen', handleSeen);
     };
   }, [refresh]);
