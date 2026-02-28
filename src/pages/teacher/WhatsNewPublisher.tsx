@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Megaphone, Check, X, BookOpen, FileText, HelpCircle, Clock, ChevronDown, ChevronUp, History, Loader2 } from 'lucide-react';
+import { Megaphone, Check, X, BookOpen, FileText, HelpCircle, Clock, ChevronDown, ChevronUp, History, Loader2, Plus, PenLine } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { whatsNewApi } from '../../api/whatsNewApi';
 import { useQuiz } from '../../context/QuizContext';
@@ -8,7 +8,7 @@ import { adaptWhatsNewItem } from '../../utils/adapters';
 
 // Group pending items by (itemType, lectureId)
 interface PendingGroup {
-  itemType: 'lecture' | 'material' | 'question';
+  itemType: 'lecture' | 'material' | 'question' | 'manual';
   lectureId: string | null;
   lectureName: string;
   items: WhatsNewItem[];
@@ -18,6 +18,7 @@ const ITEM_TYPE_META: Record<string, { icon: typeof BookOpen; label: string; col
   lecture: { icon: BookOpen, label: 'New Lecture', color: 'text-primary-600', bgColor: 'bg-primary-50', borderColor: 'border-primary-200' },
   material: { icon: FileText, label: 'New Materials', color: 'text-emerald-600', bgColor: 'bg-emerald-50', borderColor: 'border-emerald-200' },
   question: { icon: HelpCircle, label: 'New Questions', color: 'text-violet-600', bgColor: 'bg-violet-50', borderColor: 'border-violet-200' },
+  manual: { icon: PenLine, label: 'Manual Update', color: 'text-amber-600', bgColor: 'bg-amber-50', borderColor: 'border-amber-200' },
 };
 
 const WhatsNewPublisher = () => {
@@ -28,6 +29,11 @@ const WhatsNewPublisher = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [processingKey, setProcessingKey] = useState<string | null>(null);
   const [expandedGroupKey, setExpandedGroupKey] = useState<string | null>(null);
+  const [showManualModal, setShowManualModal] = useState(false);
+  const [manualTitle, setManualTitle] = useState('');
+  const [manualDescription, setManualDescription] = useState('');
+  const [manualLectureId, setManualLectureId] = useState<string>('');
+  const [manualSubmitting, setManualSubmitting] = useState(false);
 
   const getLectureName = useCallback((lectureId: string | null) => {
     if (!lectureId) return 'General';
@@ -61,7 +67,7 @@ const WhatsNewPublisher = () => {
       }
 
       // Sort: lectures first, then materials, then questions
-      const order = { lecture: 0, material: 1, question: 2 };
+      const order: Record<string, number> = { lecture: 0, material: 1, question: 2, manual: 3 };
       const groups = Array.from(groupMap.values()).sort((a, b) => {
         const diff = order[a.itemType] - order[b.itemType];
         if (diff !== 0) return diff;
@@ -109,6 +115,32 @@ const WhatsNewPublisher = () => {
     }
   };
 
+  const handleCreateManual = async () => {
+    if (!manualTitle.trim()) {
+      toast.error('Title is required');
+      return;
+    }
+    setManualSubmitting(true);
+    try {
+      await whatsNewApi.createManual({
+        title: manualTitle.trim(),
+        description: manualDescription.trim() || null,
+        lecture_id: manualLectureId || null,
+      });
+      toast.success('Manual update published!');
+      setShowManualModal(false);
+      setManualTitle('');
+      setManualDescription('');
+      setManualLectureId('');
+      await loadData();
+    } catch (err) {
+      console.error('Failed to create manual update:', err);
+      toast.error('Failed to create update');
+    } finally {
+      setManualSubmitting(false);
+    }
+  };
+
   const fmtRelative = (d: string) => {
     const diff = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
     if (diff < 60) return 'Just now';
@@ -133,12 +165,94 @@ const WhatsNewPublisher = () => {
           <div className="w-16 h-16 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center shadow-sm flex-shrink-0">
             <Megaphone size={32} />
           </div>
-          <div>
+          <div className="flex-1">
             <h1 className="text-3xl font-black text-slate-900 tracking-tight">What's New Publisher</h1>
             <p className="text-base text-slate-400 font-medium mt-0.5">Review and publish updates for students</p>
           </div>
+          <button
+            onClick={() => setShowManualModal(true)}
+            className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 shadow-sm hover:shadow-md transition-all"
+          >
+            <Plus size={18} />
+            Add Manual Update
+          </button>
         </div>
       </div>
+
+      {/* Manual Entry Modal */}
+      {showManualModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-fade-in">
+            <div className="flex items-center justify-between p-6 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+                  <PenLine size={20} />
+                </div>
+                <h2 className="text-lg font-black text-slate-900">Add Manual Update</h2>
+              </div>
+              <button
+                onClick={() => { setShowManualModal(false); setManualTitle(''); setManualDescription(''); setManualLectureId(''); }}
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-6 space-y-5">
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Title *</label>
+                <input
+                  type="text"
+                  value={manualTitle}
+                  onChange={(e) => setManualTitle(e.target.value)}
+                  placeholder="e.g. Exam schedule updated"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300 transition-all"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Description</label>
+                <textarea
+                  value={manualDescription}
+                  onChange={(e) => setManualDescription(e.target.value)}
+                  placeholder="Optional details about this update..."
+                  rows={3}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-800 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300 transition-all resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Related Lecture</label>
+                <select
+                  value={manualLectureId}
+                  onChange={(e) => setManualLectureId(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300 transition-all bg-white"
+                >
+                  <option value="">General (no lecture)</option>
+                  {lectures.map((lec) => (
+                    <option key={lec.id} value={lec.id}>{lec.title}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-slate-100 bg-slate-50/50">
+              <button
+                onClick={() => { setShowManualModal(false); setManualTitle(''); setManualDescription(''); setManualLectureId(''); }}
+                disabled={manualSubmitting}
+                className="px-5 py-3 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-all disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreateManual}
+                disabled={manualSubmitting || !manualTitle.trim()}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 shadow-sm hover:shadow-md transition-all disabled:opacity-50"
+              >
+                {manualSubmitting ? <Loader2 size={17} className="animate-spin" /> : <Megaphone size={17} />}
+                Publish Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Pending Groups */}
       {pendingGroups.length === 0 ? (

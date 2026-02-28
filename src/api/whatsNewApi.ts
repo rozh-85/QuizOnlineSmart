@@ -44,6 +44,34 @@ export const whatsNewApi = {
     return data || [];
   },
 
+  /** Create a manual what's-new item and publish it immediately */
+  async createManual(item: {
+    title: string;
+    description?: string | null;
+    lecture_id?: string | null;
+  }): Promise<WhatsNewItem> {
+    const user = await authApi.getCurrentUser();
+    const now = new Date().toISOString();
+
+    const { data, error } = await supabase
+      .from('whats_new_items')
+      .insert([{
+        item_type: 'manual',
+        lecture_id: item.lecture_id || null,
+        reference_id: crypto.randomUUID(),
+        title: item.title,
+        description: item.description || null,
+        status: 'published',
+        published_at: now,
+        teacher_id: user?.id || null,
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
   /** Create a pending what's-new item (called automatically on lecture/material/question creation) */
   async createPending(item: {
     item_type: 'lecture' | 'material' | 'question';

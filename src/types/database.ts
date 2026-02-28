@@ -110,7 +110,7 @@ export type LectureQuestion = {
 
 export type WhatsNewItem = {
   id: string;
-  item_type: 'lecture' | 'material' | 'question';
+  item_type: 'lecture' | 'material' | 'question' | 'manual';
   lecture_id: string | null;
   reference_id: string;
   title: string;

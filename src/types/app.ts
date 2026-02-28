@@ -49,7 +49,7 @@ export interface Material {
   createdAt: string;
 }
 
-export type WhatsNewItemType = 'lecture' | 'material' | 'question';
+export type WhatsNewItemType = 'lecture' | 'material' | 'question' | 'manual';
 export type WhatsNewStatus = 'pending' | 'published' | 'declined';
 
 export interface WhatsNewItem {
