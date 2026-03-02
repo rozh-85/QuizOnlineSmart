@@ -1,4 +1,4 @@
-import { MoreVertical, Pencil, Trash2, Calendar } from 'lucide-react';
+import { MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import type { LectureQuestionMessage } from '../../types/database';
 
 interface MessageBubbleProps {
@@ -34,10 +34,10 @@ const MessageBubble = ({
 
   return (
     <div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-      <div className={`max-w-[85%] rounded-[1.2rem] p-3 px-4 relative ${
+      <div className={`max-w-[85%] rounded-lg p-3 px-4 relative ${
         isMe
-          ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 rounded-tr-none'
-          : 'bg-white border border-slate-100 text-slate-800 shadow-sm rounded-tl-none'
+          ? 'bg-indigo-600 text-white shadow-sm rounded-tr-none'
+          : 'bg-white border border-slate-200 text-slate-800 shadow-sm rounded-tl-none'
       }`}>
         {/* 3-dot menu */}
         {hasActions && editingMessageId !== m.id && (
@@ -166,8 +166,7 @@ const MessageBubble = ({
         )}
 
         {/* Timestamp */}
-        <div className={`text-[10px] mt-2 font-bold flex items-center gap-2 ${isMe ? 'opacity-60' : 'text-slate-300'}`}>
-          <Calendar size={10} />
+        <div className={`text-xs mt-2 ${isMe ? 'opacity-60' : 'text-slate-400'}`}>
           {fmtFullDate(m.created_at)}
         </div>
       </div>

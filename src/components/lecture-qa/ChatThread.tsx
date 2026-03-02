@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  ArrowLeft, Send, ShieldCheck, Trash2, ImagePlus,
+  ArrowLeft, Send, Trash2, ImagePlus,
   MoreVertical, Pencil, Calendar, X
 } from 'lucide-react';
 import { Button } from '../ui';
@@ -67,38 +67,33 @@ const ChatThread = ({
   onEditQuestionTextChange, parseImageUrls,
 }: ChatThreadProps) => {
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <button
         onClick={onBack}
-        className="flex items-center gap-2 text-[10px] font-black text-slate-400 hover:text-indigo-600 uppercase tracking-widest transition-colors"
+        className="flex items-center gap-2 text-sm text-slate-500 hover:text-indigo-600 transition-colors"
       >
-        <ArrowLeft size={14} /> Back to {isMentor ? 'Inbox' : 'My Questions'}
+        <ArrowLeft size={16} /> Back to {isMentor ? 'Inbox' : 'My Questions'}
       </button>
 
-      <div className="space-y-5">
+      <div className="space-y-4">
         {/* Chat & Controls Container */}
-        <div className="flex flex-col h-[500px] sm:h-[650px] border border-slate-200 bg-white shadow-xl shadow-slate-200/50 overflow-hidden rounded-[1.5rem] sm:rounded-[2rem]">
+        <div className="flex flex-col h-[500px] sm:h-[650px] border border-slate-200 bg-white shadow-sm overflow-hidden rounded-xl">
           {/* Header */}
-          <div className="px-6 py-4 border-b border-slate-100 bg-white flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-11 h-11 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-sm font-black text-indigo-600">
+          <div className="px-4 py-3 border-b border-slate-200 bg-white flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-semibold text-indigo-600">
                 {selectedQ.student?.full_name?.charAt(0) || 'S'}
               </div>
               <div>
-                <div className="text-base font-black text-slate-900 leading-tight">
+                <div className="text-sm font-semibold text-slate-900">
                   {selectedQ.student?.full_name || 'Anonymous Student'}
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center gap-1">
-                    <ShieldCheck size={10} /> Private Message
-                  </div>
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-2">
               {isAdminView && (
                 <Button variant="ghost" size="sm" onClick={() => onDeleteThreadRequest(selectedQ.id)}
-                  className="h-9 w-9 p-0 text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl"
+                  className="h-8 w-8 p-0 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg"
                 >
                   <Trash2 size={16} />
                 </Button>
@@ -209,19 +204,19 @@ const ChatThread = ({
           </div>
 
           {/* Input Area */}
-          <div className="p-4 sm:p-6 bg-white border-t border-slate-100">
+          <div className="p-4 bg-white border-t border-slate-200">
             {/* Image Previews */}
             {imagePreviews.length > 0 && (
               <div className="mb-3 flex flex-wrap gap-2">
                 {imagePreviews.map((preview, idx) => (
                   <div key={idx} className="relative">
-                    <img src={preview} alt="Preview" className="h-16 w-16 object-cover rounded-xl border-2 border-indigo-200" />
+                    <img src={preview} alt="Preview" className="h-16 w-16 object-cover rounded-lg border-2 border-indigo-200" />
                     <button
                       type="button"
                       onClick={() => onRemoveImage(idx)}
-                      className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center hover:bg-rose-600 transition-colors shadow-sm"
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center hover:bg-rose-600 transition-colors"
                     >
-                      <X size={10} />
+                      <X size={12} />
                     </button>
                   </div>
                 ))}
@@ -239,22 +234,22 @@ const ChatThread = ({
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="rounded-2xl sm:h-[48px] h-[44px] sm:w-[48px] w-[44px] flex-shrink-0 flex items-center justify-center bg-slate-100 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 transition-all"
+                className="rounded-lg h-10 w-10 flex-shrink-0 flex items-center justify-center bg-slate-100 hover:bg-indigo-50 text-slate-400 hover:text-indigo-600 transition-colors"
               >
-                <ImagePlus size={20} />
+                <ImagePlus size={18} />
               </button>
               <input
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type your reply..."
-                className="flex-1 bg-slate-50 border-none rounded-2xl sm:px-6 px-4 sm:py-4 py-3 text-sm font-bold focus:ring-4 focus:ring-indigo-50 outline-none transition-all placeholder:text-slate-300"
+                className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none placeholder:text-slate-400"
               />
-              <Button type="submit" disabled={(!newMessage.trim() && selectedImages.length === 0) || isUploading} className="rounded-2xl sm:h-[48px] h-[44px] sm:w-[48px] w-[44px] !p-0 bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-100 disabled:opacity-20 flex-shrink-0 transition-all hover:scale-105 active:scale-95">
+              <Button type="submit" disabled={(!newMessage.trim() && selectedImages.length === 0) || isUploading} className="rounded-lg h-10 w-10 !p-0 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 flex-shrink-0">
                 {isUploading ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
-                  <Send size={20} />
+                  <Send size={16} />
                 )}
               </Button>
             </form>

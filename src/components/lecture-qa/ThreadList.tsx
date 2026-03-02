@@ -1,4 +1,4 @@
-import { Star, Bell } from 'lucide-react';
+import { Star } from 'lucide-react';
 import type { LectureQuestion } from '../../types/database';
 
 /* ─────────── Helpers ─────────── */
@@ -32,30 +32,14 @@ const ThreadList = ({
   onSelectThread, onMarkAsRead,
 }: ThreadListProps) => {
   return (
-    <section className="space-y-5">
-      {!compact && (
-        <div className="flex items-center gap-3 px-1">
-          <div className="w-9 h-9 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center relative">
-            <Bell size={18} />
-          </div>
-          <div>
-            <h2 className="text-lg font-black text-slate-900 tracking-tight">
-              {isMentor ? 'Inquiries' : 'My Questions'}
-            </h2>
-            <p className="text-xs font-medium text-slate-500">
-              {isMentor ? 'Review and respond to private student messages.' : 'Follow up on your private inquiries.'}
-            </p>
-          </div>
-        </div>
-      )}
-
+    <section className="space-y-4">
       <div className="space-y-2">
         {list.length === 0 ? (
-          <div className="py-12 text-center rounded-2xl border-2 border-dashed border-slate-100 bg-white">
-            <p className="text-slate-400 font-bold text-sm">No conversations yet</p>
+          <div className="py-8 text-center rounded-lg border border-slate-200 bg-slate-50">
+            <p className="text-slate-400 text-sm">No conversations yet</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-2">
+          <div className="space-y-1">
             {list.map((q: LectureQuestion) => {
               const lastMsg = q.messages && q.messages.length > 0 ? q.messages[q.messages.length - 1] : null;
               const displayTime = lastMsg ? lastMsg.created_at : q.created_at;
@@ -69,47 +53,39 @@ const ThreadList = ({
                     onMarkAsRead(q);
                     onSelectThread(q.id);
                   }}
-                  className={`p-3 sm:p-4 rounded-xl border transition-all cursor-pointer flex items-center justify-between group ${
+                  className={`p-3 rounded-lg border transition-all cursor-pointer ${
                     isActive
                       ? 'bg-indigo-50 border-indigo-200'
-                      : 'bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50/50 shadow-sm'
+                      : 'bg-white border-slate-200 hover:bg-slate-50'
                   }`}
                 >
-                  <div className="flex items-center gap-3.5 flex-1 min-w-0">
-                    <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-xs font-bold transition-colors flex-shrink-0 ${
-                      isActive ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400 group-hover:bg-indigo-100 group-hover:text-indigo-600'
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 ${
+                      isActive ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'
                     }`}>
                       {q.student?.full_name?.charAt(0) || 'S'}
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0 pr-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-sm font-bold text-slate-800 truncate">
+                            <span className="text-sm font-semibold text-slate-900 truncate">
                               {isMentor ? q.student?.full_name : 'Mentor Response'}
                             </span>
-                            {q.is_published && <Star size={10} className="text-amber-500 fill-amber-500" />}
+                            {q.is_published && <Star size={12} className="text-amber-500 fill-amber-500 flex-shrink-0" />}
+                            {isMentor && !q.is_read && (
+                              <span className="w-2 h-2 bg-indigo-600 rounded-full flex-shrink-0"></span>
+                            )}
                           </div>
-                          <p className="text-xs font-medium text-slate-500 line-clamp-1">
+                          <p className="text-xs text-slate-500 line-clamp-1">
                             {getSnippet(snippet, 80)}
                           </p>
                         </div>
 
-                        <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                            {fmtTime(displayTime)}
-                          </span>
-                          {isMentor && !q.is_read && (
-                            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-500 text-[9px] text-white font-black uppercase tracking-widest shadow-lg shadow-rose-100 animate-in fade-in zoom-in duration-300">
-                              <span className="relative flex h-1.5 w-1.5">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
-                              </span>
-                              New
-                            </span>
-                          )}
-                        </div>
+                        <span className="text-xs text-slate-400 flex-shrink-0">
+                          {fmtTime(displayTime)}
+                        </span>
                       </div>
                     </div>
                   </div>
