@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, Edit2, Trash2, BookOpen } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, Edit2, Trash2, BookOpen, Search, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Button, Card, Modal, Input, TextArea } from '../../components/ui';
 import { useQuiz } from '../../context/QuizContext';
@@ -15,7 +15,19 @@ const LectureManager = () => {
     isOpen: false,
     lecture: null,
   });
+  const [searchQuery, setSearchQuery] = useState('');
   const [formData, setFormData] = useState({ title: '', description: '', sections: [] as string[], order: 1 });
+
+  const sortedLectures = useMemo(() => [...lectures].sort((a, b) => a.order - b.order), [lectures]);
+
+  const filteredLectures = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return sortedLectures;
+    return sortedLectures.filter(l =>
+      l.title.toLowerCase().includes(q) ||
+      (l.description?.toLowerCase().includes(q) ?? false)
+    );
+  }, [sortedLectures, searchQuery]);
 
   const openEditModal = (lecture?: Lecture) => {
     if (lecture) {
@@ -88,8 +100,6 @@ const LectureManager = () => {
     }
   };
 
-  const sortedLectures = [...lectures].sort((a, b) => a.order - b.order);
-
   return (
     <div className="animate-fade-in">
       {/* Header */}
@@ -104,62 +114,124 @@ const LectureManager = () => {
         </Button>
       </div>
 
-      {/* Lectures Grid */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {sortedLectures.map((lecture) => {
-          const questionCount = getQuestionsByLecture(lecture.id).length;
-
-          return (
-            <Card key={lecture.id} className="p-6 hover:shadow-lg transition-shadow">
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 text-white flex items-center justify-center shadow-lg shadow-primary-200">
-                  <BookOpen size={24} />
-                </div>
-                <div className="px-3 py-1 rounded-full bg-slate-50 border border-slate-200">
-                  <span className="text-xs font-black text-slate-600">{questionCount} Questions</span>
-                </div>
-              </div>
-
-              <h3 className="text-xl font-black text-slate-900 mb-2 tracking-tight">{lecture.title}</h3>
-              <p className="text-slate-500 text-sm font-medium mb-6 leading-relaxed min-h-[3rem]">
-                {lecture.description}
-              </p>
-
-              <div className="flex items-center gap-2 pt-4 border-t border-slate-100">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => openEditModal(lecture)}
-                  className="flex-1"
-                >
-                  <Edit2 size={16} />
-                  Edit
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setDeleteModal({ isOpen: true, lecture })}
-                  className="flex-1 hover:bg-rose-50 hover:text-rose-600"
-                >
-                  <Trash2 size={16} />
-                  Delete
-                </Button>
-              </div>
-            </Card>
-          );
-        })}
-      </div>
-
-      {lectures.length === 0 && (
-        <div className="text-center py-16">
-          <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <BookOpen size={32} className="text-slate-300" />
+      {/* Search Bar */}
+      {lectures.length > 0 && (
+        <div className="mb-4">
+          <div className="relative max-w-sm">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <input
+              type="text"
+              placeholder="Search lectures…"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full h-9 pl-9 pr-8 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-700 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 transition-all"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
-          <p className="text-slate-400 font-semibold mb-4">No lectures created yet.</p>
-          <Button onClick={() => openEditModal()}>
-            <Plus size={18} />
-            Create First Lecture
-          </Button>
+          {searchQuery && (
+            <p className="mt-2 text-xs font-semibold text-slate-400">
+              Showing <span className="text-slate-700">{filteredLectures.length}</span> of {lectures.length} lectures
+            </p>
+          )}
+        </div>
+      )}
+
+      {lectures.length === 0 ? (
+        <Card className="border-slate-100">
+          <div className="py-20 text-center">
+            <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-4">
+              <BookOpen size={40} className="text-slate-300" />
+            </div>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">No lectures yet</h3>
+            <p className="text-slate-500 max-w-xs mx-auto mb-6">Start by creating your first lecture module.</p>
+            <Button onClick={() => openEditModal()} variant="secondary">
+              Create First Lecture
+            </Button>
+          </div>
+        </Card>
+      ) : (
+        <div className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-slate-50/80">
+                  <th className="text-left pl-5 pr-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Lecture Details</th>
+                  <th className="text-left px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Order</th>
+                  <th className="text-left px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Questions</th>
+                  <th className="w-20 px-3 py-2.5"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredLectures.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-12 text-center">
+                      <Search size={28} className="text-slate-200 mx-auto mb-2" />
+                      <p className="text-sm font-bold text-slate-900 mb-1">No matching lectures</p>
+                      <p className="text-xs text-slate-400 mb-3">Try a different search term.</p>
+                      <button onClick={() => setSearchQuery('')} className="text-xs font-bold text-primary-600 hover:text-primary-700 transition-colors">Clear search</button>
+                    </td>
+                  </tr>
+                ) : filteredLectures.map((lecture) => {
+                  const questionCount = getQuestionsByLecture(lecture.id).length;
+                  return (
+                    <tr key={lecture.id} className="group border-t border-slate-100 hover:bg-primary-50/40 transition-colors">
+                      <td className="pl-5 pr-3 py-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 text-white flex items-center justify-center shrink-0">
+                            <BookOpen size={15} />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="font-semibold text-[13px] text-slate-800 block truncate max-w-[320px]">{lecture.title}</span>
+                            {lecture.description && (
+                              <span className="text-[11px] text-slate-400 block truncate max-w-[320px]">{lecture.description}</span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-3 py-3">
+                        <span className="inline-block px-2 py-0.5 rounded bg-slate-100 text-[9px] font-black uppercase tracking-wider text-slate-600">
+                          #{lecture.order}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3">
+                        <span className="text-[12px] text-slate-600 font-medium">{questionCount} Questions</span>
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <div className="inline-flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => openEditModal(lecture)}
+                            title="Edit"
+                            className="p-1.5 rounded-md text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-all"
+                          >
+                            <Edit2 size={13} />
+                          </button>
+                          <button
+                            onClick={() => setDeleteModal({ isOpen: true, lecture })}
+                            title="Delete"
+                            className="p-1.5 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div className="px-5 py-2.5 bg-slate-50/80 border-t border-slate-100">
+            <p className="text-[10px] font-semibold text-slate-400">
+              Showing {filteredLectures.length} of {lectures.length} lectures
+            </p>
+          </div>
         </div>
       )}
 
