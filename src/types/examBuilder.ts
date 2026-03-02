@@ -16,9 +16,6 @@ export interface ExamSettings {
 // ── Filter state (grouped to avoid flat prop explosion) ──
 
 export interface ExamFilterState {
-  lectureFilterOn: boolean;
-  sectionFilterOn: boolean;
-  typeFilterOn: boolean;
   selectedLecture: string;
   selectedSection: string;
   selectedType: QuestionType | '';
@@ -26,9 +23,6 @@ export interface ExamFilterState {
 }
 
 export interface ExamFilterActions {
-  setLectureFilterOn: (v: boolean) => void;
-  setSectionFilterOn: (v: boolean) => void;
-  setTypeFilterOn: (v: boolean) => void;
   setSelectedLecture: (v: string) => void;
   setSelectedSection: (v: string) => void;
   setSelectedType: (v: QuestionType | '') => void;

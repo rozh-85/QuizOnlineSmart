@@ -10,9 +10,6 @@ interface UseExamFiltersOptions {
 
 export function useExamFilters({ questions, lectures }: UseExamFiltersOptions) {
   const [filters, setFilters] = useState<ExamFilterState>({
-    lectureFilterOn: false,
-    sectionFilterOn: false,
-    typeFilterOn: false,
     selectedLecture: '',
     selectedSection: '',
     selectedType: '',
@@ -25,12 +22,12 @@ export function useExamFilters({ questions, lectures }: UseExamFiltersOptions) {
   const currentLecture = lectures.find(l => l.id === filters.selectedLecture);
   const sections: string[] = currentLecture?.sections || [];
 
-  // Filtered questions
+  // Filtered questions — filter is active when a value is selected
   const filteredQuestions = useMemo(() => {
     return questions.filter(q => {
-      if (filters.lectureFilterOn && filters.selectedLecture && q.lectureId !== filters.selectedLecture) return false;
-      if (filters.sectionFilterOn && filters.selectedSection && q.sectionId !== filters.selectedSection) return false;
-      if (filters.typeFilterOn && filters.selectedType && q.type !== filters.selectedType) return false;
+      if (filters.selectedLecture && q.lectureId !== filters.selectedLecture) return false;
+      if (filters.selectedSection && q.sectionId !== filters.selectedSection) return false;
+      if (filters.selectedType && q.type !== filters.selectedType) return false;
       if (filters.searchQuery.trim()) {
         const query = filters.searchQuery.toLowerCase();
         if (!q.text.toLowerCase().includes(query)) return false;
@@ -43,9 +40,9 @@ export function useExamFilters({ questions, lectures }: UseExamFiltersOptions) {
   useEffect(() => {
     setCurrentPage(1);
   }, [
-    filters.lectureFilterOn, filters.selectedLecture,
-    filters.sectionFilterOn, filters.selectedSection,
-    filters.typeFilterOn, filters.selectedType,
+    filters.selectedLecture,
+    filters.selectedSection,
+    filters.selectedType,
     filters.searchQuery,
   ]);
 
@@ -57,18 +54,8 @@ export function useExamFilters({ questions, lectures }: UseExamFiltersOptions) {
     safeCurrentPage * QUESTIONS_PER_PAGE
   );
 
-  // Actions — each setter updates the relevant part of state
+  // Actions
   const filterActions: ExamFilterActions = {
-    setLectureFilterOn: (v) => setFilters(prev => {
-      if (!v) return { ...prev, lectureFilterOn: false, selectedLecture: '', sectionFilterOn: false, selectedSection: '' };
-      return { ...prev, lectureFilterOn: true };
-    }),
-    setSectionFilterOn: (v) => setFilters(prev => ({
-      ...prev, sectionFilterOn: v, selectedSection: v ? prev.selectedSection : '',
-    })),
-    setTypeFilterOn: (v) => setFilters(prev => ({
-      ...prev, typeFilterOn: v, selectedType: v ? prev.selectedType : '',
-    })),
     setSelectedLecture: (v) => setFilters(prev => ({ ...prev, selectedLecture: v, selectedSection: '' })),
     setSelectedSection: (v) => setFilters(prev => ({ ...prev, selectedSection: v })),
     setSelectedType: (v: QuestionType | '') => setFilters(prev => ({ ...prev, selectedType: v })),
