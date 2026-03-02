@@ -92,7 +92,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-3 py-6 overflow-y-auto">
+          <nav className="flex-1 px-3 py-6">
             {/* Main Menu Section */}
             {mainMenuItems.map((item) => {
               const Icon = item.icon;
