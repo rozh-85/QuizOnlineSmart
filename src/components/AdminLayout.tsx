@@ -70,8 +70,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   return (
     <div className="min-h-screen flex bg-slate-50 relative">
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="flex flex-col h-full">
+      <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="flex flex-col h-full lg:h-screen">
           {/* Logo */}
           <div className="flex items-center justify-between h-16 px-4 border-b border-slate-100">
             <Link to="/admin" className="flex items-center gap-3">
@@ -183,7 +183,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1">
           <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
             {children}
           </div>
