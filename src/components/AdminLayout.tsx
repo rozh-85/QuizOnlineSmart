@@ -49,17 +49,20 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const navItems = [
+  const mainMenuItems = [
     { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/admin/classes', icon: BookOpen, label: 'Classes' },
     { path: '/admin/students', icon: Users, label: 'Students' },
     { path: '/admin/lectures', icon: GraduationCap, label: 'Lectures' },
-    { path: '/admin/materials', icon: ShieldCheck, label: 'Materials' },
+    { path: '/admin/materials', icon: FileText, label: 'Materials' },
     { path: '/admin/qa', icon: MessageSquare, label: 'Q&A Discussions', hasUnread: unreadCount > 0 },
+  ];
+
+  const toolsItems = [
     { path: '/admin/new', icon: Plus, label: 'New Question' },
     { path: '/admin/whats-new', icon: Megaphone, label: "What's New" },
     { path: '/admin/ai-generator', icon: Sparkles, label: 'AI Generator' },
-    { path: '/admin/exam-builder', icon: FileText, label: 'Exam Builder' },
+    { path: '/admin/exam-builder', icon: ShieldCheck, label: 'Exam Builder' },
     { path: '/admin/attendance', icon: ClipboardCheck, label: 'Attendance' },
     { path: '/admin/reports', icon: BarChart3, label: 'Reports' },
   ];
@@ -70,12 +73,15 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between h-16 px-6 border-b border-slate-100">
+          <div className="flex items-center justify-between h-16 px-4 border-b border-slate-100">
             <Link to="/admin" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary-600 flex items-center justify-center shadow-md">
-                <GraduationCap size={22} className="text-white" />
+              <div className="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center">
+                <GraduationCap size={20} className="text-white" />
               </div>
-              <span className="text-lg font-black text-slate-900 tracking-tight">Smart Quiz Admin</span>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold text-slate-900">Smart Quiz</span>
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Admin Panel</span>
+              </div>
             </Link>
             <button
               onClick={() => setSidebarOpen(false)}
@@ -86,11 +92,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-8 space-y-1">
-            <div className="mb-4 px-3">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Menu</p>
-            </div>
-            {navItems.map((item) => {
+          <nav className="flex-1 px-3 py-6 overflow-y-auto">
+            {/* Main Menu Section */}
+            {mainMenuItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.path);
               return (
@@ -98,23 +102,58 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold text-sm transition-all ${
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-all mb-1 ${
                     active
-                      ? 'bg-primary-50 text-primary-700 shadow-sm border border-primary-100'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      ? 'bg-indigo-50 text-indigo-700'
+                      : 'text-slate-600 hover:bg-slate-50'
                   }`}
                 >
-                  <Icon size={20} className={active ? 'text-primary-600' : ''} />
+                  <Icon size={18} className={active ? 'text-indigo-600' : 'text-slate-400'} />
                   <span className="flex-1">{item.label}</span>
                   {(item as any).hasUnread && (
-                    <div className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center shadow-sm animate-pulse">
+                    <div className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
                       {unreadCount}
                     </div>
                   )}
                 </Link>
               );
             })}
+
+            {/* Tools Section */}
+            <div className="mt-6 mb-2 px-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">TOOLS</p>
+            </div>
+            {toolsItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item.path);
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setSidebarOpen(false)}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm transition-all mb-1 ${
+                    active
+                      ? 'bg-indigo-50 text-indigo-700'
+                      : 'text-slate-600 hover:bg-slate-50'
+                  }`}
+                >
+                  <Icon size={18} className={active ? 'text-indigo-600' : 'text-slate-400'} />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
           </nav>
+
+          {/* Logout Button at Bottom */}
+          <div className="p-3 border-t border-slate-100">
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition-all w-full"
+            >
+              <LogOut size={18} className="text-slate-400" />
+              <span>Logout</span>
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -130,27 +169,15 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
         <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-          <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="lg:hidden text-slate-600 hover:text-slate-900 p-2 hover:bg-slate-50 rounded-lg transition-colors relative"
-              >
-                <Menu size={24} />
-                {unreadCount > 0 && (
-                  <div className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white animate-pulse" />
-                )}
-              </button>
-              <h1 className="text-lg font-black text-slate-900 tracking-tight">Admin Dashboard</h1>
-            </div>
-            
-            {/* Logout Button */}
+          <div className="flex items-center h-16 px-4 sm:px-6 lg:px-8">
             <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm text-slate-600 hover:text-rose-600 hover:bg-rose-50 transition-all border border-slate-200 hover:border-rose-200"
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden text-slate-600 hover:text-slate-900 p-2 hover:bg-slate-50 rounded-lg transition-colors relative"
             >
-              <LogOut size={18} />
-              <span className="hidden sm:inline">Logout</span>
+              <Menu size={24} />
+              {unreadCount > 0 && (
+                <div className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white animate-pulse" />
+              )}
             </button>
           </div>
         </header>
