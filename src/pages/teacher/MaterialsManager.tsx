@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Plus, Edit2, Trash2, FileText, Upload, Link as LinkIcon, File, Search, X, Filter } from 'lucide-react';
+import { Plus, Edit2, Trash2, FileText, Upload, Link as LinkIcon, File, Search, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Button, Card, Modal, Input, TextArea } from '../../components/ui';
 import MaterialFileIcon from '../../components/MaterialFileIcon';
@@ -145,7 +145,15 @@ const MaterialsManager = () => {
     }
   };
 
-  const selectClass = "h-9 px-3 pr-8 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 transition-all appearance-none cursor-pointer";
+  const selectClass = "h-9 pl-3 pr-8 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 transition-all appearance-none cursor-pointer w-full";
+  const SelectWrapper = ({ children }: { children: React.ReactNode }) => (
+    <div className="relative">
+      {children}
+      <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      </div>
+    </div>
+  );
 
   return (
     <div className="animate-fade-in">
@@ -184,27 +192,29 @@ const MaterialsManager = () => {
 
             {/* Filter dropdowns */}
             <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-1.5 text-slate-400">
-                <Filter size={13} />
-                <span className="text-[10px] font-bold uppercase tracking-wider">Filters</span>
-              </div>
-              <select value={filterLecture} onChange={e => { setFilterLecture(e.target.value); setFilterSection(''); }} className={selectClass}>
-                <option value="">All Lectures</option>
-                {lectures.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}
-              </select>
-              <select value={filterSection} onChange={e => setFilterSection(e.target.value)} className={selectClass}>
-                <option value="">All Sections</option>
-                {(filterLecture
-                  ? lectures.find(l => l.id === filterLecture)?.sections || []
-                  : allSections
-                ).map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-              <select value={filterType} onChange={e => setFilterType(e.target.value)} className={selectClass}>
-                <option value="">All Types</option>
-                <option value="note">Note</option>
-                <option value="pdf">PDF</option>
-                <option value="word">Word</option>
-              </select>
+              <SelectWrapper>
+                <select value={filterLecture} onChange={e => { setFilterLecture(e.target.value); setFilterSection(''); }} className={selectClass}>
+                  <option value="">All Lectures</option>
+                  {lectures.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}
+                </select>
+              </SelectWrapper>
+              <SelectWrapper>
+                <select value={filterSection} onChange={e => setFilterSection(e.target.value)} className={selectClass}>
+                  <option value="">All Sections</option>
+                  {(filterLecture
+                    ? lectures.find(l => l.id === filterLecture)?.sections || []
+                    : allSections
+                  ).map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </SelectWrapper>
+              <SelectWrapper>
+                <select value={filterType} onChange={e => setFilterType(e.target.value)} className={selectClass}>
+                  <option value="">All Types</option>
+                  <option value="note">Note</option>
+                  <option value="pdf">PDF</option>
+                  <option value="word">Word</option>
+                </select>
+              </SelectWrapper>
               {(activeFilterCount > 0 || searchQuery) && (
                 <button onClick={clearAllFilters} className="h-9 px-3 rounded-lg text-xs font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 transition-all flex items-center gap-1.5">
                   <X size={12} />
