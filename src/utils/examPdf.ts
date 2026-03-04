@@ -1,6 +1,7 @@
 import { TYPE_LABELS, TYPE_ORDER } from '../constants/examBuilder';
 import type { Question, QuestionType } from '../types';
 import type { ExamSettings } from '../types/examBuilder';
+import { getFontFamily } from '../constants/typography';
 
 export function escapeHtml(text: string): string {
   return text
@@ -164,7 +165,7 @@ export function generateExamPdf(selected: Question[], settings: ExamSettings): b
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    font-family: 'Times New Roman', Times, serif;
+    font-family: ${getFontFamily(document.documentElement.lang || 'en')};
     font-size: 11.5pt;
     line-height: 1.55;
     color: #000;

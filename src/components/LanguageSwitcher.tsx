@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Languages } from 'lucide-react';
 import { RTL_LANGUAGES } from '../i18n';
+import { applyFontForLanguage } from '../constants/typography';
 
 const languages = [
   { code: 'en', label: 'English', flag: 'EN' },
@@ -36,6 +37,7 @@ const LanguageSwitcher = ({ variant = 'icon', className = '' }: LanguageSwitcher
     const isRTL = RTL_LANGUAGES.includes(code);
     document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
     document.documentElement.lang = code;
+    applyFontForLanguage(code);
     setOpen(false);
   };
 

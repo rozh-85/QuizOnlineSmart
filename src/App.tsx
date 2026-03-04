@@ -9,6 +9,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import { authRoutes, studentRoutes, adminRoutes, publicRoutes } from './routes';
 import { ROUTES, TOAST_DURATION_MS } from './constants';
 import { RTL_LANGUAGES } from './i18n';
+import { applyFontForLanguage } from './constants/typography';
 
 function App() {
   const { i18n } = useTranslation();
@@ -17,6 +18,7 @@ function App() {
     const isRTL = RTL_LANGUAGES.includes(i18n.language);
     document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
     document.documentElement.lang = i18n.language;
+    applyFontForLanguage(i18n.language);
   }, [i18n.language]);
 
   return (
