@@ -8,7 +8,8 @@ import {
   ChevronDown,
   X,
   Loader2,
-  User
+  User,
+  Users
 } from 'lucide-react';
 import { classApi } from '../../api/classApi';
 import { lectureApi } from '../../api/lectureApi';
@@ -16,7 +17,7 @@ import { studentApi } from '../../api/studentApi';
 import { reportApi } from '../../api/reportApi';
 import toast from 'react-hot-toast';
 import { PageHeader, FormField, EmptyState } from '../../components/ui';
-import { SessionDetail, SessionCard, ReportSummaryCards } from '../../components/reports';
+import { SessionDetail, ReportSummaryCards } from '../../components/reports';
 import { formatDuration, formatTimeOfDay, formatDateShort, getSessionDurationHours, getSessionEndTime } from '../../utils/format';
 
 const Reports = () => {
@@ -361,9 +362,9 @@ const Reports = () => {
         formatDuration={formatDuration}
       />
 
-      {/* Sessions List */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between mb-2">
+      {/* Sessions Table */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-black text-slate-900 tracking-tight">
             Sessions {!fetching && `(${sessions.length})`}
           </h2>
@@ -377,19 +378,61 @@ const Reports = () => {
             subtitle="Adjust your filters or create attendance sessions first"
           />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {sessions.map((session: any) => (
-              <SessionCard
-                key={session.id}
-                session={session}
-                onClick={() => setSelectedSession(session)}
-                formatDate={formatDateShort}
-                formatTime={formatTimeOfDay}
-                formatDuration={formatDuration}
-                getSessionEndTime={getSessionEndTime}
-                getSessionDurationHours={getSessionDurationHours}
-              />
-            ))}
+          <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Lecture</th>
+                    <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Class</th>
+                    <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Date</th>
+                    <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Start</th>
+                    <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">End</th>
+                    <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Duration</th>
+                    <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Present</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {sessions.map((session: any) => {
+                    const endTime = getSessionEndTime(session);
+                    const duration = getSessionDurationHours(session);
+                    const presentCount = (session.records || []).filter((r: any) => r.status === 'present').length;
+                    return (
+                      <tr
+                        key={session.id}
+                        onClick={() => setSelectedSession(session)}
+                        className="hover:bg-slate-50 cursor-pointer transition-colors group"
+                      >
+                        <td className="px-4 py-3 font-bold text-slate-800 group-hover:text-primary-700 transition-colors max-w-[180px] truncate">
+                          {session.lecture?.title || 'No Lecture'}
+                        </td>
+                        <td className="px-4 py-3 text-slate-500 font-medium whitespace-nowrap">
+                          {session.class?.name || '—'}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600 font-medium whitespace-nowrap">
+                          {formatDateShort(session.session_date)}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600 font-medium whitespace-nowrap">
+                          {formatTimeOfDay(session.started_at)}
+                        </td>
+                        <td className="px-4 py-3 text-slate-600 font-medium whitespace-nowrap">
+                          {formatTimeOfDay(endTime)}
+                        </td>
+                        <td className="px-4 py-3 font-bold text-primary-600 whitespace-nowrap">
+                          {formatDuration(duration)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="inline-flex items-center gap-1 text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-lg">
+                            <Users size={11} />
+                            {presentCount}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
