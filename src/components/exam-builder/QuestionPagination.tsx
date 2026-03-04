@@ -13,7 +13,10 @@ interface QuestionPaginationProps {
 const QuestionPagination = ({
   currentPage, totalPages, onPageChange, startIndex, endIndex, totalItems
 }: QuestionPaginationProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.dir() === 'rtl';
+  const PrevIcon = isRTL ? ChevronRight : ChevronLeft;
+  const NextIcon = isRTL ? ChevronLeft : ChevronRight;
   if (totalPages <= 1) return null;
 
   return (
@@ -27,7 +30,7 @@ const QuestionPagination = ({
           onClick={() => onPageChange(currentPage - 1)}
           className="w-8 h-8 rounded-lg border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 transition-all"
         >
-          <ChevronLeft size={14} />
+          <PrevIcon size={14} />
         </button>
         {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
           <button
@@ -47,7 +50,7 @@ const QuestionPagination = ({
           onClick={() => onPageChange(currentPage + 1)}
           className="w-8 h-8 rounded-lg border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 disabled:opacity-30 transition-all"
         >
-          <ChevronRight size={14} />
+          <NextIcon size={14} />
         </button>
       </div>
     </div>
