@@ -32,14 +32,14 @@ const DataTable = ({
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-start border-collapse">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200">
               {columns.map((col, i) => (
                 <th
                   key={i}
                   className={`px-6 py-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider ${
-                    col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : ''
+                    col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-end' : ''
                   } ${col.className || ''}`}
                 >
                   {col.label}

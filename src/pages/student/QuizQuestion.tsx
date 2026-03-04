@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { ArrowRight, X, Lightbulb, CheckCircle, Flag, Gauge, ArrowLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button, Card } from '../../components/ui';
 import { useQuiz } from '../../context/QuizContext';
 
@@ -13,6 +14,7 @@ interface QuizState {
 }
 
 const QuizQuestion = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const lectureId = searchParams.get('lectureId');
@@ -58,12 +60,12 @@ const QuizQuestion = () => {
           <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
             <Flag size={32} className="text-slate-300" />
           </div>
-          <h2 className="text-2xl font-black text-slate-900 mb-4 tracking-tight">No Questions Available</h2>
+          <h2 className="text-2xl font-black text-slate-900 mb-4 tracking-tight">{t('quiz.noQuestionsAvailable')}</h2>
           <p className="text-slate-500 font-bold mb-8">
-            The quiz library is currently empty. Head over to the teacher dashboard to add some content.
+            {t('quiz.quizLibraryEmpty')}
           </p>
           <Link to="/teacher">
-            <Button variant="primary" size="lg">Go to Teacher Panel</Button>
+            <Button variant="primary" size="lg">{t('quiz.goToTeacherPanel')}</Button>
           </Link>
         </Card>
       </div>
@@ -132,20 +134,20 @@ const QuizQuestion = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowExitConfirm(false)} />
           <div className="relative bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm animate-scale-in">
-            <h3 className="text-lg font-bold text-slate-900 mb-2">Leave Quiz?</h3>
-            <p className="text-sm text-slate-500 mb-6">Your progress will be lost. You've answered {state.currentIndex} of {questions.length} questions.</p>
+            <h3 className="text-lg font-bold text-slate-900 mb-2">{t('quiz.leaveQuiz')}</h3>
+            <p className="text-sm text-slate-500 mb-6">{t('quiz.progressLost', { answered: state.currentIndex, total: questions.length })}</p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowExitConfirm(false)}
                 className="flex-1 py-2.5 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleExit}
                 className="flex-1 py-2.5 rounded-lg bg-rose-500 text-white text-sm font-medium hover:bg-rose-600 transition-colors"
               >
-                Leave Quiz
+                {t('quiz.leaveQuiz')}
               </button>
             </div>
           </div>
@@ -163,7 +165,7 @@ const QuizQuestion = () => {
               <ArrowLeft size={16} />
             </button>
             <span className="text-xs font-medium text-slate-500 line-clamp-1">
-              {lecture?.title || 'General Quiz'} {sectionName ? `· ${sectionName}` : ''}
+              {lecture?.title || t('quiz.generalQuiz')} {sectionName ? `· ${sectionName}` : ''}
             </span>
           </div>
           <span className="text-xs font-medium text-slate-500">
@@ -191,7 +193,7 @@ const QuizQuestion = () => {
           </div>
           {state.isAnswered && (
             <span className={`text-xs font-semibold ${isCorrect ? 'text-emerald-600' : 'text-rose-500'}`}>
-              {isCorrect ? 'Correct!' : 'Incorrect'}
+              {isCorrect ? t('quiz.correct') : t('quiz.incorrect')}
             </span>
           )}
         </div>
@@ -271,7 +273,7 @@ const QuizQuestion = () => {
                     onClick={() => handleAnswerSubmit(index)}
                     disabled={state.isAnswered}
                     className={`
-                      w-full text-left px-3.5 py-3 rounded-xl border-2 font-medium text-sm
+                      w-full text-start px-3.5 py-3 rounded-xl border-2 font-medium text-sm
                       transition-all flex items-center justify-between gap-3
                       ${borderColor} ${bgColor} ${textColor}
                       ${!state.isAnswered ? 'cursor-pointer active:scale-[0.99]' : ''}
@@ -301,7 +303,7 @@ const QuizQuestion = () => {
           {currentQuestion.type === 'true-false' && (
             <div className="flex flex-col sm:flex-row gap-2.5 mb-4">
               {[0, 1].map((index) => {
-                const label = index === 0 ? 'True' : 'False';
+                const label = index === 0 ? t('quiz.true') : t('quiz.false');
                 const isSelected = index === state.selectedAnswer;
                 const isCorrectOpt = index === currentQuestion.correctIndex;
                 
@@ -356,7 +358,7 @@ const QuizQuestion = () => {
               <input
                 type="text"
                 autoFocus
-                placeholder="Type your answer..."
+                placeholder={t('quiz.typeYourAnswer')}
                 disabled={state.isAnswered}
                 className={`
                   w-full px-5 py-3.5 rounded-xl border-2 text-base font-medium transition-all outline-none text-center
@@ -373,7 +375,7 @@ const QuizQuestion = () => {
                 }}
               />
               {!state.isAnswered && (
-                <p className="mt-2 text-xs text-slate-400 text-center">Press Enter to submit</p>
+                <p className="mt-2 text-xs text-slate-400 text-center">{t('quiz.pressEnterToSubmit')}</p>
               )}
             </div>
           )}
@@ -383,8 +385,8 @@ const QuizQuestion = () => {
             <div className="mt-3 mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-3 animate-slide-up">
               <CheckCircle size={18} className="text-emerald-500 flex-shrink-0" />
               <div>
-                <div className="text-xs text-emerald-600 font-medium mb-0.5">Correct answer</div>
-                <div className="text-base font-semibold text-emerald-700">{currentQuestion.correctAnswer || 'None set'}</div>
+                <div className="text-xs text-emerald-600 font-medium mb-0.5">{t('quiz.correctAnswer')}</div>
+                <div className="text-base font-semibold text-emerald-700">{currentQuestion.correctAnswer || t('quiz.noneSet')}</div>
               </div>
             </div>
           )}
@@ -392,7 +394,7 @@ const QuizQuestion = () => {
           {/* Fallback for unknown/legacy types if somehow triggered */}
           {!['multiple-choice', 'true-false', 'blank'].includes(currentQuestion.type) && (
             <div className="p-6 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
-               <p className="text-sm text-slate-500">This question format is not supported.</p>
+               <p className="text-sm text-slate-500">{t('quiz.notSupported')}</p>
             </div>
           )}
 
@@ -413,7 +415,7 @@ const QuizQuestion = () => {
         <div className="flex items-center justify-between">
           <button className="flex items-center gap-1.5 text-slate-400 hover:text-rose-500 transition-colors">
             <Flag size={15} />
-            <span className="text-xs font-medium">Report</span>
+            <span className="text-xs font-medium">{t('quiz.report')}</span>
           </button>
           
           <Button 
@@ -421,7 +423,7 @@ const QuizQuestion = () => {
             disabled={!state.isAnswered}
             className="px-5 h-10 rounded-lg text-sm font-semibold"
           >
-            {isLastQuestion ? 'View Summary' : 'Next Question'}
+            {isLastQuestion ? t('quiz.viewSummary') : t('quiz.nextQuestion')}
             <ArrowRight size={16} className="ml-1" />
           </Button>
         </div>

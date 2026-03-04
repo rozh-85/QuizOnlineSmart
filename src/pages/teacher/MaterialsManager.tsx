@@ -175,16 +175,16 @@ const MaterialsManager = () => {
           <div className="flex flex-col sm:flex-row gap-3">
             {/* Search */}
             <div className="relative flex-1 max-w-md">
-              <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search size={15} className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 placeholder="Search title, content, or filename…"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full h-9 pl-9 pr-8 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-700 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 transition-all"
+                className="w-full h-9 ps-9 pe-8 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-700 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 transition-all"
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                <button onClick={() => setSearchQuery('')} className="absolute end-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                   <X size={14} />
                 </button>
               )}
@@ -264,18 +264,18 @@ const MaterialsManager = () => {
             <table className="w-full">
               <thead>
                 <tr className="bg-slate-50/80">
-                  <th className="text-left pl-5 pr-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Title</th>
-                  <th className="text-left px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Type</th>
-                  <th className="text-left px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Lecture</th>
-                  <th className="text-left px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Section</th>
-                  <th className="text-left px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Content / File</th>
+                  <th className="text-start ps-5 pe-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Title</th>
+                  <th className="text-start px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Type</th>
+                  <th className="text-start px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Lecture</th>
+                  <th className="text-start px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Section</th>
+                  <th className="text-start px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Content / File</th>
                   <th className="w-20 px-3 py-2.5"></th>
                 </tr>
               </thead>
               <tbody>
                 {filteredMaterials.map((material) => (
                   <tr key={material.id} className="group border-t border-slate-100 hover:bg-primary-50/40 transition-colors">
-                    <td className="pl-5 pr-3 py-2.5">
+                    <td className="ps-5 pe-3 py-2.5">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <MaterialFileIcon fileType={material.fileType} className="w-7 h-7 shrink-0" iconSize={14} />
                         <span className="font-semibold text-[13px] text-slate-800 truncate max-w-[180px]">{material.title}</span>
@@ -320,7 +320,7 @@ const MaterialsManager = () => {
                         <span className="text-slate-300 text-xs">—</span>
                       )}
                     </td>
-                    <td className="px-3 py-2.5 text-right">
+                    <td className="px-3 py-2.5 text-end">
                       <div className="inline-flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button onClick={() => handleOpenModal(material)} title="Edit"
                           className="p-1.5 rounded-md text-slate-400 hover:text-primary-600 hover:bg-primary-50 transition-all">

@@ -21,7 +21,7 @@ const SessionCard = ({
   return (
     <button
       onClick={onClick}
-      className="bg-white border border-slate-200 rounded-2xl p-4 text-left hover:border-primary-300 hover:shadow-md transition-all group"
+      className="bg-white border border-slate-200 rounded-2xl p-4 text-start hover:border-primary-300 hover:shadow-md transition-all group"
     >
       <div className="flex items-start justify-between gap-2 mb-3">
         <div>

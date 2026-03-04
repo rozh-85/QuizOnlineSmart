@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Sparkles, BookOpen, FileText, HelpCircle, Clock, ArrowRight, Search, Loader2, Megaphone, ChevronDown, ChevronUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useQuiz } from '../../context/QuizContext';
 import { authApi } from '../../api/authApi';
 import { whatsNewApi } from '../../api/whatsNewApi';
@@ -14,11 +15,11 @@ const ICON_MAP: Record<string, typeof BookOpen> = {
   manual: Megaphone,
 };
 
-const COLOR_MAP: Record<string, { iconBg: string; iconText: string; badge: string; badgeText: string }> = {
-  lecture: { iconBg: 'bg-primary-50', iconText: 'text-primary-600', badge: 'bg-primary-100 text-primary-700', badgeText: 'New Lecture' },
-  material: { iconBg: 'bg-emerald-50', iconText: 'text-emerald-600', badge: 'bg-emerald-100 text-emerald-700', badgeText: 'New Materials' },
-  question: { iconBg: 'bg-violet-50', iconText: 'text-violet-600', badge: 'bg-violet-100 text-violet-700', badgeText: 'New Questions' },
-  manual: { iconBg: 'bg-amber-50', iconText: 'text-amber-600', badge: 'bg-amber-100 text-amber-700', badgeText: 'Announcement' },
+const COLOR_MAP: Record<string, { iconBg: string; iconText: string; badge: string; badgeKey: string }> = {
+  lecture: { iconBg: 'bg-primary-50', iconText: 'text-primary-600', badge: 'bg-primary-100 text-primary-700', badgeKey: 'news.newLecture' },
+  material: { iconBg: 'bg-emerald-50', iconText: 'text-emerald-600', badge: 'bg-emerald-100 text-emerald-700', badgeKey: 'news.newMaterials' },
+  question: { iconBg: 'bg-violet-50', iconText: 'text-violet-600', badge: 'bg-violet-100 text-violet-700', badgeKey: 'news.newQuestions' },
+  manual: { iconBg: 'bg-amber-50', iconText: 'text-amber-600', badge: 'bg-amber-100 text-amber-700', badgeKey: 'news.announcement' },
 };
 
 // Group published items by (itemType, lectureId, same publishedAt batch)
@@ -31,6 +32,7 @@ interface NewsGroup {
 }
 
 const StudentNews = () => {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [newsGroups, setNewsGroups] = useState<NewsGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -83,16 +85,16 @@ const StudentNews = () => {
   }, []);
 
   const getLectureName = (lectureId: string | null) => {
-    if (!lectureId) return 'General';
-    return lectures.find(l => l.id === lectureId)?.title || 'Unknown Lecture';
+    if (!lectureId) return t('news.general');
+    return lectures.find(l => l.id === lectureId)?.title || t('news.unknownLecture');
   };
 
   const fmtRelative = (d: string) => {
     const diff = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
-    if (diff < 60) return 'Just now';
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+    if (diff < 60) return t('time.justNow');
+    if (diff < 3600) return t('time.minutesAgo', { count: Math.floor(diff / 60) });
+    if (diff < 86400) return t('time.hoursAgo', { count: Math.floor(diff / 3600) });
+    if (diff < 604800) return t('time.daysAgo', { count: Math.floor(diff / 86400) });
     return new Date(d).toLocaleDateString([], { month: 'short', day: 'numeric' });
   };
 
@@ -119,8 +121,8 @@ const StudentNews = () => {
               <Sparkles size={18} />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-slate-900">What's New</h1>
-              <p className="text-sm text-slate-500">Latest updates from your teacher</p>
+              <h1 className="text-lg font-bold text-slate-900">{t('news.whatsNew')}</h1>
+              <p className="text-sm text-slate-500">{t('news.latestUpdates')}</p>
             </div>
           </div>
         </div>
@@ -129,13 +131,13 @@ const StudentNews = () => {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-5">
         {/* Search */}
         <div className="relative mb-5">
-          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={16} className="absolute start-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search updates..."
+            placeholder={t('news.searchUpdates')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white rounded-lg border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-300 transition-all"
+            className="w-full ps-10 pe-4 py-2.5 bg-white rounded-lg border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-300 transition-all"
           />
         </div>
 
@@ -148,8 +150,8 @@ const StudentNews = () => {
           ) : filteredGroups.length === 0 ? (
             <div className="text-center py-14 bg-white rounded-xl border border-slate-200">
               <Sparkles size={28} className="text-amber-300 mx-auto mb-3" />
-              <p className="text-sm font-medium text-slate-500">No updates yet</p>
-              <p className="text-xs text-slate-400 mt-1">Check back soon!</p>
+              <p className="text-sm font-medium text-slate-500">{t('news.noUpdatesYet')}</p>
+              <p className="text-xs text-slate-400 mt-1">{t('student.checkBackSoon')}</p>
             </div>
           ) : (
             filteredGroups.map((group, idx) => {
@@ -163,10 +165,10 @@ const StudentNews = () => {
               const headerBadges = (
                 <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                   {idx === 0 && (
-                    <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-semibold rounded">Latest</span>
+                    <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-semibold rounded">{t('news.latest')}</span>
                   )}
                   <span className={`px-1.5 py-0.5 ${colors.badge} text-[10px] font-semibold rounded`}>
-                    {colors.badgeText}
+                    {t(colors.badgeKey)}
                   </span>
                   {group.items.length > 1 && (
                     <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-medium rounded">
@@ -182,7 +184,7 @@ const StudentNews = () => {
 
               const footer = (
                 <div className="mt-3 pt-3 border-t border-slate-100 text-xs text-slate-400">
-                  Published {fmtDate(group.publishedAt)}
+                  {t('news.published')} {fmtDate(group.publishedAt)}
                 </div>
               );
 
@@ -226,9 +228,9 @@ const StudentNews = () => {
                         className="flex items-center gap-1 mt-2.5 text-xs font-medium text-violet-600 hover:text-violet-700 transition-colors"
                       >
                         {isExpanded ? (
-                          <>Show less <ChevronUp size={14} /></>
+                          <>{t('news.showLess')} <ChevronUp size={14} /></>
                         ) : (
-                          <>See all {group.items.length} questions <ChevronDown size={14} /></>
+                          <>{t('news.seeAllQuestions', { count: group.items.length })} <ChevronDown size={14} /></>
                         )}
                       </button>
                     )}
@@ -262,11 +264,11 @@ const StudentNews = () => {
                             </p>
                           ))}
                           {group.items.length > 3 && (
-                            <p className="text-xs text-slate-400">+{group.items.length - 3} more</p>
+                            <p className="text-xs text-slate-400">{t('news.more', { count: group.items.length - 3 })}</p>
                           )}
                         </div>
                         <div className="flex items-center gap-1.5 mt-2.5 text-xs font-medium text-emerald-600 group-hover:gap-2 transition-all">
-                          View Materials <ArrowRight size={13} />
+                          {t('news.viewMaterials')} <ArrowRight size={13} />
                         </div>
                       </div>
                     </div>
@@ -299,7 +301,7 @@ const StudentNews = () => {
                           </p>
                         )}
                         <div className="flex items-center gap-1.5 mt-2.5 text-xs font-medium text-primary-600 group-hover:gap-2 transition-all">
-                          View Lecture <ArrowRight size={13} />
+                          {t('news.viewLecture')} <ArrowRight size={13} />
                         </div>
                       </div>
                     </div>
@@ -328,8 +330,8 @@ const StudentNews = () => {
                           {group.items[0].description}
                         </p>
                       )}
-                      {lectureName !== 'General' && (
-                        <p className="text-xs text-slate-400 mt-2">Related to: {lectureName}</p>
+                      {group.lectureId && (
+                        <p className="text-xs text-slate-400 mt-2">{t('news.relatedTo')} {lectureName}</p>
                       )}
                     </div>
                   </div>

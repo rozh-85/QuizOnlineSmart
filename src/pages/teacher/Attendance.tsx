@@ -224,36 +224,36 @@ const Attendance = () => {
           {/* Lecture Selector (Optional) */}
           <FormField label={<>Lecture <span className="text-slate-300">(optional)</span></>}>
             <div className="relative">
-              <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <GraduationCap className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <select
                 value={selectedLectureId}
                 onChange={(e) => setSelectedLectureId(e.target.value)}
-                className="w-full pl-10 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 appearance-none cursor-pointer text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
+                className="w-full ps-10 pe-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 appearance-none cursor-pointer text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
               >
                 <option value="">No lecture</option>
                 {lectures.map(l => (
                   <option key={l.id} value={l.id}>{l.title}</option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
+              <ChevronDown className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
             </div>
           </FormField>
 
           {/* Class Selector */}
           <FormField label="Class">
             <div className="relative">
-              <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <Users className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <select
                 value={selectedClassId}
                 onChange={(e) => setSelectedClassId(e.target.value)}
-                className="w-full pl-10 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 appearance-none cursor-pointer text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
+                className="w-full ps-10 pe-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 appearance-none cursor-pointer text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
               >
                 <option value="">Select a class...</option>
                 {classes.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
+              <ChevronDown className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
             </div>
           </FormField>
 
@@ -412,14 +412,14 @@ const Attendance = () => {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-slate-100 bg-slate-50/60">
-                        <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">#</th>
-                        <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">Student</th>
-                        <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">ID</th>
-                        <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">Joined</th>
-                        <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">Duration</th>
-                        <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">Status</th>
+                        <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">#</th>
+                        <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">Student</th>
+                        <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">ID</th>
+                        <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">Joined</th>
+                        <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">Duration</th>
+                        <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">Status</th>
                         {sessionStatus === 'active' && (
-                          <th className="text-right text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">Action</th>
+                          <th className="text-end text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">Action</th>
                         )}
                       </tr>
                     </thead>

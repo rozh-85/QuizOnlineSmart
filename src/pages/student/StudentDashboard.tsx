@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { BookOpen, ArrowRight, Beaker } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useQuiz } from '../../context/QuizContext';
 import { authApi } from '../../api/authApi';
 
 const StudentDashboard = () => {
   const [profile, setProfile] = useState<any>(null);
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const highlightId = searchParams.get('highlight');
   const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
@@ -48,9 +50,9 @@ const StudentDashboard = () => {
 
   const greeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
+    if (hour < 12) return t('dashboard.goodMorning');
+    if (hour < 17) return t('dashboard.goodAfternoon');
+    return t('dashboard.goodEvening');
   };
 
   return (
@@ -62,7 +64,7 @@ const StudentDashboard = () => {
             {greeting()}{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''}
           </h1>
           <p className="text-sm text-slate-500">
-            Pick a lecture to continue learning.
+            {t('student.pickLecture')}
           </p>
 
           {/* Quick Stats */}
@@ -73,7 +75,7 @@ const StudentDashboard = () => {
               </div>
               <div>
                 <div className="text-lg font-bold text-slate-900 leading-none">{lectures.length}</div>
-                <div className="text-xs text-slate-500 mt-0.5">Lectures</div>
+                <div className="text-xs text-slate-500 mt-0.5">{t('stats.lectures')}</div>
               </div>
             </div>
             <div className="w-px h-8 bg-slate-200" />
@@ -83,7 +85,7 @@ const StudentDashboard = () => {
               </div>
               <div>
                 <div className="text-lg font-bold text-slate-900 leading-none">{questions.filter(q => q.isVisible !== false).length}</div>
-                <div className="text-xs text-slate-500 mt-0.5">Questions</div>
+                <div className="text-xs text-slate-500 mt-0.5">{t('stats.questions')}</div>
               </div>
             </div>
           </div>
@@ -93,8 +95,8 @@ const StudentDashboard = () => {
       {/* Lectures Grid */}
       <div className="max-w-5xl xl:max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8" id="lectures-section">
         <div className="flex items-center justify-between mb-4 sm:mb-5">
-          <h2 className="text-base font-semibold text-slate-900">Available Lectures</h2>
-          <span className="text-xs text-slate-400">{lectures.length} modules</span>
+          <h2 className="text-base font-semibold text-slate-900">{t('student.availableLectures')}</h2>
+          <span className="text-xs text-slate-400">{lectures.length} {t('stats.modules')}</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
@@ -120,7 +122,7 @@ const StudentDashboard = () => {
                       <BookOpen size={18} />
                     </div>
                     <span className="text-xs font-medium text-slate-400 bg-slate-50 px-2 py-0.5 rounded">
-                      {questionCount} questions
+                      {t('student.questionsCount', { count: questionCount })}
                     </span>
                   </div>
 
@@ -128,12 +130,12 @@ const StudentDashboard = () => {
                     {lecture.title}
                   </h3>
                   <p className="text-slate-500 text-xs mb-4 leading-relaxed flex-1 line-clamp-2">
-                    {lecture.description || 'Master this module through interactive questions.'}
+                    {lecture.description || t('student.masterModule')}
                   </p>
 
                   <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
                     <span className="text-xs font-medium text-primary-600 flex items-center gap-1.5 group-hover:gap-2 transition-all">
-                      Start quiz <ArrowRight size={14} />
+                      {t('student.startQuiz')} <ArrowRight size={14} />
                     </span>
                   </div>
                 </div>
@@ -145,8 +147,8 @@ const StudentDashboard = () => {
         {lectures.length === 0 && (
           <div className="text-center py-16 bg-white rounded-xl border border-slate-200">
             <BookOpen size={32} className="text-slate-300 mx-auto mb-3" />
-            <p className="text-slate-500 font-medium text-sm">No lectures available yet.</p>
-            <p className="text-slate-400 text-xs mt-1">Check back soon!</p>
+            <p className="text-slate-500 font-medium text-sm">{t('student.noLectures')}</p>
+            <p className="text-slate-400 text-xs mt-1">{t('student.checkBackSoon')}</p>
           </div>
         )}
       </div>

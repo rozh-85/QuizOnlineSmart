@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, Check, Eye, EyeOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'react-hot-toast';
 import { Button, TextArea } from '../../components/ui';
 import { useQuiz } from '../../context/QuizContext';
@@ -13,6 +14,7 @@ interface FormErrors {
 }
 
 const QuestionEditor = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
   const { addQuestion, updateQuestion, getQuestion, lectures } = useQuiz();
@@ -54,18 +56,18 @@ const QuestionEditor = () => {
     const newErrors: FormErrors = {};
     const optionErrors: string[] = [];
 
-    if (!text.trim()) newErrors.text = 'Question text is required';
+    if (!text.trim()) newErrors.text = t('editor.questionRequired');
 
     if (type === 'multiple-choice') {
       options.forEach((option, index) => {
-        if (!option.trim()) optionErrors[index] = 'Option cannot be empty';
+        if (!option.trim()) optionErrors[index] = t('editor.optionEmpty');
       });
       if (optionErrors.length > 0) newErrors.options = optionErrors;
-      if (correctIndex === null) newErrors.correctIndex = 'Please select the correct answer';
+      if (correctIndex === null) newErrors.correctIndex = t('editor.selectCorrectAnswer');
     } else if (type === 'true-false') {
-      if (correctIndex === null) newErrors.correctIndex = 'Please select True or False';
+      if (correctIndex === null) newErrors.correctIndex = t('editor.selectTrueOrFalse');
     } else if (type === 'blank') {
-      if (!correctAnswer.trim()) newErrors.correctAnswer = 'Correct answer is required';
+      if (!correctAnswer.trim()) newErrors.correctAnswer = t('editor.correctAnswerRequired');
     }
 
     setErrors(newErrors);
@@ -98,9 +100,9 @@ const QuestionEditor = () => {
     })();
 
     toast.promise(promise, {
-      loading: isEditing ? 'Updating question...' : 'Creating question...',
-      success: isEditing ? 'Question updated!' : 'Question created!',
-      error: 'Failed to save question',
+      loading: isEditing ? t('editor.updatingQuestion') : t('editor.creatingQuestion'),
+      success: isEditing ? t('editor.questionUpdated') : t('editor.questionCreated'),
+      error: t('editor.failedToSave'),
     });
 
     try {
@@ -144,13 +146,13 @@ const QuestionEditor = () => {
             <ArrowLeft size={16} />
           </button>
           <h1 className="text-xl font-bold text-slate-900">
-            {isEditing ? 'Edit Question' : 'New Question'}
+            {isEditing ? t('editor.editQuestion') : t('editor.newQuestion')}
           </h1>
         </div>
         <div className="hidden sm:flex items-center gap-2">
-          <Button type="button" variant="ghost" size="sm" onClick={() => navigate('/admin')}>Cancel</Button>
+          <Button type="button" variant="ghost" size="sm" onClick={() => navigate('/admin')}>{t('common.cancel')}</Button>
           <Button type="button" variant="primary" size="sm" onClick={() => handleSubmit()}>
-            {isEditing ? 'Save' : 'Create'}
+            {isEditing ? t('common.save') : t('editor.create')}
           </Button>
         </div>
       </div>
@@ -162,9 +164,9 @@ const QuestionEditor = () => {
 
             {/* Question Text */}
             <div>
-              <label className="text-sm font-semibold text-slate-700 mb-1.5 block">Question</label>
+              <label className="text-sm font-semibold text-slate-700 mb-1.5 block">{t('editor.question')}</label>
               <TextArea
-                placeholder="Enter your question..."
+                placeholder={t('editor.enterQuestion')}
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 error={errors.text}
@@ -176,25 +178,25 @@ const QuestionEditor = () => {
             {/* Lecture & Section */}
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-semibold text-slate-700 mb-1.5 block">Lecture</label>
+                <label className="text-sm font-semibold text-slate-700 mb-1.5 block">{t('editor.lecture')}</label>
                 <select
                   value={lectureId}
                   onChange={(e) => { setLectureId(e.target.value); setSectionId(''); }}
                   className="w-full h-10 px-3 rounded-lg border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-50 outline-none text-sm text-slate-700 bg-white"
                 >
-                  <option value="">General</option>
+                  <option value="">{t('editor.general')}</option>
                   {lectures.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}
                 </select>
               </div>
               <div>
-                <label className="text-sm font-semibold text-slate-700 mb-1.5 block">Section</label>
+                <label className="text-sm font-semibold text-slate-700 mb-1.5 block">{t('editor.section')}</label>
                 <select
                   value={sectionId}
                   onChange={(e) => setSectionId(e.target.value)}
                   disabled={!lectureId}
                   className="w-full h-10 px-3 rounded-lg border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-50 outline-none text-sm text-slate-700 bg-white disabled:opacity-40 disabled:bg-slate-50"
                 >
-                  <option value="">All Sections</option>
+                  <option value="">{t('editor.allSections')}</option>
                   {selectedLecture?.sections.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
@@ -203,12 +205,12 @@ const QuestionEditor = () => {
             {/* Format & Difficulty */}
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-semibold text-slate-700 mb-1.5 block">Format</label>
+                <label className="text-sm font-semibold text-slate-700 mb-1.5 block">{t('editor.format')}</label>
                 <div className="flex bg-slate-100 rounded-lg p-1">
                   {([
-                    { id: 'multiple-choice', label: 'MCQ' },
-                    { id: 'true-false', label: 'True/False' },
-                    { id: 'blank', label: 'Blank' },
+                    { id: 'multiple-choice', label: t('editor.mcq') },
+                    { id: 'true-false', label: t('dashboard.trueFalse') },
+                    { id: 'blank', label: t('dashboard.blank') },
                   ] as const).map((f) => (
                     <button
                       key={f.id}
@@ -235,7 +237,7 @@ const QuestionEditor = () => {
                 </div>
               </div>
               <div>
-                <label className="text-sm font-semibold text-slate-700 mb-1.5 block">Difficulty</label>
+                <label className="text-sm font-semibold text-slate-700 mb-1.5 block">{t('editor.difficulty')}</label>
                 <div className="flex bg-slate-100 rounded-lg p-1">
                   {(['easy', 'medium', 'hard'] as const).map((d) => (
                     <button
@@ -263,10 +265,10 @@ const QuestionEditor = () => {
               {type === 'multiple-choice' && (
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <label className="text-sm font-semibold text-slate-700">Options</label>
+                    <label className="text-sm font-semibold text-slate-700">{t('editor.options')}</label>
                     {options.length < 5 && (
                       <button type="button" onClick={addOption} className="text-xs font-semibold text-primary-600 flex items-center gap-1 hover:text-primary-700">
-                        <Plus size={12} /> Add
+                        <Plus size={12} /> {t('editor.add')}
                       </button>
                     )}
                   </div>
@@ -309,17 +311,17 @@ const QuestionEditor = () => {
                       </div>
                     ))}
                   </div>
-                  <p className="text-[11px] text-slate-400 mt-2">Click a letter to mark the correct answer</p>
+                  <p className="text-[11px] text-slate-400 mt-2">{t('editor.clickLetterHint')}</p>
                 </div>
               )}
 
               {/* True/False */}
               {type === 'true-false' && (
                 <div>
-                  <label className="text-sm font-semibold text-slate-700 mb-2 block">Correct Answer</label>
+                  <label className="text-sm font-semibold text-slate-700 mb-2 block">{t('quiz.correctAnswer')}</label>
                   {errors.correctIndex && <p className="text-xs text-rose-500 mb-2">{errors.correctIndex}</p>}
                   <div className="flex gap-2">
-                    {['True', 'False'].map((label, index) => (
+                    {[t('quiz.true'), t('quiz.false')].map((label, index) => (
                       <button
                         key={label}
                         type="button"
@@ -341,9 +343,9 @@ const QuestionEditor = () => {
               {/* Blank */}
               {type === 'blank' && (
                 <div>
-                  <label className="text-sm font-semibold text-slate-700 mb-1.5 block">Correct Answer</label>
+                  <label className="text-sm font-semibold text-slate-700 mb-1.5 block">{t('quiz.correctAnswer')}</label>
                   <input
-                    placeholder="Enter the correct answer..."
+                    placeholder={t('editor.enterCorrectAnswer')}
                     value={correctAnswer}
                     onChange={(e) => setCorrectAnswer(e.target.value)}
                     className={`w-full px-3 py-2.5 rounded-lg border text-sm outline-none transition-colors ${
@@ -352,7 +354,7 @@ const QuestionEditor = () => {
                   />
                   {errors.correctAnswer && <p className="text-xs text-rose-500 mt-1">{errors.correctAnswer}</p>}
                   <p className="text-[11px] text-slate-400 mt-2">
-                    Tip: Use <code className="bg-slate-100 px-1 rounded text-slate-500">_____</code> in your question to show the blank inline.
+                    {t('editor.blankTip')} <code className="bg-slate-100 px-1 rounded text-slate-500">_____</code>
                   </p>
                 </div>
               )}
@@ -360,9 +362,9 @@ const QuestionEditor = () => {
 
             {/* Explanation */}
             <div className="border-t border-slate-100 pt-5">
-              <label className="text-sm font-semibold text-slate-700 mb-1.5 block">Explanation (optional)</label>
+              <label className="text-sm font-semibold text-slate-700 mb-1.5 block">{t('editor.explanationOptional')}</label>
               <TextArea
-                placeholder="Why is this the correct answer?"
+                placeholder={t('editor.whyCorrectAnswer')}
                 value={explanation}
                 onChange={(e) => setExplanation(e.target.value)}
                 rows={2}
@@ -380,11 +382,11 @@ const QuestionEditor = () => {
                 <div className="flex items-center gap-2.5">
                   {isVisible ? <Eye size={16} className="text-emerald-500" /> : <EyeOff size={16} className="text-slate-400" />}
                   <span className={`text-sm font-medium ${isVisible ? 'text-slate-700' : 'text-slate-400'}`}>
-                    {isVisible ? 'Visible to students' : 'Hidden from students'}
+                    {isVisible ? t('editor.visibleToStudents') : t('editor.hiddenFromStudents')}
                   </span>
                 </div>
                 <div className={`w-10 h-6 rounded-full p-0.5 transition-colors ${isVisible ? 'bg-emerald-500' : 'bg-slate-200'}`}>
-                  <div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${isVisible ? 'translate-x-4' : 'translate-x-0'}`} />
+                  <div className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${isVisible ? 'ltr:translate-x-4 rtl:-translate-x-4' : 'translate-x-0'}`} />
                 </div>
               </button>
             </div>
@@ -397,7 +399,7 @@ const QuestionEditor = () => {
           <div className="sticky top-6 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center gap-2">
               <Eye size={14} className="text-slate-400" />
-              <span className="text-xs font-semibold text-slate-500">Preview</span>
+              <span className="text-xs font-semibold text-slate-500">{t('editor.preview')}</span>
             </div>
 
             <div className="p-4 min-h-[200px]">
@@ -439,7 +441,7 @@ const QuestionEditor = () => {
 
                     {type === 'true-false' && (
                       <div className="flex gap-2">
-                        {['True', 'False'].map((label, index) => (
+                        {[t('quiz.true'), t('quiz.false')].map((label, index) => (
                           <div key={label} className={`flex-1 py-2.5 rounded-lg text-center text-xs font-semibold ${
                             correctIndex === index ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-50 text-slate-400'
                           }`}>
@@ -451,7 +453,7 @@ const QuestionEditor = () => {
 
                     {type === 'blank' && !text.includes('_____') && (
                       <div className="py-2 px-3 rounded-lg border border-dashed border-slate-200 text-xs text-slate-400 text-center">
-                        Answer input
+                        {t('editor.answerInput')}
                       </div>
                     )}
                   </div>
@@ -465,7 +467,7 @@ const QuestionEditor = () => {
               ) : (
                 <div className="flex flex-col items-center justify-center py-10 text-center">
                   <Eye size={20} className="text-slate-200 mb-2" />
-                  <p className="text-xs text-slate-400">Start typing to see preview</p>
+                  <p className="text-xs text-slate-400">{t('editor.startTypingPreview')}</p>
                 </div>
               )}
             </div>
@@ -476,9 +478,9 @@ const QuestionEditor = () => {
       {/* Mobile Actions */}
       <div className="fixed bottom-0 left-0 right-0 sm:hidden bg-white border-t border-slate-200 px-4 py-3 z-50">
         <div className="flex gap-2">
-          <Button type="button" variant="ghost" size="sm" onClick={() => navigate('/admin')}>Cancel</Button>
+          <Button type="button" variant="ghost" size="sm" onClick={() => navigate('/admin')}>{t('common.cancel')}</Button>
           <Button type="button" variant="primary" size="sm" fullWidth onClick={() => handleSubmit()}>
-            {isEditing ? 'Save' : 'Create'}
+            {isEditing ? t('common.save') : t('editor.create')}
           </Button>
         </div>
       </div>

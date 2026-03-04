@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { authApi } from '../api/authApi';
 import { Button, Input, Card } from './ui';
 import { LogIn, UserPlus, Loader2 } from 'lucide-react';
@@ -9,6 +10,7 @@ interface AuthFormProps {
 }
 
 export const AuthForm = ({ onSuccess }: AuthFormProps) => {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -30,14 +32,14 @@ export const AuthForm = ({ onSuccess }: AuthFormProps) => {
           formData.fullName,
           formData.role
         );
-        toast.success('Account created! Please check your email to verify.');
+        toast.success(t('auth.accountCreated'));
       } else {
         await authApi.signIn(formData.email, formData.password);
-        toast.success('Welcome back!');
+        toast.success(t('auth.welcomeBack') + '!');
         onSuccess?.();
       }
     } catch (error: any) {
-      toast.error(error.message || 'Authentication failed');
+      toast.error(error.message || t('auth.authFailed'));
     } finally {
       setLoading(false);
     }
@@ -48,10 +50,10 @@ export const AuthForm = ({ onSuccess }: AuthFormProps) => {
       <Card className="w-full max-w-md p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-black text-slate-900 mb-2">
-            {mode === 'signin' ? 'Welcome Back' : 'Create Account'}
+            {mode === 'signin' ? t('auth.welcomeBack') : t('auth.createAccount')}
           </h1>
           <p className="text-slate-500 text-sm">
-            {mode === 'signin' ? 'Sign in to continue' : 'Join our quiz platform'}
+            {mode === 'signin' ? t('auth.signInToContinue') : t('auth.joinPlatform')}
           </p>
         </div>
 
@@ -60,7 +62,7 @@ export const AuthForm = ({ onSuccess }: AuthFormProps) => {
             <>
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Full Name
+                  {t('auth.fullName')}
                 </label>
                 <Input
                   type="text"
@@ -73,15 +75,15 @@ export const AuthForm = ({ onSuccess }: AuthFormProps) => {
 
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">
-                  Role
+                  {t('auth.role')}
                 </label>
                 <select
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value as 'teacher' | 'student' })}
                   className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
-                  <option value="student">Student</option>
-                  <option value="teacher">Teacher</option>
+                  <option value="student">{t('auth.student')}</option>
+                  <option value="teacher">{t('auth.teacher')}</option>
                 </select>
               </div>
             </>
@@ -89,7 +91,7 @@ export const AuthForm = ({ onSuccess }: AuthFormProps) => {
 
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-2">
-              Email
+              {t('auth.email')}
             </label>
             <Input
               type="email"
@@ -102,7 +104,7 @@ export const AuthForm = ({ onSuccess }: AuthFormProps) => {
 
           <div>
             <label className="block text-sm font-bold text-slate-700 mb-2">
-              Password
+              {t('auth.password')}
             </label>
             <Input
               type="password"
@@ -126,12 +128,12 @@ export const AuthForm = ({ onSuccess }: AuthFormProps) => {
             ) : mode === 'signin' ? (
               <>
                 <LogIn size={20} />
-                Sign In
+                {t('auth.signIn')}
               </>
             ) : (
               <>
                 <UserPlus size={20} />
-                Create Account
+                {t('auth.createAccount')}
               </>
             )}
           </Button>
@@ -143,7 +145,7 @@ export const AuthForm = ({ onSuccess }: AuthFormProps) => {
             onClick={() => setMode(mode === 'signin' ? 'signup' : 'signin')}
             className="text-sm text-primary-600 hover:text-primary-700 font-bold"
           >
-            {mode === 'signin' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+            {mode === 'signin' ? t('auth.dontHaveAccount') : t('auth.alreadyHaveAccount')}
           </button>
         </div>
       </Card>

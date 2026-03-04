@@ -145,7 +145,7 @@ const Layout = ({ children, showFooter = false }: LayoutProps) => {
                       <div className="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-primary-100 flex items-center justify-center text-slate-500 group-hover:text-primary-600 transition-colors">
                         <BookOpen size={16} />
                       </div>
-                      <span className="text-sm text-left line-clamp-1">{lecture.title}</span>
+                      <span className="text-sm text-start line-clamp-1">{lecture.title}</span>
                     </div>
                     <ChevronRight size={16} className="text-slate-300 group-hover:text-primary-400" />
                   </button>

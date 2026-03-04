@@ -2,10 +2,12 @@ import { ReactNode, useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, Sparkles, QrCode, MessageSquare, User, Beaker, LogOut, BookOpen, X, CheckCircle, XCircle, Loader2, RefreshCw } from 'lucide-react';
 import { Html5Qrcode } from 'html5-qrcode';
+import { useTranslation } from 'react-i18next';
 import { useQuiz } from '../context/QuizContext';
 import { authApi } from '../api/authApi';
 import { attendanceApi } from '../api/attendanceApi';
 import toast from 'react-hot-toast';
+import LanguageSwitcher from './LanguageSwitcher';
 
 interface StudentLayoutProps {
   children: ReactNode;
@@ -17,6 +19,7 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
   const location = useLocation();
   const navigate = useNavigate();
   const { lectures } = useQuiz();
+  const { t } = useTranslation();
 
   // QR Scanner overlay state
   const [qrOpen, setQrOpen] = useState(false);
@@ -34,7 +37,7 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
 
   const handleQrResult = useCallback(async (text: string) => {
     setQrStatus('processing');
-    setQrMessage('Verifying attendance...');
+    setQrMessage(t('qr.verifyingAttendance'));
     try {
       let token = text;
       const attendMatch = text.match(/\/attend\/([^/?#]+)/);
@@ -42,14 +45,14 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
       const result = await attendanceApi.verifyAndJoin(token);
       if (result.success) {
         setQrStatus('success');
-        setQrMessage(result.message || 'Attendance recorded successfully!');
+        setQrMessage(result.message || t('qr.attendanceRecorded'));
       } else {
         setQrStatus('error');
-        setQrMessage(result.error || 'Failed to record attendance');
+        setQrMessage(result.error || t('qr.failedToRecord'));
       }
     } catch (e: any) {
       setQrStatus('error');
-      setQrMessage(e.message || 'Failed to verify attendance.');
+      setQrMessage(e.message || t('qr.failedToVerify'));
     }
   }, []);
 
@@ -70,7 +73,7 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
       );
     } catch (err: any) {
       setQrStatus('error');
-      setQrMessage(err?.message || 'Could not access camera. Please allow camera permissions.');
+      setQrMessage(err?.message || t('qr.cameraPermission'));
     }
   }, [stopQrScanner, handleQrResult]);
 
@@ -104,19 +107,19 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
       Object.keys(localStorage).forEach(key => {
         if (key.startsWith('sb-')) localStorage.removeItem(key);
       });
-      toast.success('Logged out');
+      toast.success(t('auth.loggedOut'));
       navigate('/login', { replace: true });
     } catch {
-      toast.error('Logout failed');
+      toast.error(t('auth.logoutFailed'));
     }
   };
 
   const navItems = [
-    { path: '/dashboard', icon: Home, label: 'Home' },
-    { path: '/news', icon: Sparkles, label: 'News', badge: unreadNewsCount },
-    { path: '/scan', icon: QrCode, label: 'QR' },
-    { path: '/chat', icon: MessageSquare, label: 'Chat', badge: unreadCount },
-    { path: '/profile', icon: User, label: 'Profile' },
+    { path: '/dashboard', icon: Home, label: t('nav.home') },
+    { path: '/news', icon: Sparkles, label: t('nav.news'), badge: unreadNewsCount },
+    { path: '/scan', icon: QrCode, label: t('nav.qr') },
+    { path: '/chat', icon: MessageSquare, label: t('nav.chat'), badge: unreadCount },
+    { path: '/profile', icon: User, label: t('nav.profile') },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -132,7 +135,7 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
               <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center">
                 <Beaker size={15} className="text-white" />
               </div>
-              <span className="text-base font-bold text-slate-900">EduPulse</span>
+              <span className="text-base font-bold text-slate-900">{t('common.eduPulse')}</span>
             </Link>
 
             {/* Desktop Nav Links */}
@@ -188,10 +191,12 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
                 className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all"
               >
                 <BookOpen size={16} />
-                <span>Lectures</span>
+                <span>{t('nav.lectures')}</span>
                 <span className="text-xs bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-semibold">{lectures.length}</span>
               </Link>
 
+              <div className="w-px h-5 bg-slate-200 mx-1.5" />
+              <LanguageSwitcher />
               <div className="w-px h-5 bg-slate-200 mx-1.5" />
               <button
                 onClick={handleLogout}
@@ -213,7 +218,7 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
       {qrOpen && (
         <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col animate-fade-in">
           <div className="flex items-center justify-between px-4 pt-[env(safe-area-inset-top)] py-4">
-            <h2 className="text-white font-bold text-lg">Scan QR Code</h2>
+            <h2 className="text-white font-bold text-lg">{t('qr.scanQRCode')}</h2>
             <button onClick={closeQrOverlay} className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
               <X size={20} className="text-white" />
             </button>
@@ -223,7 +228,7 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
             {qrStatus === 'scanning' && (
               <div className="w-full max-w-sm">
                 <div id="qr-overlay-reader" className="rounded-xl overflow-hidden bg-black aspect-square" />
-                <p className="text-center text-white/50 text-sm mt-4">Point your camera at the QR code</p>
+                <p className="text-center text-white/50 text-sm mt-4">{t('qr.pointCamera')}</p>
               </div>
             )}
 
@@ -241,10 +246,10 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
                 <div className="w-14 h-14 bg-emerald-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
                   <CheckCircle size={24} className="text-emerald-400" />
                 </div>
-                <h3 className="text-lg font-bold text-white mb-1">Attendance Confirmed</h3>
+                <h3 className="text-lg font-bold text-white mb-1">{t('qr.attendanceConfirmed')}</h3>
                 <p className="text-sm text-emerald-400 mb-6">{qrMessage}</p>
                 <button onClick={closeQrOverlay} className="w-full max-w-xs py-3 bg-white text-slate-900 font-semibold rounded-lg text-sm hover:bg-slate-100 transition-colors">
-                  Done
+                  {t('common.done')}
                 </button>
               </div>
             )}
@@ -254,13 +259,13 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
                 <div className="w-14 h-14 bg-rose-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
                   <XCircle size={24} className="text-rose-400" />
                 </div>
-                <h3 className="text-lg font-bold text-white mb-1">Scan Failed</h3>
+                <h3 className="text-lg font-bold text-white mb-1">{t('qr.scanFailed')}</h3>
                 <p className="text-sm text-rose-400 mb-6">{qrMessage}</p>
                 <button
                   onClick={() => { setQrStatus('scanning'); setQrMessage(''); }}
                   className="w-full max-w-xs py-3 bg-white text-slate-900 font-semibold rounded-lg text-sm flex items-center justify-center gap-2 mx-auto hover:bg-slate-100 transition-colors"
                 >
-                  <RefreshCw size={16} /> Try Again
+                  <RefreshCw size={16} /> {t('common.tryAgain')}
                 </button>
               </div>
             )}
@@ -281,12 +286,12 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
                 <button
                   key={item.path}
                   onClick={openQrOverlay}
-                  className="relative flex flex-col items-center justify-center py-1.5 px-3 text-primary-600 active:scale-95 transition-transform"
+                  className="relative flex flex-col items-center justify-center py-1.5 px-1.5 text-primary-600 active:scale-95 transition-transform min-w-0"
                 >
                   <div className="relative w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
                     <Icon size={20} strokeWidth={2} />
                   </div>
-                  <span className="text-[10px] font-semibold mt-0.5 text-primary-600">Scan</span>
+                  <span className="text-[10px] font-semibold mt-0.5 text-primary-600">{t('nav.scan')}</span>
                 </button>
               );
             }
@@ -295,19 +300,19 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
               <Link
                 key={item.path}
                 to={item.path}
-                className={`relative flex flex-col items-center justify-center py-1.5 px-3 transition-colors ${
+                className={`relative flex flex-col items-center justify-center py-1.5 px-1.5 transition-colors min-w-0 ${
                   active ? 'text-primary-600' : 'text-slate-400'
                 }`}
               >
                 <div className="relative">
                   <Icon size={20} strokeWidth={active ? 2.5 : 1.8} />
                   {item.badge && item.badge > 0 ? (
-                    <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-0.5 bg-rose-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center">
+                    <span className="absolute -top-1.5 -end-1 min-w-[16px] h-[16px] px-0.5 bg-rose-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center">
                       {item.badge > 9 ? '9+' : item.badge}
                     </span>
                   ) : null}
                 </div>
-                <span className={`text-[10px] mt-0.5 ${
+                <span className={`text-[10px] mt-0.5 truncate max-w-full ${
                   active ? 'text-primary-600 font-semibold' : 'text-slate-400 font-medium'
                 }`}>
                   {item.label}

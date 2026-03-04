@@ -494,11 +494,11 @@ const WhatsNewPublisher = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-slate-50/80">
-                    <th className="text-left pl-5 pr-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Title</th>
-                    <th className="text-left px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Type</th>
-                    <th className="text-left px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Lecture</th>
-                    <th className="text-left px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Status</th>
-                    <th className="text-right px-5 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">When</th>
+                    <th className="text-start ps-5 pe-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Title</th>
+                    <th className="text-start px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Type</th>
+                    <th className="text-start px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Lecture</th>
+                    <th className="text-start px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Status</th>
+                    <th className="text-end px-5 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">When</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -535,7 +535,7 @@ const WhatsNewPublisher = () => {
                             {item.status}
                           </span>
                         </td>
-                        <td className="px-5 py-2.5 text-right">
+                        <td className="px-5 py-2.5 text-end">
                           <span className="text-[10px] text-slate-300 font-medium">{fmtRelative(item.createdAt)}</span>
                         </td>
                       </tr>

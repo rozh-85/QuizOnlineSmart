@@ -18,9 +18,11 @@ import {
   Megaphone
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { authApi } from '../api/authApi';
 import { useTeacherUnreadCount } from '../hooks/useUnreadCount';
 import { ROUTES } from '../constants/routes';
+import LanguageSwitcher from './LanguageSwitcher';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -32,6 +34,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { unreadCount } = useTeacherUnreadCount({ channelPrefix: 'admin-layout' });
 
+  const { t } = useTranslation();
+
   const handleLogout = async () => {
     Object.keys(localStorage).forEach(key => {
       if (key.startsWith('sb-')) localStorage.removeItem(key);
@@ -39,38 +43,38 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     localStorage.removeItem('teacher_auth');
     try {
       await authApi.signOut();
-      toast.success('Logged out');
+      toast.success(t('auth.loggedOut'));
       navigate(ROUTES.ADMIN_LOGIN, { replace: true });
     } catch (error) {
       console.error('Logout error:', error);
-      toast.error('Failed to log out');
+      toast.error(t('auth.failedToLogout'));
     }
   };
 
   const isActive = (path: string) => location.pathname === path;
 
   const mainMenuItems = [
-    { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/admin/classes', icon: BookOpen, label: 'Classes' },
-    { path: '/admin/students', icon: Users, label: 'Students' },
-    { path: '/admin/lectures', icon: GraduationCap, label: 'Lectures' },
-    { path: '/admin/materials', icon: FileText, label: 'Materials' },
-    { path: '/admin/qa', icon: MessageSquare, label: 'Q&A Discussions', hasUnread: unreadCount > 0 },
+    { path: '/admin', icon: LayoutDashboard, label: t('nav.dashboard') },
+    { path: '/admin/classes', icon: BookOpen, label: t('nav.classes') },
+    { path: '/admin/students', icon: Users, label: t('nav.students') },
+    { path: '/admin/lectures', icon: GraduationCap, label: t('nav.lectures') },
+    { path: '/admin/materials', icon: FileText, label: t('nav.materials') },
+    { path: '/admin/qa', icon: MessageSquare, label: t('nav.qaDiscussions'), hasUnread: unreadCount > 0 },
   ];
 
   const toolsItems = [
-    { path: '/admin/new', icon: Plus, label: 'New Question' },
-    { path: '/admin/whats-new', icon: Megaphone, label: "What's New" },
-    { path: '/admin/ai-generator', icon: Sparkles, label: 'AI Generator' },
-    { path: '/admin/exam-builder', icon: ShieldCheck, label: 'Exam Builder' },
-    { path: '/admin/attendance', icon: ClipboardCheck, label: 'Attendance' },
-    { path: '/admin/reports', icon: BarChart3, label: 'Reports' },
+    { path: '/admin/new', icon: Plus, label: t('nav.newQuestion') },
+    { path: '/admin/whats-new', icon: Megaphone, label: t('nav.whatsNew') },
+    { path: '/admin/ai-generator', icon: Sparkles, label: t('nav.aiGenerator') },
+    { path: '/admin/exam-builder', icon: ShieldCheck, label: t('nav.examBuilder') },
+    { path: '/admin/attendance', icon: ClipboardCheck, label: t('nav.attendance') },
+    { path: '/admin/reports', icon: BarChart3, label: t('nav.reports') },
   ];
 
   return (
     <div className="min-h-screen flex bg-slate-50 relative">
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 z-50 w-72 bg-white border-slate-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen ltr:left-0 ltr:border-r rtl:right-0 rtl:border-l ${sidebarOpen ? 'translate-x-0' : 'max-lg:ltr:-translate-x-full max-lg:rtl:translate-x-full'}`}>
         <div className="flex flex-col h-full lg:h-screen">
           {/* Logo */}
           <div className="flex items-center justify-between h-16 px-4 border-b border-slate-100">
@@ -79,8 +83,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 <GraduationCap size={20} className="text-white" />
               </div>
               <div className="flex flex-col">
-                <span className="text-sm font-bold text-slate-900">Smart Quiz</span>
-                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Admin Panel</span>
+                <span className="text-sm font-bold text-slate-900">{t('common.appName')}</span>
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{t('common.adminPanel')}</span>
               </div>
             </Link>
             <button
@@ -121,7 +125,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
             {/* Tools Section */}
             <div className="mt-6 mb-2 px-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">TOOLS</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t('nav.tools')}</p>
             </div>
             {toolsItems.map((item) => {
               const Icon = item.icon;
@@ -151,7 +155,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg font-medium text-sm text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition-all w-full"
             >
               <LogOut size={18} className="text-slate-400" />
-              <span>Logout</span>
+              <span>{t('nav.logout')}</span>
             </button>
           </div>
         </div>
@@ -176,12 +180,15 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             >
               <Menu size={24} />
               {unreadCount > 0 && (
-                <div className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white animate-pulse" />
+                <div className="absolute top-1.5 end-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white animate-pulse" />
               )}
             </button>
-            <div className="hidden lg:flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">System Online</span>
+            <div className="flex items-center gap-3 ms-auto">
+              <LanguageSwitcher variant="full" />
+              <div className="hidden lg:flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t('common.systemOnline')}</span>
+              </div>
             </div>
           </div>
         </header>

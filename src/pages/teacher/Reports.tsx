@@ -253,14 +253,14 @@ const Reports = () => {
             ) : (
               <>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                   <input
                     type="text"
                     placeholder="Search by name..."
                     value={studentSearch}
                     onChange={(e) => { setStudentSearch(e.target.value); setShowStudentDropdown(true); }}
                     onFocus={() => setShowStudentDropdown(true)}
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
+                    className="w-full ps-10 pe-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
                   />
                 </div>
                 {showStudentDropdown && filteredStudents.length > 0 && (
@@ -273,7 +273,7 @@ const Reports = () => {
                           setStudentSearch('');
                           setShowStudentDropdown(false);
                         }}
-                        className="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors flex items-center gap-3"
+                        className="w-full text-start px-4 py-2.5 hover:bg-slate-50 transition-colors flex items-center gap-3"
                       >
                         <div className="w-7 h-7 rounded-lg bg-slate-900 text-white flex items-center justify-center text-xs font-bold shrink-0">
                           {s.full_name?.charAt(0)?.toUpperCase() || '?'}
@@ -293,12 +293,12 @@ const Reports = () => {
           {/* Date From */}
           <FormField label="From Date">
             <div className="relative">
-              <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <CalendarDays className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input
                 type="date"
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
+                className="w-full ps-10 pe-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
               />
             </div>
           </FormField>
@@ -306,12 +306,12 @@ const Reports = () => {
           {/* Date To */}
           <FormField label="To Date">
             <div className="relative">
-              <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <CalendarDays className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input
                 type="date"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
+                className="w-full ps-10 pe-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
               />
             </div>
           </FormField>
@@ -319,36 +319,36 @@ const Reports = () => {
           {/* Class */}
           <FormField label="Class">
             <div className="relative">
-              <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <BookOpen className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <select
                 value={selectedClassId}
                 onChange={(e) => setSelectedClassId(e.target.value)}
-                className="w-full pl-10 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 appearance-none cursor-pointer text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
+                className="w-full ps-10 pe-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 appearance-none cursor-pointer text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
               >
                 <option value="">All Classes</option>
                 {classes.map((c: any) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
+              <ChevronDown className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
             </div>
           </FormField>
 
           {/* Lecture */}
           <FormField label="Lecture">
             <div className="relative">
-              <GraduationCap className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <GraduationCap className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <select
                 value={selectedLectureId}
                 onChange={(e) => setSelectedLectureId(e.target.value)}
-                className="w-full pl-10 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 appearance-none cursor-pointer text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
+                className="w-full ps-10 pe-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 appearance-none cursor-pointer text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
               >
                 <option value="">All Lectures</option>
                 {lectures.map((l: any) => (
                   <option key={l.id} value={l.id}>{l.title}</option>
                 ))}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
+              <ChevronDown className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
             </div>
           </FormField>
         </div>
@@ -383,13 +383,13 @@ const Reports = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Lecture</th>
-                    <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Class</th>
-                    <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Date</th>
-                    <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Start</th>
-                    <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">End</th>
-                    <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Duration</th>
-                    <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Present</th>
+                    <th className="text-start px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Lecture</th>
+                    <th className="text-start px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Class</th>
+                    <th className="text-start px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Date</th>
+                    <th className="text-start px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Start</th>
+                    <th className="text-start px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">End</th>
+                    <th className="text-start px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Duration</th>
+                    <th className="text-start px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Present</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">

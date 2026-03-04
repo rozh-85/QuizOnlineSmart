@@ -67,11 +67,11 @@ const CreateStudentModal = ({ classes, onClose, onSubmit }: CreateStudentModalPr
           <div className="grid grid-cols-2 gap-3">
             <FormField label="Serial ID">
               <div className="relative">
-                <AtSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <AtSign size={14} className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   required
-                  className="w-full pl-9 pr-3 py-3 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl outline-none font-bold text-sm transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-50 placeholder:text-slate-300"
+                  className="w-full ps-9 pe-3 py-3 bg-slate-50 border border-slate-200 text-slate-900 rounded-xl outline-none font-bold text-sm transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-50 placeholder:text-slate-300"
                   placeholder="ID"
                   value={newStudent.serialId}
                   onChange={(e) => setNewStudent({...newStudent, serialId: e.target.value.toLowerCase()})}

@@ -112,7 +112,7 @@ const ChatThread = ({
               }`}>
                 {/* Student question edit/delete menu */}
                 {!isMentor && editingQuestionId !== selectedQ.id && (
-                  <div className="absolute top-2 right-2">
+                  <div className="absolute top-2 end-2">
                     <button
                       onClick={(e) => { e.stopPropagation(); onMenuToggle(menuOpenId === 'q-' + selectedQ.id ? null : 'q-' + selectedQ.id); }}
                       className="w-6 h-6 rounded-full flex items-center justify-center transition-all active:scale-90 hover:bg-white/20 text-white/60 hover:text-white"
@@ -122,7 +122,7 @@ const ChatThread = ({
                     {menuOpenId === 'q-' + selectedQ.id && (
                       <>
                         <div className="fixed inset-0 z-40" onClick={() => onMenuToggle(null)} />
-                        <div className="absolute z-50 mt-1 right-0 w-32 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+                        <div className="absolute z-50 mt-1 end-0 w-32 bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
                           <button
                             onClick={() => { onStartEditQuestion(selectedQ.id, selectedQ.question_text); onMenuToggle(null); }}
                             className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[12px] font-semibold text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
@@ -214,7 +214,7 @@ const ChatThread = ({
                     <button
                       type="button"
                       onClick={() => onRemoveImage(idx)}
-                      className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center hover:bg-rose-600 transition-colors"
+  className="absolute -top-1.5 -end-1.5 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center hover:bg-rose-600 transition-colors"
                     >
                       <X size={12} />
                     </button>

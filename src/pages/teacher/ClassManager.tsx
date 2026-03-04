@@ -12,11 +12,13 @@ import {
   BookOpen,
   ArrowRightLeft
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { classApi } from '../../api/classApi';
 import toast from 'react-hot-toast';
 import { PageHeader, EmptyState, DataTable, FormField } from '../../components/ui';
 
 const ClassManager = () => {
+  const { t } = useTranslation();
   const [classes, setClasses] = useState<any[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [students, setStudents] = useState<any[]>([]);
@@ -50,7 +52,7 @@ const ClassManager = () => {
       const data = await classApi.getAll();
       setClasses(data);
     } catch (error) {
-      toast.error('Failed to load classes');
+      toast.error(t('classes.failedToLoad'));
     } finally {
       setLoading(false);
     }
@@ -62,7 +64,7 @@ const ClassManager = () => {
       const data = await classApi.getClassStudents(id);
       setStudents(data);
     } catch (error) {
-      toast.error('Failed to load students');
+      toast.error(t('classes.failedToLoadStudents'));
     } finally {
       setStudentsLoading(false);
     }
@@ -76,13 +78,13 @@ const ClassManager = () => {
     try {
       setLoading(true);
       const created = await classApi.create(newClassName);
-      toast.success('Class created!');
+      toast.success(t('classes.classCreated'));
       setNewClassName('');
       setIsCreateModalOpen(false);
       await fetchClasses();
       setSelectedClassId(created.id);
     } catch (error) {
-      toast.error('Failed to create');
+      toast.error(t('classes.failedToCreate'));
     } finally {
       setLoading(false);
     }
@@ -95,26 +97,26 @@ const ClassManager = () => {
     }
     try {
       await classApi.update(selectedClassId, editedName);
-      toast.success('Renamed successfully');
+      toast.success(t('classes.renamedSuccessfully'));
       setIsEditingName(false);
       fetchClasses();
     } catch (error) {
-      toast.error('Failed to update name');
+      toast.error(t('classes.failedToUpdate'));
     }
   };
 
   const handleDeleteClass = async () => {
     if (!selectedClassId) return;
-    if (!window.confirm(`Delete "${selectedClass?.name}"? Students will not be deleted, only removed from this class.`)) return;
+    if (!window.confirm(t('classes.deleteConfirm', { name: selectedClass?.name }))) return;
     
     try {
       setLoading(true);
       await classApi.delete(selectedClassId);
-      toast.success('Class deleted');
+      toast.success(t('classes.classDeleted'));
       setSelectedClassId('');
       fetchClasses();
     } catch (error) {
-      toast.error('Failed to delete class');
+      toast.error(t('classes.failedToDelete'));
     } finally {
       setLoading(false);
     }
@@ -122,12 +124,12 @@ const ClassManager = () => {
 
   const handleRemoveStudent = async (studentId: string) => {
     try {
-      if (!window.confirm('Remove this student from the class?')) return;
+      if (!window.confirm(t('classes.removeStudentConfirm'))) return;
       await classApi.removeStudentFromClass(selectedClassId, studentId);
-      toast.success('Student removed');
+      toast.success(t('classes.studentRemoved'));
       fetchClassStudents(selectedClassId);
     } catch (error) {
-      toast.error('Failed to remove student');
+      toast.error(t('classes.failedToRemove'));
     }
   };
 
@@ -135,7 +137,7 @@ const ClassManager = () => {
     e.preventDefault();
     if (!movingStudent || !targetClassId) return;
     if (targetClassId === selectedClassId) {
-       toast.error('Student is already in this class');
+       toast.error(t('classes.alreadyInClass'));
        return;
     }
     
@@ -144,13 +146,13 @@ const ClassManager = () => {
       await classApi.removeStudentFromClass(selectedClassId, movingStudent.id);
       await classApi.addStudentToClass(targetClassId, movingStudent.id);
       
-      toast.success(`Moved ${movingStudent.full_name} successfully`);
+      toast.success(t('classes.movedSuccessfully', { name: movingStudent.full_name }));
       setMovingStudent(null);
       setTargetClassId('');
       fetchClassStudents(selectedClassId);
       fetchClasses();
     } catch (error) {
-      toast.error('Failed to move student');
+      toast.error(t('classes.failedToMove'));
     } finally {
       setIsMoving(false);
     }
@@ -160,16 +162,16 @@ const ClassManager = () => {
     <div className="animate-fade-in w-full">
       {/* Header */}
       <PageHeader
-        title="Classes."
-        badge="Groups"
-        subtitle="Manage classes and student enrollment"
+        title={t('classes.title')}
+        badge={t('classes.badge')}
+        subtitle={t('classes.subtitle')}
         action={
           <button
             onClick={() => setIsCreateModalOpen(true)}
             className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-md shadow-primary-200 transition-all active:scale-95 text-sm"
           >
             <Plus size={18} />
-            New Class
+            {t('classes.newClass')}
           </button>
         }
       />
@@ -177,18 +179,18 @@ const ClassManager = () => {
       {/* Class Selector */}
       <div className="mb-6">
         <div className="relative max-w-xs">
-          <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <BookOpen className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
           <select 
             value={selectedClassId}
             onChange={(e) => { setSelectedClassId(e.target.value); e.target.blur(); }}
-            className="w-full pl-10 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl outline-none focus:outline-none font-bold text-slate-700 appearance-none cursor-pointer text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all shadow-sm"
+            className="w-full ps-10 pe-8 py-2.5 bg-white border border-slate-200 rounded-xl outline-none focus:outline-none font-bold text-slate-700 appearance-none cursor-pointer text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all shadow-sm"
           >
-            <option value="">Select a class...</option>
+            <option value="">{t('classes.selectClass')}</option>
             {classes.map(c => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
+          <ChevronDown className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
         </div>
       </div>
 
@@ -196,8 +198,8 @@ const ClassManager = () => {
       {!selectedClassId ? (
         <EmptyState
           icon={<Users size={28} />}
-          title="No Class Selected"
-          subtitle="Select a class above to manage students"
+          title={t('classes.noClassSelected')}
+          subtitle={t('classes.selectClassAbove')}
         />
       ) : (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -233,7 +235,7 @@ const ClassManager = () => {
               )}
               <div className="flex items-center gap-3 mt-2">
                 <span className="px-3 py-1 bg-primary-50 text-primary-700 border border-primary-100 rounded-lg text-xs font-bold">
-                  {students.length} {students.length === 1 ? 'Student' : 'Students'}
+                  {students.length} {students.length === 1 ? t('auth.student') : t('stats.students')}
                 </span>
                 <span className="text-[10px] text-slate-300 font-medium">
                   ID: {selectedClass?.id?.substring(0, 8)}
@@ -246,21 +248,21 @@ const ClassManager = () => {
               className="flex items-center gap-2 px-4 py-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 hover:border-rose-200 font-bold text-xs rounded-xl transition-all border border-slate-200"
             >
               <Trash2 size={14} />
-              Delete Class
+              {t('classes.deleteClass')}
             </button>
           </div>
 
           {/* Students Table */}
           <DataTable
             columns={[
-              { label: 'Student' },
-              { label: 'Serial ID' },
-              { label: 'Actions', align: 'right' },
+              { label: t('auth.student') },
+              { label: t('auth.serialId') },
+              { label: t('classes.actions'), align: 'right' },
             ]}
             loading={studentsLoading}
             isEmpty={students.length === 0}
             emptyIcon={<Users size={24} />}
-            emptyText="No students enrolled yet"
+            emptyText={t('classes.noStudentsEnrolled')}
             skeletonRows={3}
           >
             {students.map((s) => (
@@ -289,14 +291,14 @@ const ClassManager = () => {
                         setTargetClassId('');
                       }}
                       className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-all"
-                      title="Move to another class"
+                      title={t('classes.moveToClass')}
                     >
                       <ArrowRightLeft size={15} />
                     </button>
                     <button 
                       onClick={() => handleRemoveStudent(s.id)}
                       className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
-                      title="Remove from class"
+                      title={t('classes.removeFromClass')}
                     >
                       <UserMinus size={15} />
                     </button>
@@ -314,8 +316,8 @@ const ClassManager = () => {
           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 sm:p-8 animate-scale-in relative">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-xl font-black text-slate-900 tracking-tight">New Class</h2>
-                <p className="text-xs text-slate-400 font-medium mt-0.5">Create a new class group</p>
+                <h2 className="text-xl font-black text-slate-900 tracking-tight">{t('classes.newClass')}</h2>
+                <p className="text-xs text-slate-400 font-medium mt-0.5">{t('classes.createClassGroup')}</p>
               </div>
               <button onClick={() => setIsCreateModalOpen(false)} className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all">
                 <X size={18} />
@@ -323,7 +325,7 @@ const ClassManager = () => {
             </div>
               
             <form onSubmit={handleCreateClass} className="space-y-4">
-              <FormField label="Class Name">
+              <FormField label={t('classes.className')}>
                 <input
                   autoFocus
                   type="text"
@@ -337,14 +339,14 @@ const ClassManager = () => {
               
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setIsCreateModalOpen(false)} className="flex-1 py-3 text-slate-500 font-bold text-sm hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-colors">
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button 
                   disabled={loading}
                   type="submit" 
                   className="flex-1 py-3 bg-primary-600 text-white font-bold rounded-xl shadow-md shadow-primary-200 text-sm flex items-center justify-center gap-2 transition-all active:scale-95 hover:bg-primary-700 disabled:opacity-50"
                 >
-                  {loading ? <Loader2 className="animate-spin" size={14} /> : 'Create Class'}
+                  {loading ? <Loader2 className="animate-spin" size={14} /> : t('classes.createClass')}
                 </button>
               </div>
             </form>
@@ -362,7 +364,7 @@ const ClassManager = () => {
                   <ArrowRightLeft size={18} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-slate-900 tracking-tight">Move Student</h3>
+                  <h3 className="text-lg font-black text-slate-900 tracking-tight">{t('classes.moveStudent')}</h3>
                   <p className="text-[10px] text-slate-400 font-medium">{movingStudent.full_name}</p>
                 </div>
               </div>
@@ -372,13 +374,13 @@ const ClassManager = () => {
             </div>
 
             <form onSubmit={handleMoveStudent} className="space-y-4">
-              <FormField label="Current Class">
+              <FormField label={t('classes.currentClass')}>
                 <div className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-slate-400 text-sm select-none">
                   {selectedClass?.name}
                 </div>
               </FormField>
 
-              <FormField label="Move to">
+              <FormField label={t('classes.moveTo')}>
                 <div className="relative">
                   <select 
                     required
@@ -386,25 +388,25 @@ const ClassManager = () => {
                     onChange={(e) => setTargetClassId(e.target.value)}
                     className="w-full appearance-none bg-slate-50 border border-slate-200 focus:border-primary-500 focus:bg-white px-4 py-3 rounded-xl font-medium text-slate-700 outline-none cursor-pointer text-sm transition-all focus:ring-4 focus:ring-primary-50"
                   >
-                    <option value="">Choose class...</option>
+                    <option value="">{t('classes.chooseClass')}</option>
                     {classes.filter(c => c.id !== selectedClassId).map(c => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                   </select>
-                  <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
+                  <ChevronDown className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={14} />
                 </div>
               </FormField>
 
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={() => setMovingStudent(null)} className="flex-1 py-3 text-slate-500 font-bold text-sm hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-colors">
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button 
                   disabled={isMoving || !targetClassId}
                   type="submit" 
                   className="flex-1 py-3 bg-primary-600 text-white font-bold rounded-xl shadow-md shadow-primary-200 text-sm flex items-center justify-center gap-2 transition-all active:scale-95 hover:bg-primary-700 disabled:opacity-50"
                 >
-                  {isMoving ? <Loader2 className="animate-spin" size={14} /> : 'Move Student'}
+                  {isMoving ? <Loader2 className="animate-spin" size={14} /> : t('classes.moveStudent')}
                 </button>
               </div>
             </form>

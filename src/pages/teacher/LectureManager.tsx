@@ -118,18 +118,18 @@ const LectureManager = () => {
       {lectures.length > 0 && (
         <div className="mb-4">
           <div className="relative max-w-sm">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            <Search size={15} className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               type="text"
               placeholder="Search lectures…"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full h-9 pl-9 pr-8 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-700 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 transition-all"
+              className="w-full h-9 ps-9 pe-8 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-700 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 transition-all"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                className="absolute end-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
               >
                 <X size={14} />
               </button>
@@ -162,9 +162,9 @@ const LectureManager = () => {
             <table className="w-full">
               <thead>
                 <tr className="bg-slate-50/80">
-                  <th className="text-left pl-5 pr-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Lecture Details</th>
-                  <th className="text-left px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Order</th>
-                  <th className="text-left px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Questions</th>
+                  <th className="text-start ps-5 pe-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Lecture Details</th>
+                  <th className="text-start px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Order</th>
+                  <th className="text-start px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Questions</th>
                   <th className="w-20 px-3 py-2.5"></th>
                 </tr>
               </thead>
@@ -182,7 +182,7 @@ const LectureManager = () => {
                   const questionCount = getQuestionsByLecture(lecture.id).length;
                   return (
                     <tr key={lecture.id} className="group border-t border-slate-100 hover:bg-primary-50/40 transition-colors">
-                      <td className="pl-5 pr-3 py-3">
+                      <td className="ps-5 pe-3 py-3">
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 text-white flex items-center justify-center shrink-0">
                             <BookOpen size={15} />
@@ -203,7 +203,7 @@ const LectureManager = () => {
                       <td className="px-3 py-3">
                         <span className="text-[12px] text-slate-600 font-medium">{questionCount} Questions</span>
                       </td>
-                      <td className="px-3 py-3 text-right">
+                      <td className="px-3 py-3 text-end">
                         <div className="inline-flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => openEditModal(lecture)}

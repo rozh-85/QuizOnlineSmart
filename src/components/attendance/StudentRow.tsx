@@ -104,7 +104,7 @@ const StudentRow = ({ record, index, sessionActive, onKick }: StudentRowProps) =
         )}
       </td>
       {sessionActive && (
-        <td className="px-4 py-3 text-right">
+        <td className="px-4 py-3 text-end">
           {!isRemoved && (
             <button
               onClick={onKick}

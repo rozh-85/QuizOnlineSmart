@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, CheckCircle, XCircle, MinusCircle, LogOut, TrendingUp, Award, Filter, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { authApi } from '../../api/authApi';
 import { attendanceApi } from '../../api/attendanceApi';
 import toast from 'react-hot-toast';
+import LanguageSwitcher from '../../components/LanguageSwitcher';
 
 const StudentProfile = () => {
   const [profile, setProfile] = useState<any>(null);
@@ -14,6 +16,7 @@ const StudentProfile = () => {
   const [dateTo, setDateTo] = useState<string>('');
   const [showFilters, setShowFilters] = useState(false);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     fetchData();
@@ -42,10 +45,10 @@ const StudentProfile = () => {
       Object.keys(localStorage).forEach(key => {
         if (key.startsWith('sb-')) localStorage.removeItem(key);
       });
-      toast.success('Logged out');
+      toast.success(t('auth.loggedOut'));
       navigate('/login', { replace: true });
     } catch {
-      toast.error('Logout failed');
+      toast.error(t('auth.logoutFailed'));
     }
   };
 
@@ -111,12 +114,15 @@ const StudentProfile = () => {
                 )}
               </div>
             </div>
-            <button
-              onClick={handleLogout}
-              className="sm:hidden w-10 h-10 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
-            >
-              <LogOut size={18} />
-            </button>
+            <div className="sm:hidden flex items-center gap-1.5">
+              <LanguageSwitcher variant="icon" />
+              <button
+                onClick={handleLogout}
+                className="w-10 h-10 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
+              >
+                <LogOut size={18} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -127,23 +133,23 @@ const StudentProfile = () => {
           <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
             <TrendingUp size={16} className="text-emerald-500 mx-auto mb-1.5" />
             <div className="text-xl font-bold text-slate-900">{attendanceRate}%</div>
-            <div className="text-xs text-slate-500 mt-0.5">Rate</div>
+            <div className="text-xs text-slate-500 mt-0.5">{t('stats.rate')}</div>
           </div>
           <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
             <Award size={16} className="text-primary-500 mx-auto mb-1.5" />
             <div className="text-xl font-bold text-slate-900">{presentCount}</div>
-            <div className="text-xs text-slate-500 mt-0.5">Present</div>
+            <div className="text-xs text-slate-500 mt-0.5">{t('stats.present')}</div>
           </div>
           <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
             <Clock size={16} className="text-amber-500 mx-auto mb-1.5" />
             <div className="text-xl font-bold text-slate-900">{totalHours.toFixed(1)}</div>
-            <div className="text-xs text-slate-500 mt-0.5">Hours</div>
+            <div className="text-xs text-slate-500 mt-0.5">{t('stats.hours')}</div>
           </div>
         </div>
 
         {/* Attendance Records */}
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-900">Attendance History</h2>
+          <h2 className="text-sm font-semibold text-slate-900">{t('profile.attendanceHistory')}</h2>
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg border transition-colors ${
@@ -153,7 +159,7 @@ const StudentProfile = () => {
             }`}
           >
             <Filter size={13} />
-            Filters
+            {t('common.filters')}
             {(lectureFilter !== 'all' || dateFrom || dateTo) && (
               <span className="w-1.5 h-1.5 rounded-full bg-primary-500" />
             )}
@@ -174,13 +180,13 @@ const StudentProfile = () => {
             <div className="mb-3 p-3.5 bg-white rounded-xl border border-slate-200 space-y-3 animate-fade-in">
               {/* Lecture filter */}
               <div>
-                <label className="text-xs font-medium text-slate-500 mb-1 block">Lecture</label>
+                <label className="text-xs font-medium text-slate-500 mb-1 block">{t('profile.lecture')}</label>
                 <select
                   value={lectureFilter}
                   onChange={(e) => setLectureFilter(e.target.value)}
                   className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-300"
                 >
-                  <option value="all">All lectures</option>
+                  <option value="all">{t('profile.allLectures')}</option>
                   {uniqueLectures.map(([id, title]) => (
                     <option key={id} value={title}>{title}</option>
                   ))}
@@ -190,7 +196,7 @@ const StudentProfile = () => {
               {/* Date range */}
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">From</label>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">{t('profile.from')}</label>
                   <input
                     type="date"
                     value={dateFrom}
@@ -199,7 +205,7 @@ const StudentProfile = () => {
                   />
                 </div>
                 <div className="flex-1">
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">To</label>
+                  <label className="text-xs font-medium text-slate-500 mb-1 block">{t('profile.to')}</label>
                   <input
                     type="date"
                     value={dateTo}
@@ -215,7 +221,7 @@ const StudentProfile = () => {
                   onClick={() => { setLectureFilter('all'); setDateFrom(''); setDateTo(''); }}
                   className="flex items-center gap-1 text-xs font-medium text-rose-500 hover:text-rose-600 transition-colors"
                 >
-                  <X size={13} /> Clear filters
+                  <X size={13} /> {t('common.clearFilters')}
                 </button>
               )}
             </div>
@@ -247,7 +253,7 @@ const StudentProfile = () => {
             <>
               {showCount && (
                 <p className="text-xs text-slate-400 mb-2">
-                  Showing {filteredRecords.length} of {records.length} sessions
+                  {t('profile.showingSessions', { filtered: filteredRecords.length, total: records.length })}
                 </p>
               )}
 
@@ -255,10 +261,10 @@ const StudentProfile = () => {
           <div className="text-center py-14 bg-white rounded-xl border border-slate-200">
             <Calendar size={28} className="text-slate-300 mx-auto mb-3" />
             <p className="text-sm font-medium text-slate-500 mb-1">
-              {records.length === 0 ? 'No attendance records' : 'No matching records'}
+              {records.length === 0 ? t('profile.noAttendanceRecords') : t('profile.noMatchingRecords')}
             </p>
             <p className="text-xs text-slate-400">
-              {records.length === 0 ? 'Scan QR codes during class to track your attendance' : 'Try adjusting your filters'}
+              {records.length === 0 ? t('profile.scanQRToTrack') : t('profile.adjustFilters')}
             </p>
           </div>
         ) : (
@@ -304,7 +310,7 @@ const StudentProfile = () => {
                   </div>
 
                   {/* Hours / Status badge */}
-                  <div className="flex-shrink-0 text-right">
+                  <div className="flex-shrink-0 text-end">
                     {isPresent && record.hours_attended ? (
                       <div>
                         <div className="text-sm font-semibold text-emerald-600">{record.hours_attended.toFixed(1)}h</div>

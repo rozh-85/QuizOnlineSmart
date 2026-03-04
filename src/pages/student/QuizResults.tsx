@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useLocation, Link, Navigate } from 'react-router-dom';
 import { Trophy, RotateCcw, Home, Star, CheckCircle, XCircle, Eye } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button, Card, Modal } from '../../components/ui';
 import { Question } from '../../types';
 
@@ -13,6 +14,7 @@ interface LocationState {
 }
 
 const QuizResults = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const state = location.state as LocationState | null;
   const [quickViewItem, setQuickViewItem] = useState<{question: Question, index: number, isCorrect: boolean} | null>(null);
@@ -25,10 +27,10 @@ const QuizResults = () => {
   const percentage = Math.round((score / total) * 100);
 
   const getGrade = () => {
-    if (percentage >= 90) return { label: 'Excellent!', color: 'text-emerald-400', emoji: '🏆' };
-    if (percentage >= 70) return { label: 'Great Job!', color: 'text-green-400', emoji: '🌟' };
-    if (percentage >= 50) return { label: 'Good Effort!', color: 'text-yellow-400', emoji: '👍' };
-    return { label: 'Keep Practicing!', color: 'text-orange-400', emoji: '💪' };
+    if (percentage >= 90) return { label: t('quiz.excellent'), color: 'text-emerald-400', emoji: '🏆' };
+    if (percentage >= 70) return { label: t('quiz.greatJob'), color: 'text-green-400', emoji: '🌟' };
+    if (percentage >= 50) return { label: t('quiz.goodEffort'), color: 'text-yellow-400', emoji: '👍' };
+    return { label: t('quiz.keepPracticing'), color: 'text-orange-400', emoji: '💪' };
   };
 
   const grade = getGrade();
@@ -46,7 +48,7 @@ const QuizResults = () => {
               <h1 className={`text-2xl sm:text-3xl font-bold mb-1 ${grade.color}`}>
                 {grade.label}
               </h1>
-              <p className="text-sm text-slate-500">Quiz completed</p>
+              <p className="text-sm text-slate-500">{t('quiz.quizCompleted')}</p>
             </div>
 
             {/* Score Circle */}
@@ -63,7 +65,7 @@ const QuizResults = () => {
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className="text-3xl sm:text-4xl font-bold text-slate-900 leading-none">{percentage}%</span>
-                <span className="text-xs text-slate-400 mt-1">correct</span>
+                <span className="text-xs text-slate-400 mt-1">{t('quiz.correct')}</span>
               </div>
             </div>
 
@@ -71,15 +73,15 @@ const QuizResults = () => {
             <div className="w-full grid grid-cols-3 gap-2">
               <div className="p-3 rounded-lg bg-slate-50 text-center">
                 <div className="text-lg font-bold text-slate-900">{total}</div>
-                <div className="text-xs text-slate-500">Total</div>
+                <div className="text-xs text-slate-500">{t('quiz.total')}</div>
               </div>
               <div className="p-3 rounded-lg bg-emerald-50 text-center">
                 <div className="text-lg font-bold text-emerald-600">{score}</div>
-                <div className="text-xs text-emerald-600">Correct</div>
+                <div className="text-xs text-emerald-600">{t('quiz.correct')}</div>
               </div>
               <div className="p-3 rounded-lg bg-rose-50 text-center">
                 <div className="text-lg font-bold text-rose-600">{total - score}</div>
-                <div className="text-xs text-rose-600">Wrong</div>
+                <div className="text-xs text-rose-600">{t('quiz.wrong')}</div>
               </div>
             </div>
 
@@ -91,13 +93,13 @@ const QuizResults = () => {
               >
                 <Button variant="primary" fullWidth className="h-11 rounded-lg">
                   <RotateCcw size={16} />
-                  Try Again
+                  {t('quiz.tryAgain')}
                 </Button>
               </Link>
               <Link to="/dashboard" className="block w-full">
                 <Button variant="secondary" fullWidth className="h-11 rounded-lg border-slate-200 bg-white">
                   <Home size={16} />
-                  Dashboard
+                  {t('nav.dashboard')}
                 </Button>
               </Link>
             </div>
@@ -110,9 +112,9 @@ const QuizResults = () => {
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                 <Star size={20} className="text-yellow-400 fill-yellow-400" />
-                Answer Review
+                {t('quiz.answerReview')}
               </h3>
-              <span className="text-xs text-slate-400">{questions.length} questions</span>
+              <span className="text-xs text-slate-400">{t('student.questionsCount', { count: questions.length })}</span>
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
@@ -152,22 +154,22 @@ const QuizResults = () => {
                       </button>
 
                       <div className="flex-1 min-w-0 pr-6">
-                        <span className="text-xs text-slate-400 font-medium">Question {index + 1}</span>
+                        <span className="text-xs text-slate-400 font-medium">{t('quiz.question')} {index + 1}</span>
                         <p className="text-sm font-medium text-slate-900 mb-2 leading-snug line-clamp-2">
                           {question.text}
                         </p>
                         <div className="space-y-1.5 p-2.5 rounded-lg bg-slate-50/80 border border-slate-100">
                           <div>
-                            <p className="text-[10px] text-slate-400 font-medium mb-0.5">Your answer</p>
+                            <p className="text-[10px] text-slate-400 font-medium mb-0.5">{t('quiz.yourAnswer')}</p>
                             <p className={`text-xs font-medium truncate ${isCorrect ? 'text-emerald-600' : 'text-rose-600'}`}>
                               {userAnswer !== null 
                                 ? (question.type === 'blank' ? userAnswer : question.options[userAnswer as number]) 
-                                : 'Skipped'}
+                                : t('quiz.skipped')}
                             </p>
                           </div>
                           {!isCorrect && (
                             <div className="pt-1.5 border-t border-slate-100">
-                              <p className="text-[10px] text-emerald-500 font-medium mb-0.5">Correct answer</p>
+                              <p className="text-[10px] text-emerald-500 font-medium mb-0.5">{t('quiz.correctAnswer')}</p>
                               <p className="text-xs font-medium text-emerald-600 truncate">
                                 {question.type === 'blank' 
                                   ? (question.correctAnswer || 'N/A')
@@ -204,7 +206,7 @@ const QuizResults = () => {
                   <span className={`text-sm font-semibold ${
                     quickViewItem.isCorrect ? 'text-emerald-600' : 'text-rose-600'
                   }`}>
-                    {quickViewItem.isCorrect ? 'Correct' : 'Incorrect'}
+                    {quickViewItem.isCorrect ? t('quiz.correct') : t('quiz.incorrect')}
                   </span>
                </div>
                <h3 className="text-base font-semibold text-slate-900 leading-relaxed whitespace-pre-wrap">
@@ -261,7 +263,7 @@ const QuizResults = () => {
 
                 {quickViewItem.question.type === 'true-false' && (
                   <div className="flex gap-2.5">
-                    {['True', 'False'].map((label, index) => {
+                    {[t('quiz.true'), t('quiz.false')].map((label, index) => {
                       const isUserAnswer = state.answers[quickViewItem.index] === index;
                       const isCorrectAnswer = quickViewItem.question.correctIndex === index;
                       
@@ -293,14 +295,14 @@ const QuizResults = () => {
                 {quickViewItem.question.type === 'blank' && (
                   <div className="space-y-2">
                     <div className={`p-3.5 rounded-xl border ${quickViewItem.isCorrect ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'}`}>
-                      <p className="text-xs text-slate-500 mb-1">Your answer</p>
+                      <p className="text-xs text-slate-500 mb-1">{t('quiz.yourAnswer')}</p>
                       <p className={`text-base font-semibold ${quickViewItem.isCorrect ? 'text-emerald-700' : 'text-rose-700'}`}>
-                        {state.answers[quickViewItem.index] || 'Skipped'}
+                        {state.answers[quickViewItem.index] || t('quiz.skipped')}
                       </p>
                     </div>
                     {!quickViewItem.isCorrect && (
                       <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200">
-                        <p className="text-xs text-emerald-600 mb-1">Correct answer</p>
+                        <p className="text-xs text-emerald-600 mb-1">{t('quiz.correctAnswer')}</p>
                         <p className="text-base font-semibold text-emerald-700">
                           {quickViewItem.question.correctAnswer}
                         </p>
@@ -312,7 +314,7 @@ const QuizResults = () => {
 
                {quickViewItem.question.explanation && (
                 <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                  <h4 className="text-xs font-semibold text-slate-700 mb-1.5">Explanation</h4>
+                  <h4 className="text-xs font-semibold text-slate-700 mb-1.5">{t('quiz.explanation')}</h4>
                   <p className="text-sm text-slate-600 leading-relaxed">
                     {quickViewItem.question.explanation}
                   </p>
@@ -320,7 +322,7 @@ const QuizResults = () => {
               )}
 
               <Button fullWidth size="lg" onClick={() => setQuickViewItem(null)} className="h-11 rounded-lg font-semibold text-sm">
-                Close
+                {t('common.close')}
               </Button>
             </div>
           </div>

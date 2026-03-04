@@ -115,8 +115,8 @@ const QAManager = () => {
                 <button
                   key={lecture.id}
                   onClick={() => setSelectedLectureId(lecture.id)}
-                  className={`w-full text-left px-2.5 py-2 border-b border-slate-50 hover:bg-slate-50 transition-colors ${
-                    selectedLectureId === lecture.id ? 'bg-indigo-50 border-l-4 border-l-indigo-600' : ''
+                  className={`w-full text-start px-2.5 py-2 border-b border-slate-50 hover:bg-slate-50 transition-colors ${
+                    selectedLectureId === lecture.id ? 'bg-indigo-50 border-s-4 border-s-indigo-600' : ''
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">

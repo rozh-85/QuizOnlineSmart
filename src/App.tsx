@@ -1,14 +1,24 @@
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { QuizProvider } from './context/QuizContext';
 import AdminLayout from './components/AdminLayout';
 import StudentLayoutWrapper from './components/StudentLayoutWrapper';
 import ProtectedRoute from './components/ProtectedRoute';
 import { authRoutes, studentRoutes, adminRoutes, publicRoutes } from './routes';
 import { ROUTES, TOAST_DURATION_MS } from './constants';
+import { RTL_LANGUAGES } from './i18n';
 
 function App() {
+  const { i18n } = useTranslation();
+
+  useEffect(() => {
+    const isRTL = RTL_LANGUAGES.includes(i18n.language);
+    document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
+
   return (
     <QuizProvider>
       <HashRouter>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageSquare, Clock, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { authApi } from '../../api/authApi';
 import { lectureQAApi } from '../../api/lectureQAApi';
 import { subscribeToStudentQuestions } from '../../services/realtimeService';
@@ -9,6 +10,7 @@ const StudentNotifications = () => {
   const [unreadThreads, setUnreadThreads] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const userIdRef = useRef<string | null>(null);
 
   const fetchUnread = useCallback(async (userId: string) => {
@@ -71,10 +73,10 @@ const StudentNotifications = () => {
 
   const fmtRelative = (d: string) => {
     const diff = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
-    if (diff < 60) return 'Just now';
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    if (diff < 604800) return `${Math.floor(diff / 86400)}d ago`;
+    if (diff < 60) return t('time.justNow');
+    if (diff < 3600) return t('time.minutesAgo', { count: Math.floor(diff / 60) });
+    if (diff < 86400) return t('time.hoursAgo', { count: Math.floor(diff / 3600) });
+    if (diff < 604800) return t('time.daysAgo', { count: Math.floor(diff / 86400) });
     return new Date(d).toLocaleDateString([], { month: 'short', day: 'numeric' });
   };
 
@@ -128,15 +130,15 @@ const StudentNotifications = () => {
                 <MessageSquare size={18} />
               </div>
               {unreadThreads.length > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-rose-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center">
+                <span className="absolute -top-1 -end-1 min-w-[16px] h-[16px] px-1 bg-rose-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center">
                   {unreadThreads.length > 9 ? '9+' : unreadThreads.length}
                 </span>
               )}
             </div>
             <div>
-              <h1 className="text-lg font-bold text-slate-900">Chat</h1>
+              <h1 className="text-lg font-bold text-slate-900">{t('chat.title')}</h1>
               <p className="text-sm text-slate-500">
-                {unreadThreads.length > 0 ? `${unreadThreads.length} unread message${unreadThreads.length > 1 ? 's' : ''}` : 'You\'re all caught up!'}
+                {unreadThreads.length > 0 ? t(unreadThreads.length > 1 ? 'chat.unreadMessages_plural' : 'chat.unreadMessages', { count: unreadThreads.length }) : t('chat.allCaughtUp')}
               </p>
             </div>
           </div>
@@ -162,8 +164,8 @@ const StudentNotifications = () => {
         ) : unreadThreads.length === 0 ? (
           <div className="text-center py-14 bg-white rounded-xl border border-slate-200">
             <MessageSquare size={28} className="text-slate-300 mx-auto mb-3" />
-            <p className="text-sm font-medium text-slate-500 mb-1">No new messages</p>
-            <p className="text-xs text-slate-400">When your teacher replies, they'll appear here</p>
+            <p className="text-sm font-medium text-slate-500 mb-1">{t('chat.noNewMessages')}</p>
+            <p className="text-xs text-slate-400">{t('chat.teacherRepliesAppear')}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -174,7 +176,7 @@ const StudentNotifications = () => {
                 <button
                   key={thread.id}
                   onClick={() => handleNotificationClick(thread)}
-                  className="w-full text-left bg-white rounded-xl border border-slate-200 hover:border-primary-300 hover:shadow-sm transition-all p-4 group"
+                  className="w-full text-start bg-white rounded-xl border border-slate-200 hover:border-primary-300 hover:shadow-sm transition-all p-4 group"
                 >
                   <div className="flex items-start gap-3.5">
                     <div className="w-9 h-9 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center flex-shrink-0 group-hover:bg-primary-600 group-hover:text-white transition-colors">
@@ -192,14 +194,14 @@ const StudentNotifications = () => {
                       </div>
                       <p className="text-xs text-slate-500 truncate leading-relaxed mb-2">
                         {lastMsg
-                          ? `${fromTeacher ? 'Teacher replied' : 'You'}: "${lastMsg.message_text.substring(0, 80)}${lastMsg.message_text.length > 80 ? '...' : ''}"`
-                          : `Your question: "${thread.question_text.substring(0, 80)}${thread.question_text.length > 80 ? '...' : ''}"`
+                          ? `${fromTeacher ? t('chat.teacherReplied') : t('chat.you')}: "${lastMsg.message_text.substring(0, 80)}${lastMsg.message_text.length > 80 ? '...' : ''}"`
+                          : `${t('chat.yourQuestion')}: "${thread.question_text.substring(0, 80)}${thread.question_text.length > 80 ? '...' : ''}"`
                         }
                       </p>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
                           <div className="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse" />
-                          <span className="text-xs font-medium text-primary-600">New reply</span>
+                          <span className="text-xs font-medium text-primary-600">{t('chat.newReply')}</span>
                         </div>
                         <ChevronRight size={14} className="text-slate-300 group-hover:text-primary-500 transition-colors" />
                       </div>

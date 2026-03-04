@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, HelpCircle, ChevronDown, ChevronRight, Layers, BarChart3 as BarChart, Users, BookOpen, GraduationCap, FileText, Eye, EyeOff, Sparkles, ShieldCheck, ClipboardCheck, Megaphone, ArrowRight, Gauge, X, Maximize2, Minimize2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { Button, Modal, SearchInput, StatCard, EmptyState, Card } from '../../components/ui';
 import { useQuiz } from '../../context/QuizContext';
 import { Question } from '../../types';
@@ -11,6 +12,7 @@ import { classApi } from '../../api/classApi';
 
 const TeacherDashboard = () => {
   const { questions, lectures, materials, deleteQuestion, toggleQuestionVisibility } = useQuiz();
+  const { t } = useTranslation();
   const [studentCount, setStudentCount] = useState(0);
   const [classCount, setClassCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -103,9 +105,9 @@ const TeacherDashboard = () => {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good Morning';
-    if (hour < 18) return 'Good Afternoon';
-    return 'Good Evening';
+    if (hour < 12) return t('dashboard.goodMorning');
+    if (hour < 18) return t('dashboard.goodAfternoon');
+    return t('dashboard.goodEvening');
   };
 
   const getFormattedDate = () => {
@@ -129,12 +131,12 @@ const TeacherDashboard = () => {
   const blankCount = allQuestions.filter(q => q.type === 'blank').length;
 
   const quickActions = [
-    { icon: Plus, label: 'New Question', desc: 'Create a new question', path: '/admin/new', color: 'bg-indigo-50 text-indigo-600' },
-    { icon: Sparkles, label: 'AI Generator', desc: 'Generate with AI', path: '/admin/ai-generator', color: 'bg-purple-50 text-purple-600' },
-    { icon: ClipboardCheck, label: 'Attendance', desc: 'Start a session', path: '/admin/attendance', color: 'bg-emerald-50 text-emerald-600' },
-    { icon: ShieldCheck, label: 'Exam Builder', desc: 'Build an exam', path: '/admin/exam-builder', color: 'bg-amber-50 text-amber-600' },
-    { icon: BarChart, label: 'Reports', desc: 'View analytics', path: '/admin/reports', color: 'bg-rose-50 text-rose-600' },
-    { icon: Megaphone, label: "What's New", desc: 'Publish updates', path: '/admin/whats-new', color: 'bg-cyan-50 text-cyan-600' },
+    { icon: Plus, label: t('quickActions.newQuestion'), desc: t('quickActions.createQuestion'), path: '/admin/new', color: 'bg-indigo-50 text-indigo-600' },
+    { icon: Sparkles, label: t('quickActions.aiGenerator'), desc: t('quickActions.generateWithAI'), path: '/admin/ai-generator', color: 'bg-purple-50 text-purple-600' },
+    { icon: ClipboardCheck, label: t('quickActions.attendance'), desc: t('quickActions.startSession'), path: '/admin/attendance', color: 'bg-emerald-50 text-emerald-600' },
+    { icon: ShieldCheck, label: t('quickActions.examBuilder'), desc: t('quickActions.buildExam'), path: '/admin/exam-builder', color: 'bg-amber-50 text-amber-600' },
+    { icon: BarChart, label: t('quickActions.reports'), desc: t('quickActions.viewAnalytics'), path: '/admin/reports', color: 'bg-rose-50 text-rose-600' },
+    { icon: Megaphone, label: t('quickActions.whatsNew'), desc: t('quickActions.publishUpdates'), path: '/admin/whats-new', color: 'bg-cyan-50 text-cyan-600' },
   ];
 
   // Grouping Logic
@@ -156,7 +158,7 @@ const TeacherDashboard = () => {
   const confirmDelete = () => {
     if (deleteModal.question) {
       deleteQuestion(deleteModal.question.id);
-      toast.success('Question deleted successfully');
+      toast.success(t('dashboard.questionDeleted'));
     }
     setDeleteModal({ isOpen: false, question: null });
   };
@@ -173,7 +175,7 @@ const TeacherDashboard = () => {
           <Link to="/admin/new">
             <Button size="md" className="shadow-lg shadow-indigo-200">
               <Plus size={18} />
-              <span>New Question</span>
+              <span>{t('quickActions.newQuestion')}</span>
             </Button>
           </Link>
         </div>
@@ -183,13 +185,13 @@ const TeacherDashboard = () => {
       <div>
         <h2 className="text-lg font-black text-slate-900 mb-4 flex items-center gap-2">
           <BarChart size={20} className="text-indigo-600" />
-          Overview
+          {t('dashboard.overview')}
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <StatCard 
             icon={<Users size={16} className="text-indigo-600" />} 
             value={loading ? '...' : studentCount} 
-            label="Students" 
+            label={t('stats.students')} 
             color="bg-indigo-50"
             valueColor="text-indigo-700"
             borderColor="border-indigo-100"
@@ -197,7 +199,7 @@ const TeacherDashboard = () => {
           <StatCard 
             icon={<BookOpen size={16} className="text-emerald-600" />} 
             value={loading ? '...' : classCount} 
-            label="Classes" 
+            label={t('stats.classes')} 
             color="bg-emerald-50"
             valueColor="text-emerald-700"
             borderColor="border-emerald-100"
@@ -205,7 +207,7 @@ const TeacherDashboard = () => {
           <StatCard 
             icon={<GraduationCap size={16} className="text-purple-600" />} 
             value={lectures.length} 
-            label="Lectures" 
+            label={t('stats.lectures')} 
             color="bg-purple-50"
             valueColor="text-purple-700"
             borderColor="border-purple-100"
@@ -213,7 +215,7 @@ const TeacherDashboard = () => {
           <StatCard 
             icon={<HelpCircle size={16} className="text-amber-600" />} 
             value={allQuestions.length} 
-            label="Questions" 
+            label={t('stats.questions')} 
             color="bg-amber-50"
             valueColor="text-amber-700"
             borderColor="border-amber-100"
@@ -221,7 +223,7 @@ const TeacherDashboard = () => {
           <StatCard 
             icon={<FileText size={16} className="text-rose-600" />} 
             value={materials.length} 
-            label="Materials" 
+            label={t('stats.materials')} 
             color="bg-rose-50"
             valueColor="text-rose-700"
             borderColor="border-rose-100"
@@ -229,7 +231,7 @@ const TeacherDashboard = () => {
           <StatCard 
             icon={<Eye size={16} className="text-cyan-600" />} 
             value={`${visibleQuestions}/${allQuestions.length}`} 
-            label="Visible" 
+            label={t('stats.visible')} 
             color="bg-cyan-50"
             valueColor="text-cyan-700"
             borderColor="border-cyan-100"
@@ -241,7 +243,7 @@ const TeacherDashboard = () => {
       <div>
         <h2 className="text-lg font-black text-slate-900 mb-4 flex items-center gap-2">
           <Sparkles size={20} className="text-indigo-600" />
-          Quick Actions
+          {t('dashboard.quickActions')}
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {quickActions.map((action, idx) => {
@@ -257,7 +259,7 @@ const TeacherDashboard = () => {
                       <h3 className="text-sm font-black text-slate-900 mb-1">{action.label}</h3>
                       <p className="text-xs text-slate-500 font-medium">{action.desc}</p>
                     </div>
-                    <ArrowRight size={16} className="text-slate-300 group-hover:text-indigo-600 group-hover:translate-x-1 transition-all flex-shrink-0" />
+                    <ArrowRight size={16} className="text-slate-300 group-hover:text-indigo-600 ltr:group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-all flex-shrink-0" />
                   </div>
                 </Card>
               </Link>
@@ -270,19 +272,19 @@ const TeacherDashboard = () => {
       <div>
         <h2 className="text-lg font-black text-slate-900 mb-4 flex items-center gap-2">
           <Layers size={20} className="text-indigo-600" />
-          Content Breakdown
+          {t('dashboard.contentBreakdown')}
         </h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Difficulty Distribution */}
           <Card>
             <h3 className="text-sm font-black text-slate-700 mb-4 flex items-center gap-2">
               <Gauge size={16} className="text-slate-600" />
-              Questions by Difficulty
+              {t('dashboard.questionsByDifficulty')}
             </h3>
             <div className="space-y-3">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">Easy</span>
+                  <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider">{t('dashboard.easy')}</span>
                   <span className="text-xs font-black text-slate-900">{easyCount}</span>
                 </div>
                 <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -294,7 +296,7 @@ const TeacherDashboard = () => {
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-bold text-amber-600 uppercase tracking-wider">Medium</span>
+                  <span className="text-xs font-bold text-amber-600 uppercase tracking-wider">{t('dashboard.medium')}</span>
                   <span className="text-xs font-black text-slate-900">{mediumCount}</span>
                 </div>
                 <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -306,7 +308,7 @@ const TeacherDashboard = () => {
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-bold text-rose-600 uppercase tracking-wider">Hard</span>
+                  <span className="text-xs font-bold text-rose-600 uppercase tracking-wider">{t('dashboard.hard')}</span>
                   <span className="text-xs font-black text-slate-900">{hardCount}</span>
                 </div>
                 <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -323,12 +325,12 @@ const TeacherDashboard = () => {
           <Card>
             <h3 className="text-sm font-black text-slate-700 mb-4 flex items-center gap-2">
               <HelpCircle size={16} className="text-slate-600" />
-              Questions by Type & Visibility
+              {t('dashboard.questionsByType')}
             </h3>
             <div className="space-y-3">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">Multiple Choice</span>
+                  <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">{t('dashboard.multipleChoice')}</span>
                   <span className="text-xs font-black text-slate-900">{mcCount}</span>
                 </div>
                 <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -340,7 +342,7 @@ const TeacherDashboard = () => {
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-bold text-purple-600 uppercase tracking-wider">True/False</span>
+                  <span className="text-xs font-bold text-purple-600 uppercase tracking-wider">{t('dashboard.trueFalse')}</span>
                   <span className="text-xs font-black text-slate-900">{tfCount}</span>
                 </div>
                 <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -352,7 +354,7 @@ const TeacherDashboard = () => {
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-xs font-bold text-cyan-600 uppercase tracking-wider">Fill in Blank</span>
+                  <span className="text-xs font-bold text-cyan-600 uppercase tracking-wider">{t('dashboard.fillInBlank')}</span>
                   <span className="text-xs font-black text-slate-900">{blankCount}</span>
                 </div>
                 <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -365,13 +367,13 @@ const TeacherDashboard = () => {
               <div className="pt-2 border-t border-slate-100">
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-xs font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
-                    <Eye size={12} /> Visible
+                    <Eye size={12} /> {t('dashboard.visible')}
                   </span>
                   <span className="text-xs font-black text-slate-900">{visibleQuestions}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                    <EyeOff size={12} /> Hidden
+                    <EyeOff size={12} /> {t('dashboard.hidden')}
                   </span>
                   <span className="text-xs font-black text-slate-900">{hiddenQuestions}</span>
                 </div>
@@ -386,7 +388,7 @@ const TeacherDashboard = () => {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
           <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
             <HelpCircle size={20} className="text-indigo-600" />
-            Question Bank
+            {t('dashboard.questionBank')}
             <div className="px-2 py-0.5 rounded-lg bg-indigo-50 border border-indigo-100">
               <span className="text-xs font-black text-indigo-600">
                 {allQuestions.length}
@@ -399,14 +401,14 @@ const TeacherDashboard = () => {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 transition-all"
             >
               <Maximize2 size={12} />
-              Expand All
+              {t('dashboard.expandAll')}
             </button>
             <button
               onClick={collapseAll}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-700 hover:bg-slate-50 border border-slate-200 transition-all"
             >
               <Minimize2 size={12} />
-              Collapse All
+              {t('dashboard.collapseAll')}
             </button>
           </div>
         </div>
@@ -414,7 +416,7 @@ const TeacherDashboard = () => {
         {/* Search */}
         <div className="mb-4">
           <SearchInput
-            placeholder="Search by keyword, type, or explanation..."
+            placeholder={t('dashboard.searchPlaceholder')}
             value={searchTerm}
             onChange={setSearchTerm}
           />
@@ -430,7 +432,7 @@ const TeacherDashboard = () => {
                 : 'bg-white text-slate-600 border border-slate-200 hover:border-indigo-200 hover:text-indigo-600'
             }`}
           >
-            All
+            {t('common.all')}
           </button>
           <div className="w-px h-4 bg-slate-200" />
           <button
@@ -441,7 +443,7 @@ const TeacherDashboard = () => {
                 : 'bg-white text-slate-600 border border-slate-200 hover:border-emerald-200 hover:text-emerald-600'
             }`}
           >
-            Easy
+            {t('dashboard.easy')}
           </button>
           <button
             onClick={() => toggleFilter('medium')}
@@ -451,7 +453,7 @@ const TeacherDashboard = () => {
                 : 'bg-white text-slate-600 border border-slate-200 hover:border-amber-200 hover:text-amber-600'
             }`}
           >
-            Medium
+            {t('dashboard.medium')}
           </button>
           <button
             onClick={() => toggleFilter('hard')}
@@ -461,7 +463,7 @@ const TeacherDashboard = () => {
                 : 'bg-white text-slate-600 border border-slate-200 hover:border-rose-200 hover:text-rose-600'
             }`}
           >
-            Hard
+            {t('dashboard.hard')}
           </button>
           <div className="w-px h-4 bg-slate-200" />
           <button
@@ -472,7 +474,7 @@ const TeacherDashboard = () => {
                 : 'bg-white text-slate-600 border border-slate-200 hover:border-indigo-200 hover:text-indigo-600'
             }`}
           >
-            MC
+            {t('dashboard.mc')}
           </button>
           <button
             onClick={() => toggleFilter('tf')}
@@ -482,7 +484,7 @@ const TeacherDashboard = () => {
                 : 'bg-white text-slate-600 border border-slate-200 hover:border-purple-200 hover:text-purple-600'
             }`}
           >
-            T/F
+            {t('dashboard.tf')}
           </button>
           <button
             onClick={() => toggleFilter('blank')}
@@ -492,7 +494,7 @@ const TeacherDashboard = () => {
                 : 'bg-white text-slate-600 border border-slate-200 hover:border-cyan-200 hover:text-cyan-600'
             }`}
           >
-            Blank
+            {t('dashboard.blank')}
           </button>
           <div className="w-px h-4 bg-slate-200" />
           <button
@@ -504,7 +506,7 @@ const TeacherDashboard = () => {
             }`}
           >
             <Eye size={10} />
-            Visible
+            {t('dashboard.visible')}
           </button>
           <button
             onClick={() => toggleFilter('hidden')}
@@ -515,7 +517,7 @@ const TeacherDashboard = () => {
             }`}
           >
             <EyeOff size={10} />
-            Hidden
+            {t('dashboard.hidden')}
           </button>
           {activeFilters.length > 0 && (
             <>
@@ -525,7 +527,7 @@ const TeacherDashboard = () => {
                 className="px-2 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all flex items-center gap-1"
               >
                 <X size={12} />
-                Clear
+                {t('common.clear')}
               </button>
             </>
           )}
@@ -535,19 +537,19 @@ const TeacherDashboard = () => {
         {filteredQuestions.length === 0 ? (
           <EmptyState
             icon={<HelpCircle size={48} />}
-            title="No Matches Found"
-            subtitle={activeFilters.length > 0 ? `No questions match your filters: ${activeFilters.join(', ')}` : "Try adjusting your search or add a new question."}
+            title={t('dashboard.noMatchesFound')}
+            subtitle={activeFilters.length > 0 ? t('dashboard.noMatchesFilters', { filters: activeFilters.join(', ') }) : t('dashboard.noMatchesSearch')}
             action={
               activeFilters.length > 0 ? (
                 <Button onClick={() => setActiveFilters([])} size="lg">
                   <X size={18} />
-                  Clear Filters
+                  {t('common.clearFilters')}
                 </Button>
               ) : (
                 <Link to="/admin/new">
                   <Button size="lg">
                     <Plus size={20} />
-                    Add Question
+                  {t('dashboard.addQuestion')}
                   </Button>
                 </Link>
               )
@@ -576,8 +578,8 @@ const TeacherDashboard = () => {
                     onClick={() => toggleLecture(lectureId)}
                     className={`w-full flex items-start justify-between p-4 rounded-xl transition-all border border-slate-200 hover:border-${color}-200 hover:shadow-md group ${
                       isExpanded ? `bg-slate-50 ring-2 ring-${color}-100 border-${color}-200` : 'bg-white'
-                    } border-l-4 border-l-${color}-500`}
-                    style={{ borderLeftColor: `var(--color-${color}-500)` }}
+                    } border-s-4 border-s-${color}-500`}
+                    style={{ borderInlineStartColor: `var(--color-${color}-500)` }}
                   >
                     <div className="flex items-start gap-3 flex-1 min-w-0">
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all flex-shrink-0 ${
@@ -590,7 +592,7 @@ const TeacherDashboard = () => {
                       >
                         {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                       </div>
-                      <div className="text-left flex-1 min-w-0">
+                      <div className="text-start flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-2">
                           <h4 className="text-sm font-black text-slate-900 tracking-tight">
                             {lecture.title}
@@ -603,7 +605,7 @@ const TeacherDashboard = () => {
                         <div className="flex items-center gap-3 text-[10px] font-bold text-slate-500">
                           <div className="flex items-center gap-1">
                             <Eye size={10} className="text-emerald-500" />
-                            <span>{visibleInLecture}/{totalInLecture} visible</span>
+                            <span>{visibleInLecture}/{totalInLecture} {t('dashboard.visible').toLowerCase()}</span>
                           </div>
                           <div className="flex-1 max-w-[200px]">
                             <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden flex">
@@ -636,7 +638,7 @@ const TeacherDashboard = () => {
                   </button>
 
                   {isExpanded && (
-                    <div className="pl-4 sm:pl-12 space-y-3 animate-in fade-in slide-in-from-left-2">
+                    <div className="ps-4 sm:ps-12 space-y-3 animate-in fade-in slide-in-from-left-2">
                       {Object.entries(sections).map(([sectionId, qList]) => {
                         const isSectionExpanded = searchTerm ? true : expandedSections[`${lectureId}-${sectionId}`];
                         
@@ -654,11 +656,11 @@ const TeacherDashboard = () => {
                               <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full font-bold">
                                 {qList.length}
                               </span>
-                              {isSectionExpanded ? <ChevronDown size={12} className="text-slate-400 ml-auto" /> : <ChevronRight size={12} className="text-slate-400 ml-auto" />}
+                              {isSectionExpanded ? <ChevronDown size={12} className="text-slate-400 ms-auto" /> : <ChevronRight size={12} className="text-slate-400 ms-auto" />}
                             </button>
 
                             {isSectionExpanded && (
-                              <div className="space-y-2 pl-4 border-l-2 ml-1 animate-in fade-in slide-in-from-top-1" 
+                              <div className="space-y-2 ps-4 border-s-2 ms-1 animate-in fade-in slide-in-from-top-1" 
                                 style={{ borderColor: `var(--color-${color}-200)` }}>
                                 {qList.map((question, idx) => (
                                   <QuestionCard
@@ -669,7 +671,7 @@ const TeacherDashboard = () => {
                                     onToggleQuickView={() => toggleQuickView(question.id)}
                                     onToggleVisibility={() => {
                                       toggleQuestionVisibility(question.id, !question.isVisible);
-                                      toast.success(question.isVisible ? 'Question hidden from students' : 'Question visible to students');
+                                      toast.success(question.isVisible ? t('dashboard.questionHidden') : t('dashboard.questionVisible'));
                                     }}
                                     onDelete={() => handleDeleteClick(question)}
                                   />
@@ -692,10 +694,10 @@ const TeacherDashboard = () => {
       <Modal
         isOpen={deleteModal.isOpen}
         onClose={() => setDeleteModal({ isOpen: false, question: null })}
-        title="Delete Question"
+        title={t('dashboard.deleteQuestion')}
       >
         <p className="text-slate-600 font-semibold mb-8 leading-relaxed">
-          Are you sure you want to delete this question? This action cannot be undone and will be removed from the library forever.
+          {t('dashboard.deleteConfirm')}
         </p>
         <div className="flex gap-3">
           <Button 
@@ -703,14 +705,14 @@ const TeacherDashboard = () => {
             onClick={() => setDeleteModal({ isOpen: false, question: null })}
             className="flex-1"
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button 
             variant="danger" 
             onClick={confirmDelete}
             className="flex-1"
           >
-            Delete
+            {t('common.delete')}
           </Button>
         </div>
       </Modal>

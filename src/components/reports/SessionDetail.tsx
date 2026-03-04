@@ -81,12 +81,12 @@ const SessionDetail = ({ session, onBack, formatDuration, formatTime }: SessionD
           <table className="w-full">
             <thead>
               <tr className="border-b border-slate-100">
-                <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 px-5 py-3">Code</th>
-                <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 px-5 py-3">Name</th>
-                <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 px-5 py-3">Start Time</th>
-                <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 px-5 py-3">End Time</th>
-                <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 px-5 py-3">Duration</th>
-                <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 px-5 py-3">Status</th>
+                <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-5 py-3">Code</th>
+                <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-5 py-3">Name</th>
+                <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-5 py-3">Start Time</th>
+                <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-5 py-3">End Time</th>
+                <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-5 py-3">Duration</th>
+                <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-5 py-3">Status</th>
               </tr>
             </thead>
             <tbody>

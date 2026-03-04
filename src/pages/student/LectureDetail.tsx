@@ -217,7 +217,7 @@ const LectureDetail = () => {
 
             {/* CTA Section */}
             <div className="bg-white p-5 sm:p-6 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="text-center sm:text-left">
+              <div className="text-center sm:text-start">
                 <h3 className="text-base font-semibold text-slate-900 mb-1">Need help?</h3>
                 <p className="text-sm text-slate-500">Start a discussion in the Q&A section.</p>
               </div>

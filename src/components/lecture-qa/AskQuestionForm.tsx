@@ -75,7 +75,7 @@ const AskQuestionForm = ({
                   <button
                     type="button"
                     onClick={() => onRemoveImage(idx)}
-                    className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center hover:bg-rose-600 transition-colors shadow-sm"
+                    className="absolute -top-1.5 -end-1.5 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center hover:bg-rose-600 transition-colors shadow-sm"
                   >
                     <X size={10} />
                   </button>

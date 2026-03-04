@@ -12,13 +12,13 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className={`space-y-1.5 ${containerClassName}`}>
         {label && (
-          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block ml-1">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block ms-1">
             {label}
           </label>
         )}
         <div className="relative group">
           {icon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors pointer-events-none">
+            <div className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors pointer-events-none">
               {icon}
             </div>
           )}
@@ -30,15 +30,15 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
               appearance-none cursor-pointer transition-all
               focus:border-primary-500 focus:ring-4 focus:ring-primary-50/50
               hover:border-slate-200
-              ${icon ? 'pl-10' : 'px-4'} 
-              pr-10 py-2.5
+              ${icon ? 'ps-10' : 'px-4'} 
+              pe-10 py-2.5
               ${className}
             `}
             {...props}
           >
             {children}
           </select>
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-slate-600 transition-colors">
+          <div className="absolute end-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-slate-600 transition-colors">
             <ChevronDown size={14} />
           </div>
         </div>

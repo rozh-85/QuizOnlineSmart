@@ -2,23 +2,26 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, ShieldCheck, ArrowRight } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { Button, Card, Input } from '../../components/ui';
+import LanguageSwitcher from '../../components/LanguageSwitcher';
 
 const TeacherLogin = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     // Simple prototype password check
     if (password === 'admin123') {
       localStorage.setItem('teacher_auth', 'true');
-      toast.success('Administrative session authorized');
+      toast.success(t('auth.sessionAuthorized'));
       navigate('/admin');
     } else {
-      setError('Invalid Access Key');
-      toast.error('Access Denied');
+      setError(t('auth.invalidAccessKey'));
+      toast.error(t('auth.accessDenied'));
     }
   };
 
@@ -29,15 +32,15 @@ const TeacherLogin = () => {
           <div className="w-16 h-16 rounded-2xl bg-primary-50 text-primary-600 flex items-center justify-center mx-auto mb-6 shadow-sm">
             <ShieldCheck size={32} />
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Teacher Access.</h1>
-          <p className="text-slate-500 font-medium mt-2">Enter your secure key to proceed.</p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">{t('auth.teacherAccess')}</h1>
+          <p className="text-slate-500 font-medium mt-2">{t('auth.enterSecureKey')}</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="relative group">
             <Input
               type="password"
-              placeholder="Access Key"
+              placeholder={t('auth.accessKey')}
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
@@ -55,21 +58,24 @@ const TeacherLogin = () => {
           )}
 
           <Button type="submit" size="lg" className="w-full h-14 shadow-lg shadow-primary-200">
-            Authorize Account
+            {t('auth.authorizeAccount')}
             <ArrowRight size={20} className="ml-2" />
           </Button>
         </form>
 
         <p className="text-center text-[10px] font-black uppercase tracking-widest text-slate-300 mt-10">
-          EduPulse Admin Terminal v1.0
+          {t('auth.adminTerminal')}
         </p>
       </Card>
       
+      <div className="mt-6 flex justify-center">
+        <LanguageSwitcher variant="full" />
+      </div>
       <button 
         onClick={() => navigate('/')}
-        className="mt-8 flex items-center gap-2 text-slate-400 hover:text-slate-600 mx-auto transition-colors text-xs font-bold uppercase tracking-widest"
+        className="mt-4 flex items-center gap-2 text-slate-400 hover:text-slate-600 mx-auto transition-colors text-xs font-bold uppercase tracking-widest"
       >
-        Return to Learning
+        {t('auth.returnToLearning')}
       </button>
     </div>
   );

@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useSearchParams, Navigate } from 'react-router-dom';
 import { Play, BookOpen, ArrowLeft, ArrowUp } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Button, Card } from '../../components/ui';
 import MaterialsView from '../../components/MaterialsView';
 import LectureQA from '../../components/LectureQA';
 import { useQuiz } from '../../context/QuizContext';
 
 const QuizStart = () => {
+  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const lectureId = searchParams.get('lectureId');
   const sectionName = searchParams.get('section');
@@ -89,7 +91,7 @@ const QuizStart = () => {
           )}
           
           <span className="text-xs text-slate-400">
-            {sectionName ? 'Topic Module' : 'Chapter Overview'}
+            {sectionName ? t('student.topicModule') : t('student.chapterOverview')}
           </span>
         </div>
 
@@ -106,7 +108,7 @@ const QuizStart = () => {
                 </h1>
                 {sectionName && (
                   <div className="text-xs text-slate-500 mb-1">
-                    Part of: <span className="text-primary-600 font-medium">{lecture.title}</span>
+                    {t('student.partOf')} <span className="text-primary-600 font-medium">{lecture.title}</span>
                   </div>
                 )}
                 {lecture.description && (
@@ -117,29 +119,29 @@ const QuizStart = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-6 flex-shrink-0 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6 flex-shrink-0 w-full sm:w-auto">
               {/* Stats */}
-              <div className="flex items-center gap-5">
+              <div className="flex items-center justify-center gap-5">
                 <div className="text-center">
                   <div className="text-lg font-bold text-slate-900 leading-none">
                     {sectionName ? questions.length : getQuestionsByLecture(lectureId).filter(q => q.isVisible !== false).length}
                   </div>
-                  <div className="text-xs text-slate-500 mt-0.5">Questions</div>
+                  <div className="text-xs text-slate-500 mt-0.5">{t('stats.questions')}</div>
                 </div>
                 <div className="w-px h-7 bg-slate-200" />
                 <div className="text-center">
                   <div className="text-lg font-bold text-slate-900 leading-none">
                     ~{Math.ceil((sectionName ? questions.length : getQuestionsByLecture(lectureId).filter(q => q.isVisible !== false).length) * 0.5)}m
                   </div>
-                  <div className="text-xs text-slate-500 mt-0.5">Duration</div>
+                  <div className="text-xs text-slate-500 mt-0.5">{t('stats.duration')}</div>
                 </div>
               </div>
 
               {/* Primary Action Button */}
-              <Link to={`/quiz/question?lectureId=${lectureId}${sectionName ? `&section=${encodeURIComponent(sectionName)}` : ''}`}>
-                <Button size="lg" className="h-11 px-6 text-sm font-semibold rounded-lg shadow-sm">
-                  <Play size={15} fill="currentColor" className="mr-1.5" />
-                  Start Quiz
+              <Link to={`/quiz/question?lectureId=${lectureId}${sectionName ? `&section=${encodeURIComponent(sectionName)}` : ''}`} className="w-full sm:w-auto">
+                <Button size="lg" className="h-11 px-6 text-sm font-semibold rounded-lg shadow-sm w-full sm:w-auto whitespace-nowrap">
+                  <Play size={15} fill="currentColor" className="me-1.5 flex-shrink-0" />
+                  {t('student.startQuiz')}
                 </Button>
               </Link>
             </div>
@@ -149,7 +151,7 @@ const QuizStart = () => {
         {/* Sections Grid */}
         {!sectionName && lecture.sections && lecture.sections.length > 0 && (
           <div className="space-y-3">
-            <h2 className="text-sm font-semibold text-slate-900 px-1">Sections</h2>
+            <h2 className="text-sm font-semibold text-slate-900 px-1">{t('student.sections')}</h2>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {lecture.sections.map((section, idx) => {
@@ -168,7 +170,7 @@ const QuizStart = () => {
                         </div>
                         <div>
                           <div className="text-sm font-medium text-slate-800 leading-tight">{section}</div>
-                          <div className="text-xs text-slate-400">{sectionCount} questions</div>
+                          <div className="text-xs text-slate-400">{t('student.questionsCount', { count: sectionCount })}</div>
                         </div>
                       </div>
                     </div>
@@ -192,7 +194,7 @@ const QuizStart = () => {
         {/* Empty State */}
         {questions.length === 0 && !sectionName && (
           <div className="p-10 text-center rounded-xl border border-dashed border-slate-200 bg-white">
-            <p className="text-sm text-slate-500">No questions found for this module.</p>
+            <p className="text-sm text-slate-500">{t('student.noQuestions')}</p>
           </div>
         )}
       </div>
