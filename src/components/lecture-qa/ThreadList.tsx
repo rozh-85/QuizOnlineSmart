@@ -21,14 +21,13 @@ const getSnippet = (text: string, length = 80) => {
 interface ThreadListProps {
   list: LectureQuestion[];
   isMentor: boolean;
-  compact: boolean;
   selectedQuestionId: string | null;
   onSelectThread: (id: string) => void;
   onMarkAsRead: (q: LectureQuestion) => void;
 }
 
 const ThreadList = ({
-  list, isMentor, compact, selectedQuestionId,
+  list, isMentor, selectedQuestionId,
   onSelectThread, onMarkAsRead,
 }: ThreadListProps) => {
   return (

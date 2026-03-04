@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Sparkles, Upload, Save, Trash2, Check, Key, Loader2, X, FileUp } from 'lucide-react';
+import { Sparkles, Save, Trash2, Check, Key, Loader2, X, FileUp } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Button, TextArea } from '../../components/ui';
 import { useQuiz } from '../../context/QuizContext';

@@ -114,7 +114,6 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
           <ThreadList
             list={list}
             isMentor={qa.isMentor}
-            compact={compact}
             selectedQuestionId={qa.selectedQuestionId}
             onSelectThread={qa.setSelectedQuestionId}
             onMarkAsRead={(q) => {

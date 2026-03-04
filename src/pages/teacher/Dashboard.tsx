@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, HelpCircle, ChevronDown, ChevronRight, Layers, BarChart3 as BarChart, Users, BookOpen, GraduationCap, FileText, Eye, EyeOff, Sparkles, ShieldCheck, ClipboardCheck, Megaphone, ArrowRight, Gauge } from 'lucide-react';
+import { Plus, HelpCircle, ChevronDown, ChevronRight, Layers, BarChart3 as BarChart, Users, BookOpen, GraduationCap, FileText, Eye, EyeOff, Sparkles, ShieldCheck, ClipboardCheck, Megaphone, ArrowRight, Gauge, X, Maximize2, Minimize2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Button, Modal, SearchInput, StatCard, EmptyState, Card } from '../../components/ui';
 import { useQuiz } from '../../context/QuizContext';
@@ -15,6 +15,7 @@ const TeacherDashboard = () => {
   const [classCount, setClassCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [expandedLectures, setExpandedLectures] = useState<Record<string, boolean>>({});
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [quickView, setQuickView] = useState<Record<string, boolean>>({});
@@ -45,6 +46,28 @@ const TeacherDashboard = () => {
     setExpandedLectures(prev => ({ ...prev, [lectureId]: !prev[lectureId] }));
   };
 
+  const expandAll = () => {
+    const allExpanded: Record<string, boolean> = {};
+    Object.keys(groupedQuestions).forEach(lectureId => {
+      allExpanded[lectureId] = true;
+    });
+    setExpandedLectures(allExpanded);
+  };
+
+  const collapseAll = () => {
+    setExpandedLectures({});
+  };
+
+  const toggleFilter = (filter: string) => {
+    if (filter === 'all') {
+      setActiveFilters([]);
+    } else {
+      setActiveFilters(prev => 
+        prev.includes(filter) ? prev.filter(f => f !== filter) : [...prev, filter]
+      );
+    }
+  };
+
   const toggleSection = (lectureId: string, sectionName: string) => {
     const key = `${lectureId}-${sectionName}`;
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
@@ -57,11 +80,25 @@ const TeacherDashboard = () => {
   const allQuestions = questions.filter(q => q.lectureId);
   const filteredQuestions = allQuestions.filter(q => {
     const searchLower = searchTerm.toLowerCase();
-    return (
+    const matchesSearch = 
       q.text.toLowerCase().includes(searchLower) ||
       q.explanation?.toLowerCase().includes(searchLower) ||
-      q.type.toLowerCase().includes(searchLower)
-    );
+      q.type.toLowerCase().includes(searchLower);
+    
+    if (!matchesSearch) return false;
+    if (activeFilters.length === 0) return true;
+
+    return activeFilters.every(filter => {
+      if (filter === 'easy' || filter === 'medium' || filter === 'hard') {
+        return q.difficulty === filter;
+      }
+      if (filter === 'mc') return q.type === 'multiple-choice';
+      if (filter === 'tf') return q.type === 'true-false';
+      if (filter === 'blank') return q.type === 'blank';
+      if (filter === 'visible') return q.isVisible !== false;
+      if (filter === 'hidden') return q.isVisible === false;
+      return true;
+    });
   });
 
   const getGreeting = () => {
@@ -130,7 +167,7 @@ const TeacherDashboard = () => {
       <Card className="bg-gradient-to-br from-indigo-50 via-white to-purple-50 border-indigo-100 shadow-lg">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-black text-slate-900 mb-1">{getGreeting()} 👋</h1>
+            <h1 className="text-3xl font-black text-slate-900 mb-1">{getGreeting()}</h1>
             <p className="text-sm font-medium text-slate-500">{getFormattedDate()}</p>
           </div>
           <Link to="/admin/new">
@@ -346,20 +383,36 @@ const TeacherDashboard = () => {
 
       {/* Question Bank Section */}
       <div>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
           <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
             <HelpCircle size={20} className="text-indigo-600" />
             Question Bank
+            <div className="px-2 py-0.5 rounded-lg bg-indigo-50 border border-indigo-100">
+              <span className="text-xs font-black text-indigo-600">
+                {allQuestions.length}
+              </span>
+            </div>
           </h2>
-          <div className="px-3 py-1 rounded-lg bg-indigo-50 border border-indigo-100">
-            <span className="text-xs font-black text-indigo-600 uppercase tracking-wider">
-              {allQuestions.length} Total
-            </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={expandAll}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 transition-all"
+            >
+              <Maximize2 size={12} />
+              Expand All
+            </button>
+            <button
+              onClick={collapseAll}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-700 hover:bg-slate-50 border border-slate-200 transition-all"
+            >
+              <Minimize2 size={12} />
+              Collapse All
+            </button>
           </div>
         </div>
 
         {/* Search */}
-        <div className="mb-6 max-w-xl">
+        <div className="mb-4">
           <SearchInput
             placeholder="Search by keyword, type, or explanation..."
             value={searchTerm}
@@ -367,27 +420,153 @@ const TeacherDashboard = () => {
           />
         </div>
 
+        {/* Filter Chips */}
+        <div className="flex flex-wrap items-center gap-2 mb-6">
+          <button
+            onClick={() => toggleFilter('all')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+              activeFilters.length === 0
+                ? 'bg-indigo-600 text-white border border-indigo-600'
+                : 'bg-white text-slate-600 border border-slate-200 hover:border-indigo-200 hover:text-indigo-600'
+            }`}
+          >
+            All
+          </button>
+          <div className="w-px h-4 bg-slate-200" />
+          <button
+            onClick={() => toggleFilter('easy')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+              activeFilters.includes('easy')
+                ? 'bg-emerald-600 text-white border border-emerald-600'
+                : 'bg-white text-slate-600 border border-slate-200 hover:border-emerald-200 hover:text-emerald-600'
+            }`}
+          >
+            Easy
+          </button>
+          <button
+            onClick={() => toggleFilter('medium')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+              activeFilters.includes('medium')
+                ? 'bg-amber-600 text-white border border-amber-600'
+                : 'bg-white text-slate-600 border border-slate-200 hover:border-amber-200 hover:text-amber-600'
+            }`}
+          >
+            Medium
+          </button>
+          <button
+            onClick={() => toggleFilter('hard')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+              activeFilters.includes('hard')
+                ? 'bg-rose-600 text-white border border-rose-600'
+                : 'bg-white text-slate-600 border border-slate-200 hover:border-rose-200 hover:text-rose-600'
+            }`}
+          >
+            Hard
+          </button>
+          <div className="w-px h-4 bg-slate-200" />
+          <button
+            onClick={() => toggleFilter('mc')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+              activeFilters.includes('mc')
+                ? 'bg-indigo-600 text-white border border-indigo-600'
+                : 'bg-white text-slate-600 border border-slate-200 hover:border-indigo-200 hover:text-indigo-600'
+            }`}
+          >
+            MC
+          </button>
+          <button
+            onClick={() => toggleFilter('tf')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+              activeFilters.includes('tf')
+                ? 'bg-purple-600 text-white border border-purple-600'
+                : 'bg-white text-slate-600 border border-slate-200 hover:border-purple-200 hover:text-purple-600'
+            }`}
+          >
+            T/F
+          </button>
+          <button
+            onClick={() => toggleFilter('blank')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+              activeFilters.includes('blank')
+                ? 'bg-cyan-600 text-white border border-cyan-600'
+                : 'bg-white text-slate-600 border border-slate-200 hover:border-cyan-200 hover:text-cyan-600'
+            }`}
+          >
+            Blank
+          </button>
+          <div className="w-px h-4 bg-slate-200" />
+          <button
+            onClick={() => toggleFilter('visible')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1 ${
+              activeFilters.includes('visible')
+                ? 'bg-emerald-600 text-white border border-emerald-600'
+                : 'bg-white text-slate-600 border border-slate-200 hover:border-emerald-200 hover:text-emerald-600'
+            }`}
+          >
+            <Eye size={10} />
+            Visible
+          </button>
+          <button
+            onClick={() => toggleFilter('hidden')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1 ${
+              activeFilters.includes('hidden')
+                ? 'bg-slate-600 text-white border border-slate-600'
+                : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300 hover:text-slate-700'
+            }`}
+          >
+            <EyeOff size={10} />
+            Hidden
+          </button>
+          {activeFilters.length > 0 && (
+            <>
+              <div className="w-px h-4 bg-slate-200" />
+              <button
+                onClick={() => setActiveFilters([])}
+                className="px-2 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-all flex items-center gap-1"
+              >
+                <X size={12} />
+                Clear
+              </button>
+            </>
+          )}
+        </div>
+
         {/* Grouped Questions List */}
         {filteredQuestions.length === 0 ? (
           <EmptyState
             icon={<HelpCircle size={48} />}
-            title="No Matches Found."
-            subtitle="Try adjusting your search or add a new question."
+            title="No Matches Found"
+            subtitle={activeFilters.length > 0 ? `No questions match your filters: ${activeFilters.join(', ')}` : "Try adjusting your search or add a new question."}
             action={
-              <Link to="/admin/new">
-                <Button size="lg">
-                  <Plus size={20} />
-                  Add Question
+              activeFilters.length > 0 ? (
+                <Button onClick={() => setActiveFilters([])} size="lg">
+                  <X size={18} />
+                  Clear Filters
                 </Button>
-              </Link>
+              ) : (
+                <Link to="/admin/new">
+                  <Button size="lg">
+                    <Plus size={20} />
+                    Add Question
+                  </Button>
+                </Link>
+              )
             }
           />
         ) : (
-          <div className="space-y-4">
-            {Object.entries(groupedQuestions).map(([lectureId, sections]) => {
+          <div className="space-y-3">
+            {Object.entries(groupedQuestions).map(([lectureId, sections], idx) => {
             const lecture = lectures.find(l => l.id === lectureId);
             const isExpanded = searchTerm ? true : expandedLectures[lectureId];
-            const totalInLecture = Object.values(sections).flat().length;
+            const questionsInLecture = Object.values(sections).flat();
+            const totalInLecture = questionsInLecture.length;
+            const visibleInLecture = questionsInLecture.filter(q => q.isVisible !== false).length;
+            const easyInLecture = questionsInLecture.filter(q => q.difficulty === 'easy').length;
+            const mediumInLecture = questionsInLecture.filter(q => q.difficulty === 'medium').length;
+            const hardInLecture = questionsInLecture.filter(q => q.difficulty === 'hard').length;
+            
+            const colors = ['indigo', 'emerald', 'purple', 'amber', 'rose', 'cyan'];
+            const color = colors[idx % colors.length];
 
               if (!lecture) return null;
 
@@ -395,29 +574,69 @@ const TeacherDashboard = () => {
                 <div key={lectureId} className="space-y-2">
                   <button 
                     onClick={() => toggleLecture(lectureId)}
-                    className={`w-full flex items-center justify-between p-3 rounded-xl transition-all border ${
-                      isExpanded ? 'bg-slate-50 border-slate-200 ring-2 ring-primary-50' : 'bg-white border-slate-100 hover:border-slate-200'
-                    }`}
+                    className={`w-full flex items-start justify-between p-4 rounded-xl transition-all border border-slate-200 hover:border-${color}-200 hover:shadow-md group ${
+                      isExpanded ? `bg-slate-50 ring-2 ring-${color}-100 border-${color}-200` : 'bg-white'
+                    } border-l-4 border-l-${color}-500`}
+                    style={{ borderLeftColor: `var(--color-${color}-500)` }}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-                        isExpanded ? 'bg-primary-600 text-white' : 'bg-slate-50 text-slate-400'
-                      }`}>
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all flex-shrink-0 ${
+                        isExpanded ? `bg-${color}-600 text-white` : `bg-${color}-50 text-${color}-600 group-hover:bg-${color}-100`
+                      }`}
+                        style={{
+                          backgroundColor: isExpanded ? `var(--color-${color}-600)` : `var(--color-${color}-50)`,
+                          color: isExpanded ? 'white' : `var(--color-${color}-600)`
+                        }}
+                      >
                         {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
                       </div>
-                      <div className="text-left">
-                        <h4 className="text-sm font-black text-slate-900 tracking-tight">
-                          {lecture.title}
-                        </h4>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-0.5">
-                          {totalInLecture} {totalInLecture === 1 ? 'Question' : 'Questions'} available
-                        </p>
+                      <div className="text-left flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h4 className="text-sm font-black text-slate-900 tracking-tight">
+                            {lecture.title}
+                          </h4>
+                          <div className="px-2 py-0.5 rounded-full text-[10px] font-black" 
+                            style={{ backgroundColor: `var(--color-${color}-100)`, color: `var(--color-${color}-700)` }}>
+                            {totalInLecture}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 text-[10px] font-bold text-slate-500">
+                          <div className="flex items-center gap-1">
+                            <Eye size={10} className="text-emerald-500" />
+                            <span>{visibleInLecture}/{totalInLecture} visible</span>
+                          </div>
+                          <div className="flex-1 max-w-[200px]">
+                            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden flex">
+                              {easyInLecture > 0 && (
+                                <div 
+                                  className="bg-emerald-500" 
+                                  style={{ width: `${(easyInLecture / totalInLecture) * 100}%` }}
+                                  title={`${easyInLecture} easy`}
+                                />
+                              )}
+                              {mediumInLecture > 0 && (
+                                <div 
+                                  className="bg-amber-500" 
+                                  style={{ width: `${(mediumInLecture / totalInLecture) * 100}%` }}
+                                  title={`${mediumInLecture} medium`}
+                                />
+                              )}
+                              {hardInLecture > 0 && (
+                                <div 
+                                  className="bg-rose-500" 
+                                  style={{ width: `${(hardInLecture / totalInLecture) * 100}%` }}
+                                  title={`${hardInLecture} hard`}
+                                />
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </button>
 
                   {isExpanded && (
-                    <div className="pl-4 sm:pl-8 space-y-3 animate-in fade-in slide-in-from-left-2">
+                    <div className="pl-4 sm:pl-12 space-y-3 animate-in fade-in slide-in-from-left-2">
                       {Object.entries(sections).map(([sectionId, qList]) => {
                         const isSectionExpanded = searchTerm ? true : expandedSections[`${lectureId}-${sectionId}`];
                         
@@ -425,19 +644,22 @@ const TeacherDashboard = () => {
                           <div key={sectionId} className="space-y-2">
                             <button 
                               onClick={() => toggleSection(lectureId, sectionId)}
-                              className="flex items-center gap-2 py-1 px-2 hover:bg-slate-50 rounded-lg transition-colors group"
+                              className="flex items-center gap-2 py-1.5 px-2 hover:bg-slate-50 rounded-lg transition-colors group"
                             >
-                              {isSectionExpanded ? <ChevronDown size={14} className="text-slate-400" /> : <ChevronRight size={14} className="text-slate-400" />}
-                              <span className="text-[11px] font-black uppercase tracking-widest text-slate-500 group-hover:text-primary-600">
+                              <div className="w-2 h-2 rounded-full transition-colors" 
+                                style={{ backgroundColor: `var(--color-${color}-400)` }} />
+                              <span className="text-[11px] font-black uppercase tracking-widest text-slate-600 group-hover:text-slate-900">
                                 {sectionId}
                               </span>
-                              <span className="text-[10px] bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded-full">
+                              <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full font-bold">
                                 {qList.length}
                               </span>
+                              {isSectionExpanded ? <ChevronDown size={12} className="text-slate-400 ml-auto" /> : <ChevronRight size={12} className="text-slate-400 ml-auto" />}
                             </button>
 
                             {isSectionExpanded && (
-                              <div className="space-y-3 pl-3 border-l-[3px] border-slate-100 ml-1.5 animate-in fade-in slide-in-from-top-1">
+                              <div className="space-y-2 pl-4 border-l-2 ml-1 animate-in fade-in slide-in-from-top-1" 
+                                style={{ borderColor: `var(--color-${color}-200)` }}>
                                 {qList.map((question, idx) => (
                                   <QuestionCard
                                     key={question.id}
