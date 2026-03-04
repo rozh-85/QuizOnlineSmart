@@ -169,7 +169,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
         <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-         
+          <div className="h-16 px-4 sm:px-6 lg:px-8 flex items-center justify-between">
             <button
               onClick={() => setSidebarOpen(true)}
               className="lg:hidden text-slate-600 hover:text-slate-900 p-2 hover:bg-slate-50 rounded-lg transition-colors relative"
@@ -179,7 +179,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 <div className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white animate-pulse" />
               )}
             </button>
-          
+            <div className="hidden lg:flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">System Online</span>
+            </div>
+          </div>
         </header>
 
         {/* Page Content */}
