@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Card } from '../ui';
 import { TYPE_LABELS, TYPE_ORDER, TYPE_COLORS } from '../../constants/examBuilder';
 import type { Question } from '../../types';
@@ -8,6 +9,7 @@ interface SelectionSummaryProps {
 }
 
 const SelectionSummary = ({ selectedIds, questions }: SelectionSummaryProps) => {
+  const { t } = useTranslation();
   if (selectedIds.size === 0) return null;
 
   const selectedQuestions = questions.filter(q => selectedIds.has(q.id));
@@ -19,7 +21,7 @@ const SelectionSummary = ({ selectedIds, questions }: SelectionSummaryProps) => 
   return (
     <Card className="!p-4 shadow-sm border border-primary-100 bg-primary-50/30 mb-4">
       <div className="text-[10px] font-black uppercase tracking-widest text-primary-600 mb-2">
-        Selection ({selectedIds.size})
+        {t('examBuilder.selection')} ({selectedIds.size})
       </div>
       <div className="flex flex-wrap gap-1.5">
         {TYPE_ORDER.map(t => {

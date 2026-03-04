@@ -1,4 +1,5 @@
 import { X, AlertTriangle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface StopSessionModalProps {
   onConfirm: () => void;
@@ -7,6 +8,7 @@ interface StopSessionModalProps {
 }
 
 const StopSessionModal = ({ onConfirm, onCancel, studentCount }: StopSessionModalProps) => {
+  const { t } = useTranslation();
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onCancel} />
@@ -22,13 +24,13 @@ const StopSessionModal = ({ onConfirm, onCancel, studentCount }: StopSessionModa
           <div className="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center text-rose-600 mb-4">
             <AlertTriangle size={28} />
           </div>
-          <h3 className="text-lg font-black text-slate-900 tracking-tight mb-1">Stop Session?</h3>
+          <h3 className="text-lg font-black text-slate-900 tracking-tight mb-1">{t('attendance.stopSessionQuestion')}</h3>
           <p className="text-sm text-slate-500 font-medium mb-1">
-            All student timers will be finalized.
+            {t('attendance.allTimersFinalized')}
           </p>
           {studentCount > 0 && (
             <p className="text-xs text-slate-400">
-              {studentCount} student{studentCount !== 1 ? 's' : ''} currently present
+              {t(studentCount !== 1 ? 'attendance.studentsCurrentlyPresent_plural' : 'attendance.studentsCurrentlyPresent', { count: studentCount })}
             </p>
           )}
         </div>
@@ -38,13 +40,13 @@ const StopSessionModal = ({ onConfirm, onCancel, studentCount }: StopSessionModa
             onClick={onCancel}
             className="flex-1 py-2.5 border border-slate-200 text-slate-700 font-bold rounded-xl text-sm hover:bg-slate-50 transition-all active:scale-95"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             onClick={onConfirm}
             className="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-sm shadow-md shadow-rose-200 transition-all active:scale-95"
           >
-            Stop Session
+            {t('attendance.stopSession')}
           </button>
         </div>
       </div>

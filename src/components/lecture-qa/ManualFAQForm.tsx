@@ -69,7 +69,7 @@ const ManualFAQForm = ({
         <div className="flex items-center justify-between pt-2">
           <label className="flex items-center gap-3 cursor-pointer">
             <div className={`w-10 h-6 rounded-full transition-colors flex items-center px-1 ${manualData.publish ? 'bg-indigo-600' : 'bg-slate-200'}`}>
-              <div className={`w-4 h-4 bg-white rounded-full transition-transform ${manualData.publish ? 'translate-x-4' : 'translate-x-0'}`} />
+              <div className={`w-4 h-4 bg-white rounded-full transition-transform ${manualData.publish ? 'ltr:translate-x-4 rtl:-translate-x-4' : 'translate-x-0'}`} />
             </div>
             <input
               type="checkbox"

@@ -8,6 +8,7 @@ import {
   Trash2,
   Unlock,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { studentApi } from '../../api/studentApi';
 import { classApi } from '../../api/classApi';
 import toast from 'react-hot-toast';
@@ -22,6 +23,7 @@ import {
 } from '../../components/student-manager';
 
 const StudentManager = () => {
+  const { t } = useTranslation();
   const [students, setStudents] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,7 +64,7 @@ const StudentManager = () => {
       setStudents(studentData);
     } catch (error) {
       console.error('Fetch error:', error);
-      toast.error('Failed to load data');
+      toast.error(t('studentManager.failedToLoadData'));
     } finally {
       setLoading(false);
     }
@@ -70,7 +72,7 @@ const StudentManager = () => {
 
   const handleCreateStudent = async (data: { fullName: string; serialId: string; pin: string; classId: string }) => {
     if (!data.fullName || !data.serialId || !data.pin) {
-      toast.error('Required fields missing');
+      toast.error(t('studentManager.requiredFieldsMissing'));
       return;
     }
     try {
@@ -86,9 +88,9 @@ const StudentManager = () => {
     } catch (error: any) {
       console.error('Creation failed:', error);
       if (error.message?.includes('rate limit')) {
-        toast.error('Supabase Rate Limit! Go to Dashboard > Auth > Settings > Rate Limits and increase the Signups limit.', { duration: 6000 });
+        toast.error(t('studentManager.rateLimitError'), { duration: 6000 });
       } else {
-        toast.error(error.message || 'Creation failed');
+        toast.error(error.message || t('studentManager.creationFailed'));
       }
       throw error;
     }
@@ -100,29 +102,29 @@ const StudentManager = () => {
       setLoading(true);
       setIsResetDeviceOpen(false);
       await studentApi.resetDeviceLock(studentToReset.id);
-      toast.success('Device lock reset successfully');
+      toast.success(t('studentManager.deviceLockReset'));
       setStudentToReset(null);
       fetchData();
     } catch (error) {
       console.error('Reset device error:', error);
-      toast.error('Failed to reset device lock');
+      toast.error(t('studentManager.failedToResetDevice'));
     } finally {
       setLoading(false);
     }
   };
 
   const handleChangePassword = async (studentId: string, newPassword: string) => {
-    if (!newPassword) { toast.error('Please enter a new password'); return; }
-    if (newPassword.length < 4) { toast.error('Password must be at least 4 characters'); return; }
+    if (!newPassword) { toast.error(t('studentManager.pleaseEnterPassword')); return; }
+    if (newPassword.length < 4) { toast.error(t('studentManager.passwordMinLength')); return; }
     try {
       await studentApi.changeStudentPassword(studentId, newPassword);
-      toast.success(`Password updated for ${studentToChangePassword?.full_name}`);
+      toast.success(t('studentManager.passwordUpdatedFor', { name: studentToChangePassword?.full_name }));
       setIsPasswordModalOpen(false);
       setStudentToChangePassword(null);
       fetchData();
     } catch (error: any) {
       console.error('Password change error:', error);
-      toast.error(error.message || 'Failed to change password');
+      toast.error(error.message || t('studentManager.failedToChangePassword'));
       throw error;
     }
   };
@@ -133,12 +135,12 @@ const StudentManager = () => {
       setLoading(true);
       setIsDeleteConfirmOpen(false);
       await studentApi.deleteStudent(studentToDelete.id);
-      toast.success('Student deleted successfully');
+      toast.success(t('studentManager.studentDeleted'));
       setStudentToDelete(null);
       fetchData();
     } catch (error) {
       console.error('Delete error:', error);
-      toast.error('Failed to delete student');
+      toast.error(t('studentManager.failedToDeleteStudent'));
     } finally {
       setLoading(false);
     }
@@ -148,24 +150,24 @@ const StudentManager = () => {
     if (!selectedStudent) return;
     try {
       await classApi.addStudentToClass(classId, selectedStudent.id);
-      toast.success('Enrolled');
+      toast.success(t('studentManager.enrolled'));
       setIsAssignModalOpen(false);
       fetchData();
     } catch (error: any) {
-      toast.error(error.code === '23505' ? 'Already enrolled' : 'Failed to enroll');
+      toast.error(error.code === '23505' ? t('studentManager.alreadyEnrolled') : t('studentManager.failedToEnroll'));
     }
   };
 
   const handleRemoveFromClass = async (studentId: string) => {
     if (selectedClassId === 'all') return;
-    if (!window.confirm('Remove student from this class?')) return;
+    if (!window.confirm(t('studentManager.removeFromClassConfirm'))) return;
     try {
       setLoading(true);
       await classApi.removeStudentFromClass(selectedClassId, studentId);
-      toast.success('Removed from class');
+      toast.success(t('studentManager.removedFromClass'));
       fetchData();
     } catch (error) {
-      toast.error('Failed to remove');
+      toast.error(t('studentManager.failedToRemove'));
     } finally {
       setLoading(false);
     }
@@ -183,37 +185,37 @@ const StudentManager = () => {
   return (
     <div className="animate-fade-in w-full">
       <PageHeader
-        title="Students."
-        badge="Directory"
-        subtitle="Manage student accounts and access control"
+        title={t('studentManager.title')}
+        badge={t('studentManager.badge')}
+        subtitle={t('studentManager.subtitleText')}
         action={
           <button
             onClick={() => setIsModalOpen(true)}
             className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-md shadow-primary-200 transition-all active:scale-95 text-sm"
           >
             <Plus size={18} />
-            New Student
+            {t('studentManager.newStudent')}
           </button>
         }
       />
 
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <SearchInput containerClassName="flex-1 max-w-sm" placeholder="Search students..." value={searchQuery} onChange={setSearchQuery} />
+        <SearchInput containerClassName="flex-1 max-w-sm" placeholder={t('studentManager.searchStudents')} value={searchQuery} onChange={setSearchQuery} />
         <Select containerClassName="flex-1 max-w-xs" icon={<Users size={16} />} value={selectedClassId} onChange={(e) => setSelectedClassId(e.target.value)}>
-          <option value="all">All Students</option>
+          <option value="all">{t('studentManager.allStudents')}</option>
           {classes.map(c => (<option key={c.id} value={c.id}>{c.name}</option>))}
         </Select>
         <Select containerClassName="flex-1 max-w-[180px]" icon={<Smartphone size={16} />} value={deviceFilter} onChange={(e) => setDeviceFilter(e.target.value as any)}>
-          <option value="all">All Devices</option>
-          <option value="locked">Locked Only</option>
-          <option value="unlocked">Unlocked Only</option>
+          <option value="all">{t('studentManager.allDevices')}</option>
+          <option value="locked">{t('studentManager.lockedOnly')}</option>
+          <option value="unlocked">{t('studentManager.unlockedOnly')}</option>
         </Select>
       </div>
 
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <StatCard icon={<User size={14} className="text-blue-500" />} value={students.length} label={selectedClassId === 'all' ? 'Total Students' : 'In Class'} color="bg-blue-50" />
-        <StatCard icon={<Smartphone size={14} className="text-rose-500" />} value={students.filter(s => s.device_lock_active).length} label="Locked Devices" color="bg-rose-50" />
-        <StatCard icon={<ShieldCheck size={14} className="text-emerald-500" />} value={classes.length} label="Classes" color="bg-emerald-50" />
+        <StatCard icon={<User size={14} className="text-blue-500" />} value={students.length} label={selectedClassId === 'all' ? t('studentManager.totalStudents') : t('studentManager.inClass')} color="bg-blue-50" />
+        <StatCard icon={<Smartphone size={14} className="text-rose-500" />} value={students.filter(s => s.device_lock_active).length} label={t('studentManager.lockedDevices')} color="bg-rose-50" />
+        <StatCard icon={<ShieldCheck size={14} className="text-emerald-500" />} value={classes.length} label={t('studentManager.classes')} color="bg-emerald-50" />
       </div>
 
       <DataTable
@@ -226,7 +228,7 @@ const StudentManager = () => {
         loading={loading && students.length === 0}
         isEmpty={filteredStudents.length === 0}
         emptyIcon={<Users size={28} />}
-        emptyText="No students found"
+        emptyText={t('studentManager.noStudentsFound')}
         skeletonRows={4}
       >
         {filteredStudents.map((s) => (
@@ -270,9 +272,9 @@ const StudentManager = () => {
         onConfirm={confirmResetDevice}
         icon={<Unlock size={32} />}
         iconBg="bg-amber-50 text-amber-600"
-        title="Reset Device Lock?"
-        message={<>This will unlock the device for <span className="text-slate-900 font-black">{studentToReset?.full_name}</span> and allow them to log in from a different device.</>}
-        confirmLabel="Yes, Reset Lock"
+        title={t('studentManager.resetDeviceLock')}
+        message={<>{t('studentManager.resetDeviceMessage')} <span className="text-slate-900 font-black">{studentToReset?.full_name}</span> {t('studentManager.resetDeviceMessage2')}</>}
+        confirmLabel={t('studentManager.yesResetLock')}
         confirmColor="amber"
       />
 
@@ -282,10 +284,10 @@ const StudentManager = () => {
         onConfirm={confirmDelete}
         icon={<Trash2 size={32} />}
         iconBg="bg-rose-50 text-rose-500"
-        title="Are you sure?"
-        message={<>You are about to delete <span className="text-slate-900 font-black">{studentToDelete?.full_name}</span>. This action cannot be undone and all data will be lost.</>}
-        confirmLabel="Yes, Delete Student"
-        cancelLabel="No, Keep it"
+        title={t('studentManager.areYouSure')}
+        message={<>{t('studentManager.aboutToDelete')} <span className="text-slate-900 font-black">{studentToDelete?.full_name}</span>. {t('studentManager.cannotBeUndone')}</>}
+        confirmLabel={t('studentManager.yesDeleteStudent')}
+        cancelLabel={t('studentManager.noKeepIt')}
         confirmColor="rose"
       />
     </div>

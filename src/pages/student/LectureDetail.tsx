@@ -8,12 +8,14 @@ import {
   MessageCircle,
   Clock
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { lectureApi } from '../../api/lectureApi';
 import { materialApi } from '../../api/materialApi';
 import LectureQA from '../../components/LectureQA';
 import toast from 'react-hot-toast';
 
 const LectureDetail = () => {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -70,7 +72,7 @@ const LectureDetail = () => {
       setMaterials(materialData);
     } catch (error) {
       console.error('Fetch lecture error:', error);
-      toast.error('Failed to load lecture details');
+      toast.error(t('lectureDetail.failedToLoad'));
       navigate('/dashboard');
     } finally {
       setLoading(false);
@@ -119,7 +121,7 @@ const LectureDetail = () => {
                 {lecture?.title}
               </h1>
               <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                <BookOpen size={11} /> Chapter {lecture?.order_index || 1}
+                <BookOpen size={11} /> {t('lectureDetail.chapter')} {lecture?.order_index || 1}
               </div>
             </div>
           </div>
@@ -131,7 +133,7 @@ const LectureDetail = () => {
                 activeTab === 'content' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
               }`}
             >
-              Content
+              {t('lectureDetail.content')}
             </button>
             <button
               onClick={() => setActiveTab('qa')}
@@ -139,7 +141,7 @@ const LectureDetail = () => {
                 activeTab === 'qa' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'
               }`}
             >
-              Q&A
+              {t('lectureDetail.qa')}
             </button>
           </div>
         </div>
@@ -155,9 +157,9 @@ const LectureDetail = () => {
                   <BookOpen size={18} />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900 mb-1">Lecture Overview</h2>
+                  <h2 className="text-lg font-bold text-slate-900 mb-1">{t('lectureDetail.lectureOverview')}</h2>
                   <p className="text-sm text-slate-500 leading-relaxed whitespace-pre-wrap">
-                    {lecture?.description || 'Learn and master this unit with comprehensive materials and support.'}
+                    {lecture?.description || t('lectureDetail.defaultDescription')}
                   </p>
                 </div>
               </div>
@@ -166,15 +168,15 @@ const LectureDetail = () => {
                 <div className="flex items-center gap-2.5">
                   <Clock size={15} className="text-slate-400" />
                   <div>
-                    <div className="text-xs text-slate-400">Estimate</div>
-                    <div className="text-sm font-semibold text-slate-700">45 mins</div>
+                    <div className="text-xs text-slate-400">{t('lectureDetail.estimate')}</div>
+                    <div className="text-sm font-semibold text-slate-700">{t('lectureDetail.estimateTime')}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2.5">
                   <FileText size={15} className="text-slate-400" />
                   <div>
-                    <div className="text-xs text-slate-400">Resources</div>
-                    <div className="text-sm font-semibold text-slate-700">{materials.length} materials</div>
+                    <div className="text-xs text-slate-400">{t('lectureDetail.resources')}</div>
+                    <div className="text-sm font-semibold text-slate-700">{materials.length} {t('lectureDetail.materials')}</div>
                   </div>
                 </div>
               </div>
@@ -182,12 +184,12 @@ const LectureDetail = () => {
 
             {/* Materials Section */}
             <div ref={materialsSectionRef}>
-              <h3 className="text-sm font-semibold text-slate-900 mb-3 px-1">Materials</h3>
+              <h3 className="text-sm font-semibold text-slate-900 mb-3 px-1">{t('lectureDetail.materials')}</h3>
 
               {materials.length === 0 ? (
                 <div className="py-12 text-center bg-white rounded-xl border border-dashed border-slate-200">
                   <FileText size={28} className="text-slate-300 mx-auto mb-2" />
-                  <p className="text-sm text-slate-400">No materials linked to this lecture</p>
+                  <p className="text-sm text-slate-400">{t('lectureDetail.noMaterials')}</p>
                 </div>
               ) : (
                 <div className="grid sm:grid-cols-2 gap-3">
@@ -205,7 +207,7 @@ const LectureDetail = () => {
                         </div>
                         <div>
                           <div className="text-sm font-medium text-slate-800 group-hover:text-primary-600 transition-colors">{m.title}</div>
-                          <div className="text-xs text-slate-400 mt-0.5">{m.file_type || 'PDF Document'}</div>
+                          <div className="text-xs text-slate-400 mt-0.5">{m.file_type || t('lectureDetail.pdfDocument')}</div>
                         </div>
                       </div>
                       <ExternalLink size={14} className="text-slate-300 group-hover:text-primary-500 transition-colors flex-shrink-0" />
@@ -218,20 +220,20 @@ const LectureDetail = () => {
             {/* CTA Section */}
             <div className="bg-white p-5 sm:p-6 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="text-center sm:text-start">
-                <h3 className="text-base font-semibold text-slate-900 mb-1">Need help?</h3>
-                <p className="text-sm text-slate-500">Start a discussion in the Q&A section.</p>
+                <h3 className="text-base font-semibold text-slate-900 mb-1">{t('lectureDetail.needHelp')}</h3>
+                <p className="text-sm text-slate-500">{t('lectureDetail.startDiscussion')}</p>
               </div>
               <button 
                 onClick={() => setActiveTab('qa')}
                 className="px-5 py-2.5 bg-primary-600 text-white font-semibold rounded-lg text-sm hover:bg-primary-700 transition-colors flex items-center gap-2"
               >
-                Open Q&A <MessageCircle size={15} />
+                {t('lectureDetail.openQA')} <MessageCircle size={15} />
               </button>
             </div>
           </div>
         ) : (
           <div ref={qaSectionRef} id="qa-section" className="animate-fade-in bg-white p-5 sm:p-8 rounded-xl border border-slate-200 min-h-[500px]">
-            <h3 className="text-sm font-semibold text-slate-900 mb-4">Q&A Discussion</h3>
+            <h3 className="text-sm font-semibold text-slate-900 mb-4">{t('lectureDetail.qaDiscussion')}</h3>
             {id && <LectureQA lectureId={id} initialThreadId={threadId} />}
           </div>
         )}
@@ -245,7 +247,7 @@ const LectureDetail = () => {
             activeTab === 'content' ? 'bg-slate-900 text-white' : 'text-slate-500'
           }`}
         >
-          Content
+          {t('lectureDetail.content')}
         </button>
         <button
           onClick={() => setActiveTab('qa')}
@@ -253,7 +255,7 @@ const LectureDetail = () => {
             activeTab === 'qa' ? 'bg-slate-900 text-white' : 'text-slate-500'
           }`}
         >
-          Q&A
+          {t('lectureDetail.qa')}
         </button>
       </div>
     </div>

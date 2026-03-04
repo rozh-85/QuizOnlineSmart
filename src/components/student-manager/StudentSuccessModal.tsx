@@ -1,5 +1,6 @@
 import { ShieldCheck, Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 interface StudentSuccessModalProps {
   studentInfo: {
@@ -11,9 +12,10 @@ interface StudentSuccessModalProps {
 }
 
 const StudentSuccessModal = ({ studentInfo, onClose }: StudentSuccessModalProps) => {
+  const { t } = useTranslation();
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
-    toast.success(`${label} copied!`);
+    toast.success(t('studentManager.copied', { label }));
   };
 
   return (
@@ -24,11 +26,11 @@ const StudentSuccessModal = ({ studentInfo, onClose }: StudentSuccessModalProps)
         </div>
 
         <h3 className="text-xl font-black text-slate-900 tracking-tight mb-1">{studentInfo.fullName}</h3>
-        <p className="text-xs text-slate-400 font-medium mb-6">Account created successfully</p>
+        <p className="text-xs text-slate-400 font-medium mb-6">{t('studentManager.accountCreatedSuccess')}</p>
         
         <div className="w-full space-y-4 mb-8">
           <div>
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Login Email</div>
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">{t('studentManager.loginEmail')}</div>
             <div className="bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl flex items-center justify-between">
                <span className="text-sm font-bold text-slate-900">{studentInfo.serialId}@kimya.com</span>
                <button onClick={() => copyToClipboard(`${studentInfo.serialId}@kimya.com`, 'Email')} className="w-7 h-7 flex items-center justify-center bg-white rounded-lg text-slate-400 hover:text-slate-900 border border-slate-200 transition-all active:scale-90">
@@ -38,7 +40,7 @@ const StudentSuccessModal = ({ studentInfo, onClose }: StudentSuccessModalProps)
           </div>
 
           <div>
-            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">PIN</div>
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">{t('studentManager.pin')}</div>
             <div className="bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-xl flex items-center justify-between">
                <span className="text-lg font-black text-slate-900 tracking-widest">{studentInfo.pin}</span>
                <button onClick={() => copyToClipboard(studentInfo.pin, 'PIN')} className="w-7 h-7 flex items-center justify-center bg-white rounded-lg text-slate-400 hover:text-slate-900 border border-slate-200 transition-all active:scale-90">
@@ -52,7 +54,7 @@ const StudentSuccessModal = ({ studentInfo, onClose }: StudentSuccessModalProps)
           onClick={onClose}
           className="w-full py-3 bg-primary-600 text-white font-bold rounded-xl shadow-md shadow-primary-200 text-sm transition-all active:scale-95 hover:bg-primary-700"
         >
-          Done
+          {t('common.done')}
         </button>
       </div>
     </div>

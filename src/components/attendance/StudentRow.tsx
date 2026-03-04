@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { UserX, AlertCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface AttendanceRecord {
   id: string;
@@ -26,6 +27,7 @@ interface StudentRowProps {
 }
 
 const StudentRow = ({ record, index, sessionActive, onKick }: StudentRowProps) => {
+  const { t } = useTranslation();
   const [liveElapsed, setLiveElapsed] = useState(0);
 
   useEffect(() => {
@@ -95,11 +97,11 @@ const StudentRow = ({ record, index, sessionActive, onKick }: StudentRowProps) =
         {isRemoved ? (
           <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-rose-600 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-md">
             <AlertCircle size={10} />
-            Removed
+            {t('attendance.removed')}
           </span>
         ) : (
           <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
-            Present
+            {t('attendance.present')}
           </span>
         )}
       </td>
@@ -112,7 +114,7 @@ const StudentRow = ({ record, index, sessionActive, onKick }: StudentRowProps) =
               title="Remove student"
             >
               <UserX size={14} />
-              Remove
+              {t('attendance.remove')}
             </button>
           )}
         </td>

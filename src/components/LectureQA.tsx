@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { ConfirmDialog } from './ui';
 import {
   useLectureQA,
@@ -21,6 +22,7 @@ interface LectureQAProps {
 }
 
 const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThreadId }: LectureQAProps) => {
+  const { t } = useTranslation();
   const qa = useLectureQA({ lectureId, isAdminView, initialThreadId });
 
   if (qa.isLoading) return <QASkeleton />;
@@ -162,9 +164,9 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
       {/* Delete Message Confirmation */}
       <ConfirmDialog
         open={!!qa.deletingMsgId}
-        title="Delete Message"
-        message="Are you sure you want to delete this message? This cannot be undone."
-        confirmLabel="Delete"
+        title={t('lectureQA.deleteMessage')}
+        message={t('lectureQA.deleteMessageConfirm')}
+        confirmLabel={t('common.delete')}
         onConfirm={qa.handleDeleteMessage}
         onClose={() => qa.setDeletingMsgId(null)}
         confirmColor="rose"
@@ -173,9 +175,9 @@ const LectureQA = ({ lectureId, compact = false, isAdminView = false, initialThr
       {/* Delete Thread Confirmation */}
       <ConfirmDialog
         open={!!qa.deletingId}
-        title="Confirm Delete"
-        message="Are you sure you want to delete this? This action cannot be undone."
-        confirmLabel="Delete"
+        title={t('lectureQA.confirmDelete')}
+        message={t('lectureQA.confirmDeleteMsg')}
+        confirmLabel={t('common.delete')}
         onConfirm={qa.handleDelete}
         onClose={() => qa.setDeletingId(null)}
         confirmColor="rose"

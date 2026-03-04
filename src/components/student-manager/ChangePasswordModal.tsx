@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { KeyRound, Eye, EyeOff, AlertCircle, Loader2, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { FormField } from '../ui';
 
 interface ChangePasswordModalProps {
@@ -9,6 +10,7 @@ interface ChangePasswordModalProps {
 }
 
 const ChangePasswordModal = ({ student, onClose, onSubmit }: ChangePasswordModalProps) => {
+  const { t } = useTranslation();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [changingPassword, setChangingPassword] = useState(false);
@@ -35,7 +37,7 @@ const ChangePasswordModal = ({ student, onClose, onSubmit }: ChangePasswordModal
               <KeyRound size={18} />
             </div>
             <div>
-              <h2 className="text-xl font-black text-slate-900 tracking-tight">Change Password</h2>
+              <h2 className="text-xl font-black text-slate-900 tracking-tight">{t('studentManager.changePassword')}</h2>
               <p className="text-xs text-slate-400 font-medium mt-0.5">{student.full_name}</p>
             </div>
           </div>
@@ -45,13 +47,13 @@ const ChangePasswordModal = ({ student, onClose, onSubmit }: ChangePasswordModal
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <FormField label="New Password">
+          <FormField label={t('studentManager.newPassword')}>
             <div className="relative">
               <input
                 type={showNewPassword ? 'text' : 'password'}
                 required
                 className="w-full px-4 py-3 pr-10 bg-slate-50 border border-slate-200 focus:border-violet-500 focus:bg-white rounded-xl outline-none font-bold tracking-widest text-sm transition-all focus:ring-4 focus:ring-violet-50"
-                placeholder="Enter new password"
+                placeholder={t('studentManager.enterNewPassword')}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
               />
@@ -65,7 +67,7 @@ const ChangePasswordModal = ({ student, onClose, onSubmit }: ChangePasswordModal
             </div>
           </FormField>
 
-          <FormField label="Confirm Password">
+          <FormField label={t('studentManager.confirmPassword')}>
             <div className="relative">
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
@@ -75,7 +77,7 @@ const ChangePasswordModal = ({ student, onClose, onSubmit }: ChangePasswordModal
                     ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-50'
                     : 'border-slate-200 focus:border-violet-500 focus:ring-violet-50'
                 }`}
-                placeholder="Confirm new password"
+                placeholder={t('studentManager.confirmNewPassword')}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
@@ -89,14 +91,14 @@ const ChangePasswordModal = ({ student, onClose, onSubmit }: ChangePasswordModal
             </div>
             {confirmPassword && confirmPassword !== newPassword && (
               <p className="text-xs text-rose-500 font-medium mt-1.5 flex items-center gap-1">
-                <AlertCircle size={10} /> Passwords do not match
+                <AlertCircle size={10} /> {t('studentManager.passwordsDoNotMatch')}
               </p>
             )}
           </FormField>
 
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-3 text-slate-500 font-bold text-sm hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-colors">
-              Cancel
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
@@ -104,8 +106,8 @@ const ChangePasswordModal = ({ student, onClose, onSubmit }: ChangePasswordModal
               className="flex-1 py-3 bg-violet-600 text-white font-bold rounded-xl shadow-md shadow-violet-200 text-sm flex items-center justify-center gap-2 transition-all active:scale-95 hover:bg-violet-700 disabled:opacity-50"
             >
               {changingPassword ? (
-                <><Loader2 className="animate-spin" size={14} /> Updating...</>
-              ) : 'Update Password'}
+                <><Loader2 className="animate-spin" size={14} /> {t('studentManager.updating')}</>
+              ) : t('studentManager.updatePassword')}
             </button>
           </div>
         </form>

@@ -1,5 +1,6 @@
 import { FileText, Printer, BookOpen } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { useQuiz } from '../../context/QuizContext';
 import { useExamFilters } from '../../hooks/useExamFilters';
 import { useExamSelection } from '../../hooks/useExamSelection';
@@ -16,6 +17,7 @@ import {
 } from '../../components/exam-builder';
 
 const ExamBuilder = () => {
+  const { t } = useTranslation();
   const { questions, lectures } = useQuiz();
 
   // Composed hooks — all business logic lives here
@@ -32,11 +34,11 @@ const ExamBuilder = () => {
   // Generate PDF
   const handleGeneratePdf = () => {
     if (selectedIds.size === 0) {
-      toast.error('Select at least one question to generate the exam');
+      toast.error(t('examBuilder.selectAtLeastOne'));
       return;
     }
     if (!generateExamPdf(selectedQuestions, settings)) {
-      toast.error('Please allow popups to generate the exam PDF');
+      toast.error(t('examBuilder.allowPopups'));
     }
   };
 
@@ -57,9 +59,9 @@ const ExamBuilder = () => {
             <FileText size={20} className="text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Exam Builder</h1>
+            <h1 className="text-2xl font-black text-slate-900 tracking-tight">{t('examBuilder.title')}</h1>
             <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest leading-none mt-0.5">
-              Select questions &middot; Configure &middot; Generate PDF
+              {t('examBuilder.subtitle')}
             </p>
           </div>
         </div>
@@ -82,8 +84,8 @@ const ExamBuilder = () => {
             {filteredQuestions.length === 0 ? (
               <Card className="!p-8 text-center shadow-sm border border-slate-100">
                 <BookOpen size={28} className="mx-auto text-slate-200 mb-2" />
-                <p className="text-sm font-bold text-slate-400">No questions match the current filters</p>
-                <p className="text-xs text-slate-300 mt-1">Try adjusting your filters or search query</p>
+                <p className="text-sm font-bold text-slate-400">{t('examBuilder.noQuestionsMatch')}</p>
+                <p className="text-xs text-slate-300 mt-1">{t('examBuilder.adjustFilters')}</p>
               </Card>
             ) : (
               paginatedQuestions.map((q) => (
@@ -130,7 +132,7 @@ const ExamBuilder = () => {
               disabled={selectedIds.size === 0}
             >
               <Printer size={18} />
-              Generate Exam PDF
+              {t('examBuilder.generateExamPDF')}
               {selectedIds.size > 0 && (
                 <span className="ml-1 px-2 py-0.5 bg-white/20 rounded-lg text-[10px]">
                   {selectedIds.size} Q{selectedIds.size !== 1 ? 's' : ''}
@@ -140,7 +142,7 @@ const ExamBuilder = () => {
 
             {selectedIds.size === 0 && (
               <p className="text-center text-[10px] text-slate-300 font-bold mt-2">
-                Select questions from the left to enable PDF generation
+                {t('examBuilder.selectFromLeft')}
               </p>
             )}
           </div>

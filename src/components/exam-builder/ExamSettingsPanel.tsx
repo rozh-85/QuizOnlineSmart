@@ -1,4 +1,5 @@
 import { Settings2, ChevronUp, ChevronDown, Building2, GraduationCap, Type, Calendar, Clock } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../ui';
 import type { ExamSettings } from '../../types/examBuilder';
 
@@ -42,6 +43,7 @@ interface ExamSettingsPanelProps {
 }
 
 const ExamSettingsPanel = ({ settings, settingsOpen, setSettingsOpen, updateSetting }: ExamSettingsPanelProps) => {
+  const { t } = useTranslation();
   return (
     <Card className="!p-4 shadow-sm border border-slate-100 mb-4">
       <button
@@ -51,7 +53,7 @@ const ExamSettingsPanel = ({ settings, settingsOpen, setSettingsOpen, updateSett
         <div className="flex items-center gap-2">
           <Settings2 size={15} className="text-primary-600" />
           <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-            Exam Settings
+            {t('examBuilder.examSettings')}
           </span>
         </div>
         {settingsOpen ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
@@ -70,13 +72,13 @@ const ExamSettingsPanel = ({ settings, settingsOpen, setSettingsOpen, updateSett
               }`}
             >
               <span className={`text-xs font-black ${settings.header_enabled ? 'text-emerald-700' : 'text-slate-400'}`}>
-                Exam Header
+                {t('examBuilder.examHeader')}
               </span>
               <div className={`w-9 h-5 rounded-full p-0.5 transition-colors ${
                 settings.header_enabled ? 'bg-emerald-500' : 'bg-slate-200'
               }`}>
                 <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
-                  settings.header_enabled ? 'translate-x-4' : 'translate-x-0'
+                  settings.header_enabled ? 'ltr:translate-x-4 rtl:-translate-x-4' : 'translate-x-0'
                 }`} />
               </div>
             </button>
@@ -84,13 +86,13 @@ const ExamSettingsPanel = ({ settings, settingsOpen, setSettingsOpen, updateSett
 
           {settings.header_enabled && (
             <div className="space-y-3 pl-1">
-              <HeaderField icon={Building2} label="College" value={settings.college} onChange={(v) => updateSetting('college', v)} placeholder="e.g. College of Science" />
-              <HeaderField icon={GraduationCap} label="Department" value={settings.department} onChange={(v) => updateSetting('department', v)} placeholder="e.g. Chemistry Dept." />
-              <HeaderField icon={Type} label="Subject" value={settings.subject} onChange={(v) => updateSetting('subject', v)} placeholder="e.g. Organic Chemistry" />
-              <HeaderField icon={Calendar} label="Date" value={settings.date} onChange={(v) => updateSetting('date', v)} placeholder="e.g. 2025-02-17" type="date" />
-              <HeaderField icon={Clock} label="Time Allowed" value={settings.time_allowed} onChange={(v) => updateSetting('time_allowed', v)} placeholder="e.g. 2 Hours" />
+              <HeaderField icon={Building2} label={t('examBuilder.college')} value={settings.college} onChange={(v) => updateSetting('college', v)} placeholder="e.g. College of Science" />
+              <HeaderField icon={GraduationCap} label={t('examBuilder.department')} value={settings.department} onChange={(v) => updateSetting('department', v)} placeholder="e.g. Chemistry Dept." />
+              <HeaderField icon={Type} label={t('examBuilder.subject')} value={settings.subject} onChange={(v) => updateSetting('subject', v)} placeholder="e.g. Organic Chemistry" />
+              <HeaderField icon={Calendar} label={t('examBuilder.date')} value={settings.date} onChange={(v) => updateSetting('date', v)} placeholder="e.g. 2025-02-17" type="date" />
+              <HeaderField icon={Clock} label={t('examBuilder.timeAllowed')} value={settings.time_allowed} onChange={(v) => updateSetting('time_allowed', v)} placeholder="e.g. 2 Hours" />
               <p className="text-[10px] text-slate-400 font-medium italic">
-                Only filled fields will appear in the PDF header. Settings auto-save.
+                {t('examBuilder.settingsAutoSave')}
               </p>
             </div>
           )}
@@ -106,19 +108,19 @@ const ExamSettingsPanel = ({ settings, settingsOpen, setSettingsOpen, updateSett
               }`}
             >
               <span className={`text-xs font-black ${settings.footer_enabled ? 'text-emerald-700' : 'text-slate-400'}`}>
-                Page Footer
+                {t('examBuilder.pageFooter')}
               </span>
               <div className={`w-9 h-5 rounded-full p-0.5 transition-colors ${
                 settings.footer_enabled ? 'bg-emerald-500' : 'bg-slate-200'
               }`}>
                 <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${
-                  settings.footer_enabled ? 'translate-x-4' : 'translate-x-0'
+                  settings.footer_enabled ? 'ltr:translate-x-4 rtl:-translate-x-4' : 'translate-x-0'
                 }`} />
               </div>
             </button>
             {settings.footer_enabled && (
               <p className="text-[10px] text-slate-400 font-medium italic mt-2 pl-1">
-                Enable "Headers and footers" in the print dialog to include page numbers.
+                {t('examBuilder.enableHeadersFooters')}
               </p>
             )}
           </div>

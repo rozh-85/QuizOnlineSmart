@@ -1,4 +1,5 @@
 import { CheckSquare, BookOpen, Layers } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { TYPE_LABELS, TYPE_COLORS } from '../../constants/examBuilder';
 import type { Question } from '../../types';
 
@@ -10,6 +11,7 @@ interface QuestionListItemProps {
 }
 
 const QuestionListItem = ({ question, isSelected, lectureName, onToggle }: QuestionListItemProps) => {
+  const { t } = useTranslation();
   return (
     <div
       onClick={onToggle}
@@ -53,7 +55,7 @@ const QuestionListItem = ({ question, isSelected, lectureName, onToggle }: Quest
           )}
           {question.type === 'multiple-choice' && question.options && (
             <span className="text-[10px] font-bold text-slate-300">
-              {question.options.length} options
+              {t('examBuilder.options', { count: question.options.length })}
             </span>
           )}
         </div>

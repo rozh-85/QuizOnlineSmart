@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { AtSign, ChevronDown, Loader2, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { FormField } from '../ui';
 
 interface CreateStudentModalProps {
@@ -9,6 +10,7 @@ interface CreateStudentModalProps {
 }
 
 const CreateStudentModal = ({ classes, onClose, onSubmit }: CreateStudentModalProps) => {
+  const { t } = useTranslation();
   const [creating, setCreating] = useState(false);
   const [newStudent, setNewStudent] = useState({
     fullName: '',
@@ -44,8 +46,8 @@ const CreateStudentModal = ({ classes, onClose, onSubmit }: CreateStudentModalPr
       <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 sm:p-8 animate-scale-in relative">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-xl font-black text-slate-900 tracking-tight">New Student</h2>
-            <p className="text-xs text-slate-400 font-medium mt-0.5">Create a new student account</p>
+            <h2 className="text-xl font-black text-slate-900 tracking-tight">{t('studentManager.newStudent')}</h2>
+            <p className="text-xs text-slate-400 font-medium mt-0.5">{t('studentManager.createStudentAccount')}</p>
           </div>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all">
             <X size={18} />
@@ -53,7 +55,7 @@ const CreateStudentModal = ({ classes, onClose, onSubmit }: CreateStudentModalPr
         </div>
          
         <form onSubmit={handleCreate} className="space-y-4">
-          <FormField label="Full Name">
+          <FormField label={t('studentManager.fullName')}>
             <input
               type="text"
               required
@@ -65,7 +67,7 @@ const CreateStudentModal = ({ classes, onClose, onSubmit }: CreateStudentModalPr
           </FormField>
           
           <div className="grid grid-cols-2 gap-3">
-            <FormField label="Serial ID">
+            <FormField label={t('studentManager.serialId')}>
               <div className="relative">
                 <AtSign size={14} className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
@@ -78,7 +80,7 @@ const CreateStudentModal = ({ classes, onClose, onSubmit }: CreateStudentModalPr
                 />
               </div>
             </FormField>
-            <FormField label="PIN">
+            <FormField label={t('studentManager.pin')}>
               <input
                 type="password"
                 required
@@ -90,14 +92,14 @@ const CreateStudentModal = ({ classes, onClose, onSubmit }: CreateStudentModalPr
             </FormField>
           </div>
 
-          <FormField label="Assign to Class (optional)">
+          <FormField label={t('studentManager.assignToClass')}>
             <div className="relative">
               <select
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 focus:border-primary-500 focus:bg-white rounded-xl outline-none font-medium text-slate-700 appearance-none cursor-pointer text-sm transition-all focus:ring-4 focus:ring-primary-50"
                 value={newStudent.classId}
                 onChange={(e) => setNewStudent({...newStudent, classId: e.target.value})}
               >
-                <option value="">No class</option>
+                <option value="">{t('studentManager.noClass')}</option>
                 {classes.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
@@ -108,7 +110,7 @@ const CreateStudentModal = ({ classes, onClose, onSubmit }: CreateStudentModalPr
 
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-3 text-slate-500 font-bold text-sm hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-colors">
-              Cancel
+              {t('common.cancel')}
             </button>
             <button 
               type="submit" 
@@ -117,9 +119,9 @@ const CreateStudentModal = ({ classes, onClose, onSubmit }: CreateStudentModalPr
             >
               {creating ? (
                 <>
-                  <Loader2 className="animate-spin" size={14} /> Creating...
+                  <Loader2 className="animate-spin" size={14} /> {t('studentManager.creating')}
                 </>
-              ) : 'Create Student'}
+              ) : t('studentManager.createStudent')}
             </button>
           </div>
         </form>

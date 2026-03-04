@@ -11,6 +11,7 @@ import {
   GraduationCap,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { useTranslation } from 'react-i18next';
 import { classApi } from '../../api/classApi';
 import { attendanceApi } from '../../api/attendanceApi';
 import { authApi } from '../../api/authApi';
@@ -26,6 +27,7 @@ import { formatTime } from '../../utils/format';
 type SessionStatus = 'idle' | 'pending' | 'active' | 'completed';
 
 const Attendance = () => {
+  const { t } = useTranslation();
   // Core state
   const [classes, setClasses] = useState<any[]>([]);
   const [lectures, setLectures] = useState<any[]>([]);
@@ -81,7 +83,7 @@ const Attendance = () => {
         setClasses(cls);
         setLectures(lecs);
       } catch (e) {
-        toast.error('Failed to load data');
+        toast.error(t('attendance.failedToLoadData'));
       } finally {
         setLoading(false);
       }
@@ -100,16 +102,16 @@ const Attendance = () => {
   // Handlers
   const handleCreateSession = async () => {
     if (!selectedClassId || !teacherId) {
-      toast.error('Please select a class');
+      toast.error(t('attendance.pleaseSelectClass'));
       return;
     }
     try {
       const session = await attendanceApi.createSession(selectedClassId, teacherId, sessionDate, selectedLectureId || undefined);
       setSessionId(session.id);
       setSessionStatus('pending');
-      toast.success('Session created. Click Start to begin.');
+      toast.success(t('attendance.sessionCreated'));
     } catch (e: any) {
-      toast.error(e.message || 'Failed to create session');
+      toast.error(e.message || t('attendance.failedToCreateSession'));
     }
   };
 
@@ -121,9 +123,9 @@ const Attendance = () => {
       setStartedAt(new Date(session.started_at));
       resetTimer();
       setQrVisible(true);
-      toast.success('Session started!');
+      toast.success(t('attendance.sessionStarted'));
     } catch (e: any) {
-      toast.error(e.message || 'Failed to start session');
+      toast.error(e.message || t('attendance.failedToStartSession'));
     }
   };
 
@@ -138,21 +140,21 @@ const Attendance = () => {
       // Hooks auto-cleanup via deps; fetch final records
       const finalRecords = await attendanceApi.getSessionRecords(sessionId);
       setRecords(finalRecords);
-      toast.success('Session completed!');
+      toast.success(t('attendance.sessionCompleted'));
     } catch (e: any) {
-      toast.error(e.message || 'Failed to stop session');
+      toast.error(e.message || t('attendance.failedToStopSession'));
     }
   };
 
   const handleKick = async (record: AttendanceRecord) => {
-    if (!window.confirm(`Remove ${record.student.full_name} from attendance?`)) return;
+    if (!window.confirm(t('attendance.removeConfirm', { name: record.student.full_name }))) return;
     try {
       await attendanceApi.kickStudent(record.id);
       const updated = await attendanceApi.getSessionRecords(sessionId!);
       setRecords(updated);
-      toast.success(`${record.student.full_name} removed`);
+      toast.success(t('attendance.studentRemoved', { name: record.student.full_name }));
     } catch (e: any) {
-      toast.error(e.message || 'Failed to remove student');
+      toast.error(e.message || t('attendance.failedToRemoveStudent'));
     }
   };
 
@@ -201,16 +203,16 @@ const Attendance = () => {
     <div className="animate-fade-in w-full">
       {/* Header */}
       <PageHeader
-        title="Attendance."
-        badge="Live"
-        subtitle="Start a class session and track student attendance via QR code"
+        title={t('attendance.title')}
+        badge={t('attendance.live')}
+        subtitle={t('attendance.subtitle')}
         action={
           sessionStatus === 'completed' ? (
             <button
               onClick={handleReset}
               className="flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-md shadow-primary-200 transition-all active:scale-95 text-sm"
             >
-              New Session
+              {t('attendance.newSession')}
             </button>
           ) : undefined
         }
@@ -219,10 +221,10 @@ const Attendance = () => {
       {/* Setup Panel - shown when idle */}
       {sessionStatus === 'idle' && (
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 space-y-5 max-w-lg">
-          <h2 className="text-lg font-black text-slate-900 tracking-tight">Create Attendance Session</h2>
+          <h2 className="text-lg font-black text-slate-900 tracking-tight">{t('attendance.createAttendanceSession')}</h2>
 
           {/* Lecture Selector (Optional) */}
-          <FormField label={<>Lecture <span className="text-slate-300">(optional)</span></>}>
+          <FormField label={<>{t('attendance.lecture')} <span className="text-slate-300">({t('attendance.optional')})</span></>}>
             <div className="relative">
               <GraduationCap className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <select
@@ -230,7 +232,7 @@ const Attendance = () => {
                 onChange={(e) => setSelectedLectureId(e.target.value)}
                 className="w-full ps-10 pe-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 appearance-none cursor-pointer text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
               >
-                <option value="">No lecture</option>
+                <option value="">{t('attendance.noLecture')}</option>
                 {lectures.map(l => (
                   <option key={l.id} value={l.id}>{l.title}</option>
                 ))}
@@ -240,7 +242,7 @@ const Attendance = () => {
           </FormField>
 
           {/* Class Selector */}
-          <FormField label="Class">
+          <FormField label={t('attendance.class')}>
             <div className="relative">
               <Users className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <select
@@ -248,7 +250,7 @@ const Attendance = () => {
                 onChange={(e) => setSelectedClassId(e.target.value)}
                 className="w-full ps-10 pe-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 appearance-none cursor-pointer text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
               >
-                <option value="">Select a class...</option>
+                <option value="">{t('attendance.selectClass')}</option>
                 {classes.map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
@@ -262,7 +264,7 @@ const Attendance = () => {
             disabled={!selectedClassId}
             className="w-full py-3 bg-primary-600 text-white font-bold rounded-xl shadow-md shadow-primary-200 text-sm flex items-center justify-center gap-2 transition-all active:scale-95 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Create Session
+            {t('attendance.createSession')}
           </button>
         </div>
       )}
@@ -315,7 +317,7 @@ const Attendance = () => {
                     className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-md transition-all active:scale-95 text-sm"
                   >
                     <Play size={16} />
-                    Start Session
+                    {t('attendance.startSession')}
                   </button>
                 )}
 
@@ -330,14 +332,14 @@ const Attendance = () => {
                       }`}
                     >
                       {qrVisible ? <EyeOff size={16} /> : <Eye size={16} />}
-                      {qrVisible ? 'Hide QR' : 'Show QR'}
+                      {qrVisible ? t('attendance.hideQR') : t('attendance.showQR')}
                     </button>
                     <button
                       onClick={() => setShowStopModal(true)}
                       className="flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-md transition-all active:scale-95 text-sm"
                     >
                       <Square size={16} />
-                      Stop Session
+                      {t('attendance.stopSession')}
                     </button>
                   </>
                 )}
@@ -353,7 +355,7 @@ const Attendance = () => {
                 <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 text-center">
                   <div className="flex items-center justify-center gap-2 mb-4">
                     <QrCode size={18} className="text-primary-600" />
-                    <h3 className="text-sm font-black text-slate-900 tracking-tight">Scan to Attend</h3>
+                    <h3 className="text-sm font-black text-slate-900 tracking-tight">{t('attendance.scanToAttend')}</h3>
                   </div>
 
                   {qrVisible && currentToken ? (
@@ -368,7 +370,7 @@ const Attendance = () => {
                       </div>
                       <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
                         <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                        Refreshing every 5 seconds
+                        {t('attendance.refreshingEvery5s')}
                       </div>
                     </div>
                   ) : (
@@ -376,8 +378,8 @@ const Attendance = () => {
                       <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300">
                         <EyeOff size={28} />
                       </div>
-                      <p className="text-sm text-slate-400 font-bold">QR Code Hidden</p>
-                      <p className="text-xs text-slate-300">Students cannot join right now</p>
+                      <p className="text-sm text-slate-400 font-bold">{t('attendance.qrCodeHidden')}</p>
+                      <p className="text-xs text-slate-300">{t('attendance.studentsCannotJoin')}</p>
                     </div>
                   )}
                 </div>
@@ -390,12 +392,12 @@ const Attendance = () => {
               <div className="flex items-center gap-4 mb-4">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-emerald-500 rounded-full" />
-                  <span className="text-xs font-bold text-slate-600">{activeRecords.length} Present</span>
+                  <span className="text-xs font-bold text-slate-600">{activeRecords.length} {t('attendance.present')}</span>
                 </div>
                 {removedRecords.length > 0 && (
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-rose-500 rounded-full" />
-                    <span className="text-xs font-bold text-slate-600">{removedRecords.length} Removed</span>
+                    <span className="text-xs font-bold text-slate-600">{removedRecords.length} {t('attendance.removed')}</span>
                   </div>
                 )}
               </div>
@@ -404,8 +406,8 @@ const Attendance = () => {
               {records.length === 0 ? (
                 <EmptyState
                   icon={<Users size={28} />}
-                  title="No Students Yet"
-                  subtitle={sessionStatus === 'active' ? 'Waiting for students to scan the QR code...' : 'Start the session to begin tracking attendance'}
+                  title={t('attendance.noStudentsYet')}
+                  subtitle={sessionStatus === 'active' ? t('attendance.waitingForStudents') : t('attendance.startToBeginTracking')}
                 />
               ) : (
                 <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
@@ -413,13 +415,13 @@ const Attendance = () => {
                     <thead>
                       <tr className="border-b border-slate-100 bg-slate-50/60">
                         <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">#</th>
-                        <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">Student</th>
-                        <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">ID</th>
-                        <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">Joined</th>
-                        <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">Duration</th>
-                        <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">Status</th>
+                        <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">{t('attendance.studentCol')}</th>
+                        <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">{t('attendance.idCol')}</th>
+                        <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">{t('attendance.joinedCol')}</th>
+                        <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">{t('attendance.durationCol')}</th>
+                        <th className="text-start text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">{t('attendance.statusCol')}</th>
                         {sessionStatus === 'active' && (
-                          <th className="text-end text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">Action</th>
+                          <th className="text-end text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 py-3">{t('attendance.actionCol')}</th>
                         )}
                       </tr>
                     </thead>

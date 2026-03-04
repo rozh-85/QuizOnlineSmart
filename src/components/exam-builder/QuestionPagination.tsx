@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface QuestionPaginationProps {
   currentPage: number;
@@ -12,12 +13,13 @@ interface QuestionPaginationProps {
 const QuestionPagination = ({
   currentPage, totalPages, onPageChange, startIndex, endIndex, totalItems
 }: QuestionPaginationProps) => {
+  const { t } = useTranslation();
   if (totalPages <= 1) return null;
 
   return (
     <div className="flex items-center justify-between pt-4 border-t border-slate-100">
       <span className="text-[10px] font-bold text-slate-400">
-        {startIndex + 1}–{Math.min(endIndex, totalItems)} of {totalItems}
+        {startIndex + 1}–{Math.min(endIndex, totalItems)} {t('common.of')} {totalItems}
       </span>
       <div className="flex items-center gap-1">
         <button

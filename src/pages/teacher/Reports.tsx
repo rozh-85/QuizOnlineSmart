@@ -11,6 +11,7 @@ import {
   User,
   Users
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { classApi } from '../../api/classApi';
 import { lectureApi } from '../../api/lectureApi';
 import { studentApi } from '../../api/studentApi';
@@ -21,6 +22,7 @@ import { SessionDetail, ReportSummaryCards } from '../../components/reports';
 import { formatDuration, formatTimeOfDay, formatDateShort, getSessionDurationHours, getSessionEndTime } from '../../utils/format';
 
 const Reports = () => {
+  const { t } = useTranslation();
   // Filter states
   const [studentSearch, setStudentSearch] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
@@ -68,7 +70,7 @@ const Reports = () => {
         setLectures(lecs);
         setStudents(studs);
       } catch (e) {
-        toast.error('Failed to load data');
+        toast.error(t('reportsPage.failedToLoadData'));
       } finally {
         setLoading(false);
       }
@@ -100,7 +102,7 @@ const Reports = () => {
       setEnrolledCounts(counts);
     } catch (e: any) {
       console.error('Failed to fetch reports:', e);
-      toast.error('Failed to fetch reports');
+      toast.error(t('reportsPage.failedToFetchReports'));
     } finally {
       setFetching(false);
     }
@@ -217,9 +219,9 @@ const Reports = () => {
     <div className="animate-fade-in w-full">
       {/* Header */}
       <PageHeader
-        title="Reports."
-        badge="Analytics"
-        subtitle="View attendance reports and analytics"
+        title={t('reportsPage.title')}
+        badge={t('reportsPage.badge')}
+        subtitle={t('reportsPage.subtitle')}
         action={
           hasActiveFilters ? (
             <button
@@ -227,7 +229,7 @@ const Reports = () => {
               className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 px-4 py-2 rounded-xl border border-slate-200 hover:border-rose-200 transition-all"
             >
               <X size={14} />
-              Clear Filters
+              {t('reportsPage.clearFilters')}
             </button>
           ) : undefined
         }
@@ -238,7 +240,7 @@ const Reports = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Student Search */}
           <div className="space-y-1.5 relative" ref={studentDropdownRef}>
-            <label className="text-xs font-bold text-slate-500">Student</label>
+            <label className="text-xs font-bold text-slate-500">{t('reportsPage.student')}</label>
             {selectedStudent ? (
               <div className="flex items-center gap-2 px-3 py-2.5 bg-primary-50 border border-primary-200 rounded-xl">
                 <User size={16} className="text-primary-600 shrink-0" />
@@ -256,7 +258,7 @@ const Reports = () => {
                   <Search className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                   <input
                     type="text"
-                    placeholder="Search by name..."
+                    placeholder={t('reportsPage.searchByName')}
                     value={studentSearch}
                     onChange={(e) => { setStudentSearch(e.target.value); setShowStudentDropdown(true); }}
                     onFocus={() => setShowStudentDropdown(true)}
@@ -291,7 +293,7 @@ const Reports = () => {
           </div>
 
           {/* Date From */}
-          <FormField label="From Date">
+          <FormField label={t('reportsPage.fromDate')}>
             <div className="relative">
               <CalendarDays className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input
@@ -304,7 +306,7 @@ const Reports = () => {
           </FormField>
 
           {/* Date To */}
-          <FormField label="To Date">
+          <FormField label={t('reportsPage.toDate')}>
             <div className="relative">
               <CalendarDays className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input
@@ -317,7 +319,7 @@ const Reports = () => {
           </FormField>
 
           {/* Class */}
-          <FormField label="Class">
+          <FormField label={t('reportsPage.class')}>
             <div className="relative">
               <BookOpen className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <select
@@ -325,7 +327,7 @@ const Reports = () => {
                 onChange={(e) => setSelectedClassId(e.target.value)}
                 className="w-full ps-10 pe-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 appearance-none cursor-pointer text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
               >
-                <option value="">All Classes</option>
+                <option value="">{t('reportsPage.allClasses')}</option>
                 {classes.map((c: any) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
@@ -335,7 +337,7 @@ const Reports = () => {
           </FormField>
 
           {/* Lecture */}
-          <FormField label="Lecture">
+          <FormField label={t('reportsPage.lecture')}>
             <div className="relative">
               <GraduationCap className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <select
@@ -343,7 +345,7 @@ const Reports = () => {
                 onChange={(e) => setSelectedLectureId(e.target.value)}
                 className="w-full ps-10 pe-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700 appearance-none cursor-pointer text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-50 transition-all"
               >
-                <option value="">All Lectures</option>
+                <option value="">{t('reportsPage.allLectures')}</option>
                 {lectures.map((l: any) => (
                   <option key={l.id} value={l.id}>{l.title}</option>
                 ))}
@@ -366,7 +368,7 @@ const Reports = () => {
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-black text-slate-900 tracking-tight">
-            Sessions {!fetching && `(${sessions.length})`}
+            {t('reportsPage.sessions')} {!fetching && `(${sessions.length})`}
           </h2>
           {fetching && <Loader2 className="animate-spin text-primary-600" size={16} />}
         </div>
@@ -374,8 +376,8 @@ const Reports = () => {
         {sessions.length === 0 && !fetching ? (
           <EmptyState
             icon={<BarChart3 size={28} />}
-            title="No Sessions Found"
-            subtitle="Adjust your filters or create attendance sessions first"
+            title={t('reportsPage.noSessionsFound')}
+            subtitle={t('reportsPage.adjustFiltersOrCreate')}
           />
         ) : (
           <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
@@ -383,13 +385,13 @@ const Reports = () => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="text-start px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Lecture</th>
-                    <th className="text-start px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Class</th>
-                    <th className="text-start px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Date</th>
-                    <th className="text-start px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Start</th>
-                    <th className="text-start px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">End</th>
-                    <th className="text-start px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Duration</th>
-                    <th className="text-start px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Present</th>
+                    <th className="text-start px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">{t('reportsPage.lectureCol')}</th>
+                    <th className="text-start px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">{t('reportsPage.classCol')}</th>
+                    <th className="text-start px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">{t('reportsPage.dateCol')}</th>
+                    <th className="text-start px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">{t('reportsPage.startCol')}</th>
+                    <th className="text-start px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">{t('reportsPage.endCol')}</th>
+                    <th className="text-start px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">{t('reportsPage.durationCol')}</th>
+                    <th className="text-start px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">{t('reportsPage.presentCol')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -404,7 +406,7 @@ const Reports = () => {
                         className="hover:bg-slate-50 cursor-pointer transition-colors group"
                       >
                         <td className="px-4 py-3 font-bold text-slate-800 group-hover:text-primary-700 transition-colors max-w-[180px] truncate">
-                          {session.lecture?.title || 'No Lecture'}
+                          {session.lecture?.title || t('reportsPage.noLecture')}
                         </td>
                         <td className="px-4 py-3 text-slate-500 font-medium whitespace-nowrap">
                           {session.class?.name || '—'}

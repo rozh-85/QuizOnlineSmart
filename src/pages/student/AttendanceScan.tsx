@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle, Loader2, QrCode } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { attendanceApi } from '../../api/attendanceApi';
 
 const AttendanceScan = () => {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
 
@@ -13,7 +15,7 @@ const AttendanceScan = () => {
     const verify = async () => {
       if (!token) {
         setStatus('error');
-        setMessage('No attendance token provided');
+        setMessage(t('attendanceScan.noTokenProvided'));
         return;
       }
 
@@ -21,14 +23,14 @@ const AttendanceScan = () => {
         const result = await attendanceApi.verifyAndJoin(token);
         if (result.success) {
           setStatus('success');
-          setMessage(result.message || 'Attendance recorded successfully!');
+          setMessage(result.message || t('attendanceScan.recordedSuccessfully'));
         } else {
           setStatus('error');
-          setMessage(result.error || 'Failed to record attendance');
+          setMessage(result.error || t('attendanceScan.failedToRecord'));
         }
       } catch (e: any) {
         setStatus('error');
-        setMessage(e.message || 'Failed to verify attendance. Please try again.');
+        setMessage(e.message || t('attendanceScan.failedToVerify'));
       }
     };
 
@@ -51,9 +53,9 @@ const AttendanceScan = () => {
         </div>
 
         <h1 className="text-lg font-bold text-slate-900 mb-1">
-          {status === 'loading' ? 'Verifying...' :
-           status === 'success' ? 'Attendance Confirmed' :
-           'Attendance Failed'}
+          {status === 'loading' ? t('attendanceScan.verifying') :
+           status === 'success' ? t('attendanceScan.attendanceConfirmed') :
+           t('attendanceScan.attendanceFailed')}
         </h1>
 
         <p className={`text-sm mb-6 ${
@@ -61,12 +63,12 @@ const AttendanceScan = () => {
           status === 'error' ? 'text-rose-500' :
           'text-slate-500'
         }`}>
-          {message || 'Checking your attendance token...'}
+          {message || t('attendanceScan.checkingToken')}
         </p>
 
         <div className="flex items-center justify-center gap-1.5 text-slate-300 text-xs">
           <QrCode size={13} />
-          <span>EduPulse Attendance</span>
+          <span>{t('attendanceScan.eduPulseAttendance')}</span>
         </div>
 
         {status !== 'loading' && (
@@ -74,7 +76,7 @@ const AttendanceScan = () => {
             onClick={() => navigate('/dashboard')}
             className="mt-6 w-full py-3 bg-primary-600 text-white font-semibold rounded-lg text-sm transition-all active:scale-95 hover:bg-primary-700"
           >
-            Go to Dashboard
+            {t('attendanceScan.goToDashboard')}
           </button>
         )}
       </div>

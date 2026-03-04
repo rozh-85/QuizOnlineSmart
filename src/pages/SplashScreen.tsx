@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Beaker } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { authApi } from '../api/authApi';
 
 const SplashScreen = ({ defaultMode = 'student' }: { defaultMode?: 'student' | 'teacher' }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const checkSession = async () => {
@@ -49,7 +51,7 @@ const SplashScreen = ({ defaultMode = 'student' }: { defaultMode?: 'student' | '
       </div>
       
       <div className="mt-12 text-center animate-fade-in-up">
-        <h2 className="text-3xl font-black text-white tracking-tight mb-2">Smart Quiz</h2>
+        <h2 className="text-3xl font-black text-white tracking-tight mb-2">{t('common.appName')}</h2>
         <div className="flex items-center gap-1.5 justify-center">
           <div className="w-1.5 h-1.5 rounded-full bg-primary-400 animate-bounce" style={{ animationDelay: '0ms' }}></div>
           <div className="w-1.5 h-1.5 rounded-full bg-primary-400 animate-bounce" style={{ animationDelay: '200ms' }}></div>
@@ -58,7 +60,7 @@ const SplashScreen = ({ defaultMode = 'student' }: { defaultMode?: 'student' | '
       </div>
 
       <div className="absolute bottom-12 text-slate-500 text-sm font-bold tracking-widest uppercase">
-        Initializing Canvas
+        {t('splash.initializingCanvas')}
       </div>
     </div>
   );

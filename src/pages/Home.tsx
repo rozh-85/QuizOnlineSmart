@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, BookOpen, Beaker } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useQuiz } from '../context/QuizContext';
 
 const Home = () => {
   const { questions, lectures, getQuestionsByLecture } = useQuiz();
+  const { t } = useTranslation();
 
   return (
     <div className="flex flex-col animate-fade-in">
@@ -18,21 +20,21 @@ const Home = () => {
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white shadow-md shadow-primary-100/30 border border-primary-100 mb-6 animate-slide-up">
             <div className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-pulse"></div>
             <Beaker size={13} className="text-primary-600" />
-            <span className="text-[11px] font-bold text-slate-600">Chemistry Learning Platform</span>
+            <span className="text-[11px] font-bold text-slate-600">{t('home.chemistryPlatform')}</span>
           </div>
           
           {/* Heading */}
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black mb-4 text-slate-900 tracking-tighter leading-[1.1] animate-slide-up">
-            Master Chemistry
+            {t('home.masterChemistry')}
             <br />
             <span className="bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent">
-              One Lecture at a Time
+              {t('home.oneLectureAtATime')}
             </span>
           </h1>
           
           {/* Subtitle */}
           <p className="text-sm sm:text-base text-slate-500 leading-relaxed mb-10 font-medium max-w-lg mx-auto animate-slide-up">
-            Interactive quizzes designed to help you understand chemistry concepts through structured learning and detailed feedback.
+            {t('home.heroSubtitle')}
           </p>
 
           {/* Stats — Compact Row */}
@@ -41,19 +43,19 @@ const Home = () => {
               <div className="text-3xl font-black bg-gradient-to-br from-primary-600 to-primary-700 bg-clip-text text-transparent">
                 {lectures.length}
               </div>
-              <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Lectures</div>
+              <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">{t('home.lectures')}</div>
             </div>
             <div className="flex-1 bg-white rounded-2xl p-5 shadow-lg shadow-slate-100/50 border border-slate-100">
               <div className="text-3xl font-black bg-gradient-to-br from-purple-600 to-purple-700 bg-clip-text text-transparent">
                 {questions.length}
               </div>
-              <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Questions</div>
+              <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">{t('home.questions')}</div>
             </div>
             <div className="flex-1 bg-white rounded-2xl p-5 shadow-lg shadow-slate-100/50 border border-slate-100">
               <div className="text-3xl font-black bg-gradient-to-br from-emerald-600 to-emerald-700 bg-clip-text text-transparent">
                 100%
               </div>
-              <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Progress</div>
+              <div className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">{t('home.progress')}</div>
             </div>
           </div>
         </div>
@@ -62,8 +64,8 @@ const Home = () => {
       {/* Lectures Grid */}
       <div id="lectures" className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16 scroll-mt-20">
         <div className="mb-8 sm:mb-10">
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mb-2">Available Lectures</h2>
-          <p className="text-slate-400 font-medium text-sm">Choose a module to start your learning journey</p>
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mb-2">{t('home.availableLectures')}</h2>
+          <p className="text-slate-400 font-medium text-sm">{t('home.chooseModule')}</p>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
@@ -83,7 +85,7 @@ const Home = () => {
                       <BookOpen size={22} />
                     </div>
                     <div className="px-3 py-1.5 rounded-full bg-slate-50 border border-slate-100">
-                      <span className="text-[10px] font-black text-slate-500">{questionCount} Questions</span>
+                      <span className="text-[10px] font-black text-slate-500">{t('home.questionsCount', { count: questionCount })}</span>
                     </div>
                   </div>
                   
@@ -91,11 +93,11 @@ const Home = () => {
                     {lecture.title}
                   </h3>
                   <p className="text-slate-400 text-sm font-medium mb-6 leading-relaxed flex-1 line-clamp-2">
-                    {lecture.description || 'Master this module through interactive questions.'}
+                    {lecture.description || t('home.defaultDescription')}
                   </p>
                   
                   <div className="pt-4 border-t border-slate-50 text-[10px] font-black text-primary-600 uppercase tracking-widest flex items-center gap-2 group-hover:gap-3 transition-all">
-                    Start Session <ArrowRight size={14} />
+                    {t('home.startSession')} <ArrowRight size={14} />
                   </div>
                 </div>
               </Link>
@@ -108,8 +110,8 @@ const Home = () => {
             <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <BookOpen size={32} className="text-slate-300" />
             </div>
-            <p className="text-slate-400 font-bold text-sm">No lectures available yet.</p>
-            <p className="text-slate-300 font-medium text-xs mt-1">Coming soon!</p>
+            <p className="text-slate-400 font-bold text-sm">{t('home.noLecturesYet')}</p>
+            <p className="text-slate-300 font-medium text-xs mt-1">{t('home.comingSoon')}</p>
           </div>
         )}
       </div>

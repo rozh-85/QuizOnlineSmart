@@ -1,4 +1,5 @@
 import { FileText, Link as LinkIcon, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Card } from './ui';
 import { Material } from '../types';
 import MaterialFileIcon from './MaterialFileIcon';
@@ -8,6 +9,7 @@ interface MaterialsViewProps {
 }
 
 const MaterialsView = ({ materials }: MaterialsViewProps) => {
+  const { t } = useTranslation();
   if (materials.length === 0) return null;
 
   return (
@@ -17,8 +19,8 @@ const MaterialsView = ({ materials }: MaterialsViewProps) => {
           <FileText size={20} />
         </div>
         <div>
-          <h2 className="text-xl font-black text-slate-900 tracking-tight">Learning Materials</h2>
-          <p className="text-sm font-medium text-slate-500">Study these notes before starting the quiz</p>
+          <h2 className="text-xl font-black text-slate-900 tracking-tight">{t('materialsView.learningMaterials')}</h2>
+          <p className="text-sm font-medium text-slate-500">{t('materialsView.studyNotes')}</p>
         </div>
       </div>
 
@@ -32,7 +34,7 @@ const MaterialsView = ({ materials }: MaterialsViewProps) => {
                   {material.title}
                 </h3>
                 <p className="text-xs font-semibold text-slate-400 mt-0.5 uppercase tracking-wider">
-                  {material.fileType === 'note' ? 'Lecture Note' : material.fileType.toUpperCase()}
+                  {material.fileType === 'note' ? t('materialsView.lectureNote') : material.fileType.toUpperCase()}
                 </p>
                 
                 {material.fileType === 'note' ? (
@@ -48,7 +50,7 @@ const MaterialsView = ({ materials }: MaterialsViewProps) => {
                   >
                     <span className="truncate flex items-center gap-2">
                        <LinkIcon size={14} />
-                       {material.fileName || 'Open Document'}
+                       {material.fileName || t('materialsView.openDocument')}
                     </span>
                     <ChevronRight size={14} />
                   </a>

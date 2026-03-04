@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MessageSquare, BookOpen, Search } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/ui';
 import { lectureApi } from '../../api/lectureApi';
 import type { Lecture } from '../../types/database';
@@ -7,6 +8,7 @@ import LectureQA from '../../components/LectureQA';
 import { useTeacherUnreadByLecture } from '../../hooks/useUnreadCount';
 
 const QAManager = () => {
+  const { t } = useTranslation();
   const [lectures, setLectures] = useState<Lecture[]>([]);
   const [selectedLectureId, setSelectedLectureId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,8 +66,8 @@ const QAManager = () => {
     <div className="animate-fade-in h-full flex flex-col">
       {/* Header */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-slate-900">Q&A Management</h2>
-        <p className="text-slate-600 mt-1">Monitor student questions and publish answers</p>
+        <h2 className="text-2xl font-bold text-slate-900">{t('qaManager.title')}</h2>
+        <p className="text-slate-600 mt-1">{t('qaManager.subtitle')}</p>
       </div>
 
       {/* Mobile: Select dropdown */}
@@ -75,10 +77,10 @@ const QAManager = () => {
           onChange={(e) => setSelectedLectureId(e.target.value)}
           className="w-full px-4 py-3 border border-slate-200 rounded-lg bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
-          <option value="">Select a lecture</option>
+          <option value="">{t('qaManager.selectLecture')}</option>
           {lectures.map((lecture) => (
             <option key={lecture.id} value={lecture.id}>
-              {lecture.title} {unreadCounts[lecture.id] > 0 ? `(${unreadCounts[lecture.id]} new)` : ''}
+              {lecture.title} {unreadCounts[lecture.id] > 0 ? `(${t('qaManager.newCount', { count: unreadCounts[lecture.id] })})` : ''}
             </option>
           ))}
         </select>
@@ -92,13 +94,13 @@ const QAManager = () => {
             <div className="p-2.5 border-b border-slate-100">
               <div className="flex items-center gap-2 mb-2">
                 <BookOpen size={14} />
-                <h3 className="text-xs font-semibold text-slate-900">Lectures</h3>
+                <h3 className="text-xs font-semibold text-slate-900">{t('qaManager.lectures')}</h3>
               </div>
               <div className="relative">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={13} />
                 <input
                   type="text"
-                  placeholder="Search lectures..."
+                  placeholder={t('qaManager.searchLectures')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-8 pr-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
@@ -150,7 +152,7 @@ const QAManager = () => {
             <div className="h-full border border-slate-200 rounded-lg bg-slate-50 flex items-center justify-center">
               <div className="text-center">
                 <MessageSquare size={48} className="text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-600 font-medium">Select a lecture to view Q&A</p>
+                <p className="text-slate-600 font-medium">{t('qaManager.selectLectureToView')}</p>
               </div>
             </div>
           )}
@@ -167,7 +169,7 @@ const QAManager = () => {
           <div className="h-full border border-slate-200 rounded-lg bg-slate-50 flex items-center justify-center">
             <div className="text-center p-8">
               <MessageSquare size={48} className="text-slate-300 mx-auto mb-3" />
-              <p className="text-slate-600 font-medium">Select a lecture above</p>
+              <p className="text-slate-600 font-medium">{t('qaManager.selectLectureAbove')}</p>
             </div>
           </div>
         )}

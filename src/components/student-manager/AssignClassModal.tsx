@@ -1,4 +1,5 @@
 import { Link as LinkIcon, ChevronRight, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface AssignClassModalProps {
   student: any;
@@ -8,6 +9,7 @@ interface AssignClassModalProps {
 }
 
 const AssignClassModal = ({ student, classes, onAssign, onClose }: AssignClassModalProps) => {
+  const { t } = useTranslation();
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
       <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl p-6 sm:p-8 animate-scale-in">
@@ -17,8 +19,8 @@ const AssignClassModal = ({ student, classes, onAssign, onClose }: AssignClassMo
               <LinkIcon size={18} />
             </div>
             <div>
-              <h3 className="text-lg font-black text-slate-900 tracking-tight">Assign Class</h3>
-              <p className="text-[10px] text-slate-400 font-medium">Choose a class for {student?.full_name}</p>
+              <h3 className="text-lg font-black text-slate-900 tracking-tight">{t('studentManager.assignClass')}</h3>
+              <p className="text-[10px] text-slate-400 font-medium">{t('studentManager.chooseClassFor', { name: student?.full_name })}</p>
             </div>
           </div>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all">
@@ -40,7 +42,7 @@ const AssignClassModal = ({ student, classes, onAssign, onClose }: AssignClassMo
         </div>
         
         <button onClick={onClose} className="w-full mt-4 py-2.5 text-slate-400 hover:text-slate-900 font-bold text-sm transition-colors">
-          Cancel
+          {t('common.cancel')}
         </button>
       </div>
     </div>

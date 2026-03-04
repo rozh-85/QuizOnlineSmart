@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Megaphone, Check, X, BookOpen, FileText, HelpCircle, Clock, ChevronDown, ChevronUp, History, Loader2, Plus, PenLine, Eye, Link as LinkIcon, CheckCircle2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { whatsNewApi } from '../../api/whatsNewApi';
 import { useQuiz } from '../../context/QuizContext';
 import type { WhatsNewItem } from '../../types/app';
@@ -22,6 +23,7 @@ const ITEM_TYPE_META: Record<string, { icon: typeof BookOpen; label: string; col
 };
 
 const WhatsNewPublisher = () => {
+  const { t } = useTranslation();
   const { lectures, questions, materials } = useQuiz();
   const [pendingGroups, setPendingGroups] = useState<PendingGroup[]>([]);
   const [history, setHistory] = useState<WhatsNewItem[]>([]);
@@ -37,9 +39,9 @@ const WhatsNewPublisher = () => {
   const [previewItemId, setPreviewItemId] = useState<string | null>(null);
 
   const getLectureName = useCallback((lectureId: string | null) => {
-    if (!lectureId) return 'General';
+    if (!lectureId) return t('whatsNew.general');
     const lecture = lectures.find(l => l.id === lectureId);
-    return lecture?.title || 'Unknown Lecture';
+    return lecture?.title || t('whatsNew.unknownLecture');
   }, [lectures]);
 
   const loadData = useCallback(async () => {
@@ -78,7 +80,7 @@ const WhatsNewPublisher = () => {
       setPendingGroups(groups);
     } catch (err) {
       console.error('Failed to load what\'s new data:', err);
-      toast.error('Failed to load data');
+      toast.error(t('whatsNew.failedToLoadData'));
     } finally {
       setLoading(false);
     }
@@ -91,11 +93,11 @@ const WhatsNewPublisher = () => {
     setProcessingKey(key);
     try {
       await whatsNewApi.publishGroup(group.itemType, group.lectureId);
-      toast.success(`Published ${group.items.length} ${group.itemType}(s) to students`);
+      toast.success(t('whatsNew.publishedItems', { count: group.items.length }));
       await loadData();
     } catch (err) {
       console.error('Publish failed:', err);
-      toast.error('Failed to publish');
+      toast.error(t('whatsNew.failedToPublish'));
     } finally {
       setProcessingKey(null);
     }
@@ -106,11 +108,11 @@ const WhatsNewPublisher = () => {
     setProcessingKey(key);
     try {
       await whatsNewApi.declineGroup(group.itemType, group.lectureId);
-      toast.success(`Declined ${group.items.length} item(s)`);
+      toast.success(t('whatsNew.declinedItems', { count: group.items.length }));
       await loadData();
     } catch (err) {
       console.error('Decline failed:', err);
-      toast.error('Failed to decline');
+      toast.error(t('whatsNew.failedToDecline'));
     } finally {
       setProcessingKey(null);
     }
@@ -118,7 +120,7 @@ const WhatsNewPublisher = () => {
 
   const handleCreateManual = async () => {
     if (!manualTitle.trim()) {
-      toast.error('Title is required');
+      toast.error(t('whatsNew.titleRequired'));
       return;
     }
     setManualSubmitting(true);
@@ -128,7 +130,7 @@ const WhatsNewPublisher = () => {
         description: manualDescription.trim() || null,
         lecture_id: manualLectureId || null,
       });
-      toast.success('Manual update published!');
+      toast.success(t('whatsNew.manualUpdatePublished'));
       setShowManualModal(false);
       setManualTitle('');
       setManualDescription('');
@@ -136,7 +138,7 @@ const WhatsNewPublisher = () => {
       await loadData();
     } catch (err) {
       console.error('Failed to create manual update:', err);
-      toast.error('Failed to create update');
+      toast.error(t('whatsNew.failedToCreateUpdate'));
     } finally {
       setManualSubmitting(false);
     }
@@ -144,10 +146,10 @@ const WhatsNewPublisher = () => {
 
   const fmtRelative = (d: string) => {
     const diff = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
-    if (diff < 60) return 'Just now';
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    return `${Math.floor(diff / 86400)}d ago`;
+    if (diff < 60) return t('whatsNew.justNow');
+    if (diff < 3600) return t('whatsNew.mAgo', { count: Math.floor(diff / 60) });
+    if (diff < 86400) return t('whatsNew.hAgo', { count: Math.floor(diff / 3600) });
+    return t('whatsNew.dAgo', { count: Math.floor(diff / 86400) });
   };
 
   if (loading) {
@@ -163,15 +165,15 @@ const WhatsNewPublisher = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">What's New.</h1>
-          <p className="text-slate-500 mt-1 font-medium">Review and publish updates for students</p>
+          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">{t('whatsNew.title')}</h1>
+          <p className="text-slate-500 mt-1 font-medium">{t('whatsNew.subtitle')}</p>
         </div>
         <button
           onClick={() => setShowManualModal(true)}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 shadow-lg shadow-amber-200 transition-all"
         >
           <Plus size={18} />
-          Add Manual Update
+          {t('whatsNew.addManualUpdate')}
         </button>
       </div>
 
@@ -184,7 +186,7 @@ const WhatsNewPublisher = () => {
                 <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
                   <PenLine size={20} />
                 </div>
-                <h2 className="text-lg font-black text-slate-900">Add Manual Update</h2>
+                <h2 className="text-lg font-black text-slate-900">{t('whatsNew.addManualUpdate')}</h2>
               </div>
               <button
                 onClick={() => { setShowManualModal(false); setManualTitle(''); setManualDescription(''); setManualLectureId(''); }}
@@ -222,7 +224,7 @@ const WhatsNewPublisher = () => {
                   onChange={(e) => setManualLectureId(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-300 transition-all bg-white"
                 >
-                  <option value="">General (no lecture)</option>
+                  <option value="">{t('whatsNew.generalNoLecture')}</option>
                   {lectures.map((lec) => (
                     <option key={lec.id} value={lec.id}>{lec.title}</option>
                   ))}
@@ -235,7 +237,7 @@ const WhatsNewPublisher = () => {
                 disabled={manualSubmitting}
                 className="px-5 py-3 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-all disabled:opacity-50"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleCreateManual}
@@ -243,7 +245,7 @@ const WhatsNewPublisher = () => {
                 className="flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 shadow-sm hover:shadow-md transition-all disabled:opacity-50"
               >
                 {manualSubmitting ? <Loader2 size={17} className="animate-spin" /> : <Megaphone size={17} />}
-                Publish Now
+                {t('whatsNew.publishNow')}
               </button>
             </div>
           </div>
@@ -256,13 +258,13 @@ const WhatsNewPublisher = () => {
           <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Check size={32} className="text-slate-300" />
           </div>
-          <p className="text-slate-500 font-bold text-lg">All caught up!</p>
-          <p className="text-slate-400 text-sm mt-1">No pending updates to review</p>
+          <p className="text-slate-500 font-bold text-lg">{t('whatsNew.allCaughtUp')}</p>
+          <p className="text-slate-400 text-sm mt-1">{t('whatsNew.noPendingUpdates')}</p>
         </div>
       ) : (
         <div className="mb-10">
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3 px-1">
-            Pending Review · {pendingGroups.reduce((sum, g) => sum + g.items.length, 0)} items
+            {t('whatsNew.pendingReview')} · {pendingGroups.reduce((sum, g) => sum + g.items.length, 0)} {t('whatsNew.items')}
           </p>
           <div className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
             {pendingGroups.map((group, idx) => {
@@ -302,7 +304,7 @@ const WhatsNewPublisher = () => {
                     <button
                       onClick={() => setExpandedGroupKey(isExpanded ? null : key)}
                       className="p-1.5 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all shrink-0"
-                      title={isExpanded ? 'Collapse' : 'Expand'}
+                      title={isExpanded ? t('whatsNew.collapse') : t('whatsNew.expand')}
                     >
                       {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                     </button>
@@ -315,7 +317,7 @@ const WhatsNewPublisher = () => {
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 transition-all disabled:opacity-50"
                       >
                         {isProcessing ? <Loader2 size={12} className="animate-spin" /> : <X size={12} />}
-                        Decline
+                        {t('whatsNew.decline')}
                       </button>
                       <button
                         onClick={() => handlePublish(group)}
@@ -323,7 +325,7 @@ const WhatsNewPublisher = () => {
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold text-white bg-primary-600 hover:bg-primary-700 transition-all disabled:opacity-50"
                       >
                         {isProcessing ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
-                        Publish
+                        {t('whatsNew.publish')}
                       </button>
                     </div>
                   </div>
@@ -339,7 +341,7 @@ const WhatsNewPublisher = () => {
                           </span>
                         ))}
                         {group.items.length > 3 && (
-                          <span className="text-[11px] text-slate-300 font-bold">+{group.items.length - 3} more</span>
+                          <span className="text-[11px] text-slate-300 font-bold">+{group.items.length - 3} {t('whatsNew.more')}</span>
                         )}
                       </div>
                     </div>
@@ -372,7 +374,7 @@ const WhatsNewPublisher = () => {
                                   <button
                                     onClick={() => setPreviewItemId(isPreviewing ? null : item.id)}
                                     className={`p-1 rounded-md transition-all shrink-0 ${isPreviewing ? 'text-primary-600 bg-primary-50' : 'text-slate-300 hover:text-slate-500 hover:bg-slate-100'}`}
-                                    title="Quick view"
+                                    title={t('whatsNew.quickView')}
                                   >
                                     <Eye size={13} />
                                   </button>
@@ -400,12 +402,12 @@ const WhatsNewPublisher = () => {
                                   )}
                                   {question.type === 'true-false' && (
                                     <p className="text-[11px] font-bold text-emerald-600 flex items-center gap-1.5">
-                                      <CheckCircle2 size={11} /> Answer: {question.correctAnswer || (question.correctIndex === 0 ? 'True' : 'False')}
+                                      <CheckCircle2 size={11} /> {t('whatsNew.answer')}: {question.correctAnswer || (question.correctIndex === 0 ? 'True' : 'False')}
                                     </p>
                                   )}
                                   {question.type === 'blank' && question.correctAnswer && (
                                     <p className="text-[11px] font-bold text-emerald-600 flex items-center gap-1.5">
-                                      <CheckCircle2 size={11} /> Answer: {question.correctAnswer}
+                                      <CheckCircle2 size={11} /> {t('whatsNew.answer')}: {question.correctAnswer}
                                     </p>
                                   )}
                                   {question.explanation && (
@@ -430,10 +432,10 @@ const WhatsNewPublisher = () => {
                                     <a href={material.fileUrl} target="_blank" rel="noopener noreferrer"
                                       className="inline-flex items-center gap-1.5 text-[11px] font-bold text-primary-600 hover:text-primary-700">
                                       <LinkIcon size={11} />
-                                      {material.fileName || 'Open file'}
+                                      {material.fileName || t('whatsNew.openFile')}
                                     </a>
                                   ) : (
-                                    <p className="text-[11px] text-slate-400">No content preview available</p>
+                                    <p className="text-[11px] text-slate-400">{t('whatsNew.noContentPreview')}</p>
                                   )}
                                   <div className="flex items-center gap-2">
                                     <span className={`px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider ${
@@ -482,23 +484,23 @@ const WhatsNewPublisher = () => {
           className="flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors mb-3"
         >
           <History size={15} />
-          <span>Recent History</span>
+          <span>{t('whatsNew.recentHistory')}</span>
           {showHistory ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
         </button>
 
         {showHistory && (
           history.length === 0 ? (
-            <p className="text-sm text-slate-400 py-6 px-1">No history yet</p>
+            <p className="text-sm text-slate-400 py-6 px-1">{t('whatsNew.noHistoryYet')}</p>
           ) : (
             <div className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-slate-50/80">
-                    <th className="text-start ps-5 pe-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Title</th>
-                    <th className="text-start px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Type</th>
-                    <th className="text-start px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Lecture</th>
-                    <th className="text-start px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Status</th>
-                    <th className="text-end px-5 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">When</th>
+                    <th className="text-start ps-5 pe-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">{t('whatsNew.titleCol')}</th>
+                    <th className="text-start px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">{t('whatsNew.typeCol')}</th>
+                    <th className="text-start px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">{t('whatsNew.lectureCol')}</th>
+                    <th className="text-start px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">{t('whatsNew.statusCol')}</th>
+                    <th className="text-end px-5 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400">{t('whatsNew.whenCol')}</th>
                   </tr>
                 </thead>
                 <tbody>

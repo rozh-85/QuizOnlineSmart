@@ -1,11 +1,13 @@
 import { useState, useMemo } from 'react';
 import { Plus, Edit2, Trash2, BookOpen, Search, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { Button, Card, Modal, Input, TextArea } from '../../components/ui';
 import { useQuiz } from '../../context/QuizContext';
 import { Lecture } from '../../types';
 
 const LectureManager = () => {
+  const { t } = useTranslation();
   const { lectures, addLecture, updateLecture, deleteLecture, getQuestionsByLecture } = useQuiz();
   const [editModal, setEditModal] = useState<{ isOpen: boolean; lecture: Lecture | null }>({
     isOpen: false,
@@ -52,7 +54,7 @@ const LectureManager = () => {
 
   const handleSave = async () => {
     if (!formData.title.trim()) {
-      toast.error('Please enter a lecture title');
+      toast.error(t('lectureManager.pleaseEnterTitle'));
       return;
     }
 
@@ -65,9 +67,9 @@ const LectureManager = () => {
     })();
 
     toast.promise(promise, {
-      loading: editModal.lecture ? 'Updating lecture...' : 'Creating lecture...',
-      success: editModal.lecture ? 'Lecture updated successfully' : 'Lecture created successfully',
-      error: 'Failed to save lecture',
+      loading: editModal.lecture ? t('lectureManager.updatingLecture') : t('lectureManager.creatingLecture'),
+      success: editModal.lecture ? t('lectureManager.lectureUpdated') : t('lectureManager.lectureCreated'),
+      error: t('lectureManager.failedToSave'),
     });
 
     try {
@@ -86,9 +88,9 @@ const LectureManager = () => {
       })();
       
       toast.promise(promise, {
-        loading: 'Deleting lecture...',
-        success: 'Lecture deleted successfully',
-        error: 'Failed to delete lecture',
+        loading: t('lectureManager.deletingLecture'),
+        success: t('lectureManager.lectureDeleted'),
+        error: t('lectureManager.failedToDelete'),
       });
 
       try {
@@ -105,12 +107,12 @@ const LectureManager = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">Lectures.</h1>
-          <p className="text-slate-500 mt-1 font-medium">Manage your chemistry lecture structure</p>
+          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">{t('lectureManager.title')}</h1>
+          <p className="text-slate-500 mt-1 font-medium">{t('lectureManager.subtitle')}</p>
         </div>
         <Button onClick={() => openEditModal()} className="w-full sm:w-auto shadow-lg shadow-primary-200">
           <Plus size={20} />
-          <span>New Lecture</span>
+          <span>{t('lectureManager.newLecture')}</span>
         </Button>
       </div>
 
@@ -121,7 +123,7 @@ const LectureManager = () => {
             <Search size={15} className="absolute start-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               type="text"
-              placeholder="Search lectures…"
+              placeholder={t('lectureManager.searchLectures')}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="w-full h-9 ps-9 pe-8 rounded-lg border border-slate-200 bg-white text-sm font-medium text-slate-700 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 transition-all"
@@ -137,7 +139,7 @@ const LectureManager = () => {
           </div>
           {searchQuery && (
             <p className="mt-2 text-xs font-semibold text-slate-400">
-              Showing <span className="text-slate-700">{filteredLectures.length}</span> of {lectures.length} lectures
+              {t('lectureManager.showing')} <span className="text-slate-700">{filteredLectures.length}</span> {t('lectureManager.of')} {lectures.length} {t('lectureManager.lecturesCount')}
             </p>
           )}
         </div>
@@ -149,10 +151,10 @@ const LectureManager = () => {
             <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-4">
               <BookOpen size={40} className="text-slate-300" />
             </div>
-            <h3 className="text-xl font-bold text-slate-900 mb-2">No lectures yet</h3>
-            <p className="text-slate-500 max-w-xs mx-auto mb-6">Start by creating your first lecture module.</p>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">{t('lectureManager.noLecturesYet')}</h3>
+            <p className="text-slate-500 max-w-xs mx-auto mb-6">{t('lectureManager.startByCreating')}</p>
             <Button onClick={() => openEditModal()} variant="secondary">
-              Create First Lecture
+              {t('lectureManager.createFirstLecture')}
             </Button>
           </div>
         </Card>
@@ -162,9 +164,9 @@ const LectureManager = () => {
             <table className="w-full">
               <thead>
                 <tr className="bg-slate-50/80">
-                  <th className="text-start ps-5 pe-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Lecture Details</th>
-                  <th className="text-start px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Order</th>
-                  <th className="text-start px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">Questions</th>
+                  <th className="text-start ps-5 pe-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">{t('lectureManager.lectureDetails')}</th>
+                  <th className="text-start px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">{t('lectureManager.order')}</th>
+                  <th className="text-start px-3 py-2.5 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 whitespace-nowrap">{t('lectureManager.questions')}</th>
                   <th className="w-20 px-3 py-2.5"></th>
                 </tr>
               </thead>
@@ -173,9 +175,9 @@ const LectureManager = () => {
                   <tr>
                     <td colSpan={4} className="py-12 text-center">
                       <Search size={28} className="text-slate-200 mx-auto mb-2" />
-                      <p className="text-sm font-bold text-slate-900 mb-1">No matching lectures</p>
-                      <p className="text-xs text-slate-400 mb-3">Try a different search term.</p>
-                      <button onClick={() => setSearchQuery('')} className="text-xs font-bold text-primary-600 hover:text-primary-700 transition-colors">Clear search</button>
+                      <p className="text-sm font-bold text-slate-900 mb-1">{t('lectureManager.noMatchingLectures')}</p>
+                      <p className="text-xs text-slate-400 mb-3">{t('lectureManager.tryDifferentSearch')}</p>
+                      <button onClick={() => setSearchQuery('')} className="text-xs font-bold text-primary-600 hover:text-primary-700 transition-colors">{t('lectureManager.clearSearch')}</button>
                     </td>
                   </tr>
                 ) : filteredLectures.map((lecture) => {
@@ -201,7 +203,7 @@ const LectureManager = () => {
                         </span>
                       </td>
                       <td className="px-3 py-3">
-                        <span className="text-[12px] text-slate-600 font-medium">{questionCount} Questions</span>
+                        <span className="text-[12px] text-slate-600 font-medium">{questionCount} {t('lectureManager.questions')}</span>
                       </td>
                       <td className="px-3 py-3 text-end">
                         <div className="inline-flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -229,7 +231,7 @@ const LectureManager = () => {
           </div>
           <div className="px-5 py-2.5 bg-slate-50/80 border-t border-slate-100">
             <p className="text-[10px] font-semibold text-slate-400">
-              Showing {filteredLectures.length} of {lectures.length} lectures
+              {t('lectureManager.showing')} {filteredLectures.length} {t('lectureManager.of')} {lectures.length} {t('lectureManager.lecturesCount')}
             </p>
           </div>
         </div>
@@ -239,21 +241,21 @@ const LectureManager = () => {
       <Modal
         isOpen={editModal.isOpen}
         onClose={() => setEditModal({ isOpen: false, lecture: null })}
-        title={editModal.lecture ? 'Edit Module' : 'Create New Module'}
+        title={editModal.lecture ? t('lectureManager.editModule') : t('lectureManager.createNewModule')}
       >
         <div className="flex flex-col gap-5 pb-2">
           {/* Primary Information Section */}
           <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
             <div className="md:col-span-8 flex flex-col gap-3">
               <Input
-                label="Module Name"
-                placeholder="e.g., Quantum Chemistry Fundamentals"
+                label={t('lectureManager.moduleName')}
+                placeholder={t('lectureManager.moduleNamePlaceholder')}
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               />
               <TextArea
-                label="Description"
-                placeholder="Brief summary..."
+                label={t('lectureManager.description')}
+                placeholder={t('lectureManager.briefSummary')}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={2}
@@ -261,7 +263,7 @@ const LectureManager = () => {
             </div>
             <div className="md:col-span-4 self-start">
               <Input
-                label="Order"
+                label={t('lectureManager.order')}
                 type="number"
                 min="1"
                 value={formData.order}
@@ -276,14 +278,14 @@ const LectureManager = () => {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                Curriculum Sections
+                {t('lectureManager.curriculumSections')}
               </label>
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, sections: [...formData.sections, `New Section ${formData.sections.length + 1}`] })}
                 className="text-[10px] font-black text-primary-600 uppercase tracking-widest flex items-center gap-1 hover:text-primary-700 transition-colors"
               >
-                <Plus size={12} /> Add Topic
+                <Plus size={12} /> {t('lectureManager.addTopic')}
               </button>
             </div>
             
@@ -313,7 +315,7 @@ const LectureManager = () => {
               ))}
               {formData.sections.length === 0 && (
                 <div className="col-span-full py-6 text-center border-2 border-dashed border-slate-100 rounded-xl bg-slate-50/30">
-                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">No sections added yet.</p>
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{t('lectureManager.noSectionsYet')}</p>
                 </div>
               )}
             </div>
@@ -328,13 +330,13 @@ const LectureManager = () => {
               className="flex-1 h-11"
               onClick={() => setEditModal({ isOpen: false, lecture: null })}
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button 
               className="flex-1 h-11 bg-slate-900 border-slate-900 shadow-md shadow-slate-200"
               onClick={handleSave}
             >
-              {editModal.lecture ? 'Save Changes' : 'Create Module'}
+              {editModal.lecture ? t('lectureManager.saveChanges') : t('lectureManager.createModule')}
             </Button>
           </div>
         </div>
@@ -344,14 +346,14 @@ const LectureManager = () => {
       <Modal
         isOpen={deleteModal.isOpen}
         onClose={() => setDeleteModal({ isOpen: false, lecture: null })}
-        title="Delete Lecture"
+        title={t('lectureManager.deleteLecture')}
       >
         <div className="space-y-4">
           <p className="text-slate-700 font-medium leading-relaxed">
-            Are you sure you want to delete <strong className="text-slate-900">{deleteModal.lecture?.title}</strong>?
+            {t('lectureManager.confirmDelete')} <strong className="text-slate-900">{deleteModal.lecture?.title}</strong>?
           </p>
           <p className="text-sm text-slate-500">
-            Questions assigned to this lecture will not be deleted, but their lecture assignment will be removed.
+            {t('lectureManager.deleteWarning')}
           </p>
           <div className="flex gap-3 pt-4">
             <Button
@@ -359,13 +361,13 @@ const LectureManager = () => {
               onClick={() => setDeleteModal({ isOpen: false, lecture: null })}
               className="flex-1"
             >
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               onClick={confirmDelete}
               className="flex-1 bg-rose-500 hover:bg-rose-600 border-rose-500"
             >
-              Delete Lecture
+              {t('lectureManager.deleteLecture')}
             </Button>
           </div>
         </div>

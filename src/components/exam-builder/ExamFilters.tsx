@@ -1,4 +1,5 @@
 import { Search, CheckSquare, Square, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { TYPE_LABELS, TYPE_ORDER } from '../../constants/examBuilder';
 import type { Lecture, QuestionType } from '../../types';
 import type { ExamFilterState, ExamFilterActions, ExamBulkActions } from '../../types/examBuilder';
@@ -22,6 +23,7 @@ const selectCls = (active: boolean) =>
 const ExamFilters = ({
   lectures, sections, filters, filterActions, bulkActions,
 }: ExamFiltersProps) => {
+  const { t } = useTranslation();
   const { selectedLecture, selectedSection, selectedType, searchQuery } = filters;
   const { setSelectedLecture, setSelectedSection, setSelectedType, setSearchQuery } = filterActions;
   const { allFilteredSelected, selectedCount, selectAllFiltered, deselectAllFiltered, deselectAll } = bulkActions;
@@ -44,7 +46,7 @@ const ExamFilters = ({
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search questions..."
+          placeholder={t('examBuilder.searchQuestions')}
           className="w-full h-9 pl-8 pr-3 rounded-lg border-2 border-slate-100 focus:border-primary-400 outline-none transition-all text-xs font-semibold text-slate-700 bg-white"
         />
       </div>
@@ -59,7 +61,7 @@ const ExamFilters = ({
           onChange={(e) => { setSelectedLecture(e.target.value); setSelectedSection(''); }}
           className={selectCls(!!selectedLecture)}
         >
-          <option value="">All Lectures</option>
+          <option value="">{t('examBuilder.allLectures')}</option>
           {lectures.map(l => (
             <option key={l.id} value={l.id}>{l.title}</option>
           ))}
@@ -76,9 +78,9 @@ const ExamFilters = ({
           onChange={(e) => setSelectedSection(e.target.value)}
           disabled={!selectedLecture}
           className={`${selectCls(!!selectedSection)} disabled:opacity-40 disabled:cursor-not-allowed`}
-          title={!selectedLecture ? 'Select a lecture first' : undefined}
+          title={!selectedLecture ? t('examBuilder.selectLectureFirst') : undefined}
         >
-          <option value="">All Sections</option>
+          <option value="">{t('examBuilder.allSections')}</option>
           {sections.map(s => (
             <option key={s} value={s}>{s}</option>
           ))}
@@ -95,7 +97,7 @@ const ExamFilters = ({
           onChange={(e) => setSelectedType(e.target.value as QuestionType | '')}
           className={selectCls(!!selectedType)}
         >
-          <option value="">All Types</option>
+          <option value="">{t('examBuilder.allTypes')}</option>
           {TYPE_ORDER.map(t => (
             <option key={t} value={t}>{TYPE_LABELS[t]}</option>
           ))}
@@ -126,14 +128,14 @@ const ExamFilters = ({
           className="h-9 px-3 rounded-lg border-2 border-slate-100 hover:border-primary-200 text-xs font-bold text-slate-500 hover:text-primary-600 transition-all bg-white flex items-center gap-1.5 whitespace-nowrap"
         >
           {allFilteredSelected ? <Square size={13} /> : <CheckSquare size={13} />}
-          {allFilteredSelected ? 'Deselect All' : 'Select All'}
+          {allFilteredSelected ? t('examBuilder.deselectAll') : t('examBuilder.selectAll')}
         </button>
         {selectedCount > 0 && (
           <button
             onClick={deselectAll}
             className="h-9 px-3 rounded-lg border-2 border-rose-100 text-xs font-bold text-rose-500 hover:bg-rose-50 transition-all bg-white whitespace-nowrap"
           >
-            Clear ({selectedCount})
+            {t('common.clear')} ({selectedCount})
           </button>
         )}
       </div>

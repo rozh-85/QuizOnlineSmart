@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { Sparkles, Save, Trash2, Check, Key, Loader2, X, FileUp } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { Button, TextArea } from '../../components/ui';
 import { useQuiz } from '../../context/QuizContext';
 import { Question, QuestionType } from '../../types';
@@ -16,6 +17,7 @@ interface GeneratedQuestion extends Omit<Question, 'id'> {
 }
 
 const AIGenerator = () => {
+  const { t } = useTranslation();
   const { lectures, addQuestion } = useQuiz();
   const [apiKey, setApiKey] = useState(() => {
     const envKey = import.meta.env.VITE_GEMINI_API_KEY;
@@ -49,11 +51,11 @@ const AIGenerator = () => {
   const saveApiKey = () => {
     localStorage.setItem('edu_ai_api_key', apiKey);
     setShowKeyInput(false);
-    toast.success('API Key saved');
+    toast.success(t('aiGenerator.apiKeySaved'));
   };
 
   const handleTestConnection = async () => {
-    if (!apiKey) { toast.error('Enter an API Key first'); return; }
+    if (!apiKey) { toast.error(t('aiGenerator.enterApiKeyFirst')); return; }
     setIsTestLoading(true);
     try {
       const response = await testGeminiConnection(apiKey);
@@ -105,18 +107,18 @@ const AIGenerator = () => {
   };
 
   const handleGenerate = async () => {
-    if (!apiKey) { toast.error('Please configure your API Key'); setShowKeyInput(true); return; }
-    if (!selectedLecture) { toast.error('Please select a lecture'); return; }
+    if (!apiKey) { toast.error(t('aiGenerator.pleaseConfigureApiKey')); setShowKeyInput(true); return; }
+    if (!selectedLecture) { toast.error(t('aiGenerator.pleaseSelectLecture')); return; }
 
     let sourceContent = "";
     if (sourceType === 'manual') {
-      if (!manualText.trim()) { toast.error('Please paste lecture content'); return; }
+      if (!manualText.trim()) { toast.error(t('aiGenerator.pleasePasteContent')); return; }
       sourceContent = manualText;
     } else {
-      if (files.length === 0) { toast.error('Please upload at least one file'); return; }
+      if (files.length === 0) { toast.error(t('aiGenerator.pleaseUploadFile')); return; }
       setIsReadingFiles(true);
       try { sourceContent = await extractTextFromFiles(); }
-      catch { toast.error('Failed to read files'); setIsReadingFiles(false); return; }
+      catch { toast.error(t('aiGenerator.failedToReadFiles')); setIsReadingFiles(false); return; }
       setIsReadingFiles(false);
     }
 
@@ -132,9 +134,9 @@ const AIGenerator = () => {
         lectureId: selectedLecture, sectionId: selectedSection || 'AI Generated',
       }));
       setGeneratedQuestions(newQuestions);
-      toast.success(`Generated ${newQuestions.length} questions!`);
+      toast.success(t('aiGenerator.generatedQuestions', { count: newQuestions.length }));
     } catch (error: any) {
-      toast.error(error.message || 'Failed to generate questions');
+      toast.error(error.message || t('aiGenerator.failedToGenerate'));
     } finally {
       setIsGenerating(false);
     }
@@ -146,8 +148,8 @@ const AIGenerator = () => {
       const { tempId, ...questionData } = q;
       await addQuestion(questionData);
       setGeneratedQuestions(prev => prev.filter(item => item.tempId !== q.tempId));
-      toast.success('Saved to library');
-    } catch { toast.error('Failed to save'); }
+      toast.success(t('aiGenerator.savedToLibrary'));
+    } catch { toast.error(t('aiGenerator.failedToSave')); }
     finally { setSavingLoading(null); }
   };
 
@@ -169,7 +171,7 @@ const AIGenerator = () => {
           <div className="h-9 w-9 rounded-lg bg-primary-600 flex items-center justify-center">
             <Sparkles size={16} className="text-white" />
           </div>
-          <h1 className="text-xl font-bold text-slate-900">AI Generator</h1>
+          <h1 className="text-xl font-bold text-slate-900">{t('aiGenerator.title')}</h1>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -178,18 +180,18 @@ const AIGenerator = () => {
             className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-primary-600 hover:bg-primary-50 transition-colors disabled:opacity-50"
           >
             {isTestLoading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-            Test Connection
+            {t('aiGenerator.testConnection')}
           </button>
           {showKeyInput ? (
             <div className="flex gap-2">
               <input
                 type="password"
-                placeholder="Gemini API Key..."
+                placeholder={t('aiGenerator.apiKeyPlaceholder')}
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 className="h-9 px-3 rounded-lg border border-slate-200 text-sm outline-none focus:border-primary-500 w-40"
               />
-              <Button size="sm" onClick={saveApiKey}>Save</Button>
+              <Button size="sm" onClick={saveApiKey}>{t('common.save')}</Button>
             </div>
           ) : (
             <button
@@ -197,7 +199,7 @@ const AIGenerator = () => {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-500 hover:text-slate-700 border border-slate-200 transition-colors"
             >
               <Key size={12} />
-              API Key
+              {t('aiGenerator.apiKey')}
             </button>
           )}
         </div>
@@ -210,7 +212,7 @@ const AIGenerator = () => {
 
             {/* Source */}
             <div>
-              <label className="text-sm font-semibold text-slate-700 mb-1.5 block">Content Source</label>
+              <label className="text-sm font-semibold text-slate-700 mb-1.5 block">{t('aiGenerator.contentSource')}</label>
               <div className="flex bg-slate-100 rounded-lg p-1 mb-3">
                 <button
                   onClick={() => setSourceType('manual')}
@@ -218,7 +220,7 @@ const AIGenerator = () => {
                     sourceType === 'manual' ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
                   }`}
                 >
-                  Paste Text
+                  {t('aiGenerator.pasteText')}
                 </button>
                 <button
                   onClick={() => setSourceType('upload')}
@@ -226,13 +228,13 @@ const AIGenerator = () => {
                     sourceType === 'upload' ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
                   }`}
                 >
-                  Upload PDF
+                  {t('aiGenerator.uploadPDF')}
                 </button>
               </div>
 
               {sourceType === 'manual' ? (
                 <TextArea
-                  placeholder="Paste your lecture notes here..."
+                  placeholder={t('aiGenerator.pasteNotesPlaceholder')}
                   value={manualText}
                   onChange={(e) => setManualText(e.target.value)}
                   rows={5}
@@ -245,7 +247,7 @@ const AIGenerator = () => {
                 >
                   <input type="file" ref={fileInputRef} className="hidden" multiple accept=".pdf,.txt" onChange={handleFileChange} />
                   <FileUp size={20} className="text-slate-400" />
-                  <p className="text-xs font-medium text-slate-500">Click to upload PDF or TXT</p>
+                  <p className="text-xs font-medium text-slate-500">{t('aiGenerator.clickToUpload')}</p>
                   {files.length > 0 && (
                     <div className="w-full mt-2 space-y-1">
                       {files.map((f, i) => (
@@ -265,25 +267,25 @@ const AIGenerator = () => {
             {/* Lecture & Section */}
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-semibold text-slate-700 mb-1.5 block">Lecture</label>
+                <label className="text-sm font-semibold text-slate-700 mb-1.5 block">{t('aiGenerator.lecture')}</label>
                 <select
                   value={selectedLecture}
                   onChange={(e) => { setSelectedLecture(e.target.value); setSelectedSection(''); }}
                   className="w-full h-10 px-3 rounded-lg border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-50 outline-none text-sm text-slate-700 bg-white"
                 >
-                  <option value="">Select a lecture...</option>
+                  <option value="">{t('aiGenerator.selectLecture')}</option>
                   {lectures.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}
                 </select>
               </div>
               <div>
-                <label className="text-sm font-semibold text-slate-700 mb-1.5 block">Section</label>
+                <label className="text-sm font-semibold text-slate-700 mb-1.5 block">{t('aiGenerator.section')}</label>
                 <select
                   value={selectedSection}
                   onChange={(e) => setSelectedSection(e.target.value)}
                   disabled={!selectedLecture}
                   className="w-full h-10 px-3 rounded-lg border border-slate-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-50 outline-none text-sm text-slate-700 bg-white disabled:opacity-40 disabled:bg-slate-50"
                 >
-                  <option value="">All Sections</option>
+                  <option value="">{t('aiGenerator.allSections')}</option>
                   {(selectedLectureObj?.sections ?? []).map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
@@ -292,7 +294,7 @@ const AIGenerator = () => {
             {/* Format & Difficulty */}
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-semibold text-slate-700 mb-1.5 block">Format</label>
+                <label className="text-sm font-semibold text-slate-700 mb-1.5 block">{t('aiGenerator.format')}</label>
                 <div className="flex bg-slate-100 rounded-lg p-1">
                   {([
                     { id: 'multiple-choice', label: 'MCQ' },
@@ -312,7 +314,7 @@ const AIGenerator = () => {
                 </div>
               </div>
               <div>
-                <label className="text-sm font-semibold text-slate-700 mb-1.5 block">Difficulty</label>
+                <label className="text-sm font-semibold text-slate-700 mb-1.5 block">{t('aiGenerator.difficulty')}</label>
                 <div className="flex bg-slate-100 rounded-lg p-1">
                   {(['easy', 'medium', 'hard'] as const).map((d) => (
                     <button
@@ -336,7 +338,7 @@ const AIGenerator = () => {
             {/* Count & Language */}
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-semibold text-slate-700 mb-1.5 block">Quantity</label>
+                <label className="text-sm font-semibold text-slate-700 mb-1.5 block">{t('aiGenerator.quantity')}</label>
                 <input
                   type="number" min="1" max="15" value={count}
                   onChange={e => setCount(parseInt(e.target.value))}
@@ -344,7 +346,7 @@ const AIGenerator = () => {
                 />
               </div>
               <div>
-                <label className="text-sm font-semibold text-slate-700 mb-1.5 block">Language</label>
+                <label className="text-sm font-semibold text-slate-700 mb-1.5 block">{t('aiGenerator.language')}</label>
                 <input
                   type="text" value={language}
                   onChange={e => setLanguage(e.target.value)}
@@ -365,7 +367,7 @@ const AIGenerator = () => {
                 ) : (
                   <Sparkles size={16} />
                 )}
-                {isReadingFiles ? 'Reading files...' : isGenerating ? 'Generating...' : 'Generate Questions'}
+                {isReadingFiles ? t('aiGenerator.readingFiles') : isGenerating ? t('aiGenerator.generating') : t('aiGenerator.generateQuestions')}
               </Button>
             </div>
 
@@ -376,14 +378,14 @@ const AIGenerator = () => {
         <div className="lg:col-span-2 space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-slate-700">
-              Generated
+              {t('aiGenerator.generated')}
               {generatedQuestions.length > 0 && (
                 <span className="ml-1.5 text-xs font-medium text-slate-400">({generatedQuestions.length})</span>
               )}
             </h2>
             {generatedQuestions.length > 0 && (
               <button onClick={() => setGeneratedQuestions([])} className="text-xs font-medium text-slate-400 hover:text-rose-500 transition-colors">
-                Discard all
+                {t('aiGenerator.discardAll')}
               </button>
             )}
           </div>
@@ -391,8 +393,8 @@ const AIGenerator = () => {
           {generatedQuestions.length === 0 ? (
             <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-10 text-center">
               <Sparkles size={24} className="mx-auto text-slate-200 mb-3" />
-              <p className="text-sm font-medium text-slate-400">No questions yet</p>
-              <p className="text-xs text-slate-300 mt-1">Fill in the form and click Generate</p>
+              <p className="text-sm font-medium text-slate-400">{t('aiGenerator.noQuestionsYet')}</p>
+              <p className="text-xs text-slate-300 mt-1">{t('aiGenerator.fillFormAndGenerate')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -456,7 +458,7 @@ const AIGenerator = () => {
                             value={q.correctAnswer}
                             onChange={e => updateGeneratedQuestion(q.tempId, { correctAnswer: e.target.value })}
                             className="flex-1 bg-transparent border-none outline-none font-semibold"
-                            placeholder="Correct answer"
+                            placeholder={t('aiGenerator.correctAnswer')}
                           />
                         </div>
                       )}
@@ -471,7 +473,7 @@ const AIGenerator = () => {
                   {/* Save bar */}
                   <div className="px-4 py-2.5 border-t border-slate-100 bg-slate-50/50 flex justify-end">
                     <Button size="sm" onClick={() => saveQuestion(q)} disabled={savingLoading === q.tempId}>
-                      {savingLoading === q.tempId ? <Loader2 className="animate-spin" size={12} /> : <><Save size={12} /> Save</>}
+                      {savingLoading === q.tempId ? <Loader2 className="animate-spin" size={12} /> : <><Save size={12} /> {t('common.save')}</>}
                     </Button>
                   </div>
                 </div>
