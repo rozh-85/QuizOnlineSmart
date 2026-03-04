@@ -37,48 +37,42 @@ const AttendanceScan = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-lg p-8 max-w-sm w-full text-center">
-        <div className="flex justify-center mb-6">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-8 max-w-sm w-full text-center">
+        <div className="flex justify-center mb-4">
           {status === 'loading' && (
-            <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center">
-              <Loader2 className="animate-spin text-primary-600" size={32} />
-            </div>
+            <Loader2 className="animate-spin text-primary-600" size={32} />
           )}
           {status === 'success' && (
-            <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center">
-              <CheckCircle className="text-emerald-600" size={32} />
-            </div>
+            <CheckCircle className="text-emerald-500" size={36} />
           )}
           {status === 'error' && (
-            <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center">
-              <XCircle className="text-rose-600" size={32} />
-            </div>
+            <XCircle className="text-rose-500" size={36} />
           )}
         </div>
 
-        <h1 className="text-xl font-black text-slate-900 tracking-tight mb-2">
+        <h1 className="text-lg font-bold text-slate-900 mb-1">
           {status === 'loading' ? 'Verifying...' :
            status === 'success' ? 'Attendance Confirmed' :
            'Attendance Failed'}
         </h1>
 
-        <p className={`text-sm font-medium mb-6 ${
+        <p className={`text-sm mb-6 ${
           status === 'success' ? 'text-emerald-600' :
           status === 'error' ? 'text-rose-500' :
-          'text-slate-400'
+          'text-slate-500'
         }`}>
           {message || 'Checking your attendance token...'}
         </p>
 
-        <div className="flex items-center justify-center gap-2 text-slate-300 text-xs font-medium">
-          <QrCode size={14} />
-          <span>Smart Quiz Attendance</span>
+        <div className="flex items-center justify-center gap-1.5 text-slate-300 text-xs">
+          <QrCode size={13} />
+          <span>EduPulse Attendance</span>
         </div>
 
         {status !== 'loading' && (
           <button
             onClick={() => navigate('/dashboard')}
-            className="mt-6 w-full py-3 bg-slate-900 text-white font-bold rounded-xl text-sm transition-all active:scale-95 hover:bg-slate-800"
+            className="mt-6 w-full py-3 bg-primary-600 text-white font-semibold rounded-lg text-sm transition-all active:scale-95 hover:bg-primary-700"
           >
             Go to Dashboard
           </button>

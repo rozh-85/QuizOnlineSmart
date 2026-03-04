@@ -122,24 +122,21 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-primary-50/20">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       {/* ── Desktop Top Navigation Bar (hidden on mobile) ── */}
-      <header className="hidden sm:block sticky top-0 z-40 backdrop-blur-xl bg-white/80 border-b border-slate-200/50 shadow-sm">
-        <div className="max-w-6xl xl:max-w-7xl 2xl:max-w-[1400px] mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+      <header className="hidden sm:block sticky top-0 z-40 bg-white border-b border-slate-200">
+        <div className="max-w-5xl xl:max-w-6xl mx-auto px-6">
+          <div className="flex items-center justify-between h-14">
             {/* Logo */}
-            <Link to="/dashboard" className="flex items-center gap-3 group">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-md group-hover:shadow-primary-200 transition-all">
-                <Beaker size={16} className="text-white" />
+            <Link to="/dashboard" className="flex items-center gap-2.5 group">
+              <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center">
+                <Beaker size={15} className="text-white" />
               </div>
-              <div>
-                <span className="text-lg font-black bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent tracking-tighter">EduPulse</span>
-                <div className="text-[9px] font-bold text-primary-600 uppercase tracking-[0.15em] -mt-0.5">Chemistry</div>
-              </div>
+              <span className="text-base font-bold text-slate-900">EduPulse</span>
             </Link>
 
             {/* Desktop Nav Links */}
-            <nav className="flex items-center gap-1">
+            <nav className="flex items-center gap-0.5">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.path);
@@ -150,7 +147,7 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
                     <button
                       key={item.path}
                       onClick={openQrOverlay}
-                      className="relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all text-primary-600 bg-primary-50 hover:bg-primary-100"
+                      className="relative flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-semibold transition-all text-primary-600 hover:bg-primary-50"
                     >
                       <Icon size={16} />
                       <span>{item.label}</span>
@@ -162,16 +159,16 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                    className={`relative flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
                       active
-                        ? 'bg-primary-50 text-primary-600'
-                        : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                        ? 'bg-primary-50 text-primary-600 font-semibold'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                     }`}
                   >
                     <Icon size={16} />
                     <span>{item.label}</span>
                     {item.badge && item.badge > 0 ? (
-                      <span className="absolute -top-0.5 right-1 min-w-[16px] h-[16px] px-1 bg-rose-500 rounded-full text-[8px] font-black text-white flex items-center justify-center border-2 border-white">
+                      <span className="min-w-[18px] h-[18px] px-1 bg-rose-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center">
                         {item.badge > 9 ? '9+' : item.badge}
                       </span>
                     ) : null}
@@ -179,8 +176,7 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
                 );
               })}
 
-              {/* Lectures dropdown-style link */}
-              <div className="w-px h-6 bg-slate-200 mx-2" />
+              <div className="w-px h-5 bg-slate-200 mx-1.5" />
               <Link
                 to="/dashboard"
                 onClick={(e) => {
@@ -189,17 +185,17 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
                     document.getElementById('lectures-section')?.scrollIntoView({ behavior: 'smooth' });
                   }
                 }}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-all"
+                className="flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all"
               >
                 <BookOpen size={16} />
                 <span>Lectures</span>
-                <span className="text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-md font-black">{lectures.length}</span>
+                <span className="text-xs bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-semibold">{lectures.length}</span>
               </Link>
 
-              <div className="w-px h-6 bg-slate-200 mx-2" />
+              <div className="w-px h-5 bg-slate-200 mx-1.5" />
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                className="p-2 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all"
               >
                 <LogOut size={16} />
               </button>
@@ -213,13 +209,12 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
         {children}
       </main>
 
-      {/* ── QR Scanner Fullscreen Overlay (mobile) ── */}
+      {/* ── QR Scanner Fullscreen Overlay ── */}
       {qrOpen && (
         <div className="fixed inset-0 z-[100] bg-black/95 flex flex-col animate-fade-in">
-          {/* Overlay header */}
           <div className="flex items-center justify-between px-4 pt-[env(safe-area-inset-top)] py-4">
-            <h2 className="text-white font-black text-lg">Scan QR Code</h2>
-            <button onClick={closeQrOverlay} className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+            <h2 className="text-white font-bold text-lg">Scan QR Code</h2>
+            <button onClick={closeQrOverlay} className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
               <X size={20} className="text-white" />
             </button>
           </div>
@@ -227,28 +222,28 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
           <div className="flex-1 flex flex-col items-center justify-center px-6">
             {qrStatus === 'scanning' && (
               <div className="w-full max-w-sm">
-                <div id="qr-overlay-reader" className="rounded-2xl overflow-hidden bg-black aspect-square" />
-                <p className="text-center text-white/60 text-xs font-medium mt-4">Point your camera at the QR code</p>
+                <div id="qr-overlay-reader" className="rounded-xl overflow-hidden bg-black aspect-square" />
+                <p className="text-center text-white/50 text-sm mt-4">Point your camera at the QR code</p>
               </div>
             )}
 
             {qrStatus === 'processing' && (
               <div className="text-center">
-                <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Loader2 className="animate-spin text-white" size={28} />
+                <div className="w-14 h-14 bg-white/10 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <Loader2 className="animate-spin text-white" size={24} />
                 </div>
-                <p className="text-sm font-bold text-white/80">{qrMessage}</p>
+                <p className="text-sm font-medium text-white/80">{qrMessage}</p>
               </div>
             )}
 
             {qrStatus === 'success' && (
               <div className="text-center">
-                <div className="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle size={28} className="text-emerald-400" />
+                <div className="w-14 h-14 bg-emerald-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle size={24} className="text-emerald-400" />
                 </div>
-                <h3 className="text-lg font-black text-white mb-2">Attendance Confirmed</h3>
-                <p className="text-sm font-medium text-emerald-400 mb-6">{qrMessage}</p>
-                <button onClick={closeQrOverlay} className="w-full max-w-xs py-3.5 bg-white text-slate-900 font-bold rounded-xl text-sm">
+                <h3 className="text-lg font-bold text-white mb-1">Attendance Confirmed</h3>
+                <p className="text-sm text-emerald-400 mb-6">{qrMessage}</p>
+                <button onClick={closeQrOverlay} className="w-full max-w-xs py-3 bg-white text-slate-900 font-semibold rounded-lg text-sm hover:bg-slate-100 transition-colors">
                   Done
                 </button>
               </div>
@@ -256,14 +251,14 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
 
             {qrStatus === 'error' && (
               <div className="text-center">
-                <div className="w-16 h-16 bg-rose-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <XCircle size={28} className="text-rose-400" />
+                <div className="w-14 h-14 bg-rose-500/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <XCircle size={24} className="text-rose-400" />
                 </div>
-                <h3 className="text-lg font-black text-white mb-2">Scan Failed</h3>
-                <p className="text-sm font-medium text-rose-400 mb-6">{qrMessage}</p>
+                <h3 className="text-lg font-bold text-white mb-1">Scan Failed</h3>
+                <p className="text-sm text-rose-400 mb-6">{qrMessage}</p>
                 <button
                   onClick={() => { setQrStatus('scanning'); setQrMessage(''); }}
-                  className="w-full max-w-xs py-3.5 bg-white text-slate-900 font-bold rounded-xl text-sm flex items-center justify-center gap-2 mx-auto"
+                  className="w-full max-w-xs py-3 bg-white text-slate-900 font-semibold rounded-lg text-sm flex items-center justify-center gap-2 mx-auto hover:bg-slate-100 transition-colors"
                 >
                   <RefreshCw size={16} /> Try Again
                 </button>
@@ -274,8 +269,8 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
       )}
 
       {/* ── Mobile Bottom Navigation Bar (only on mobile) ── */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-slate-200/60 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
-        <div className="flex items-center justify-around px-2 py-1">
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200">
+        <div className="flex items-center justify-around px-1 pt-1.5 pb-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
@@ -286,12 +281,12 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
                 <button
                   key={item.path}
                   onClick={openQrOverlay}
-                  className="relative flex flex-col items-center justify-center py-2 px-3 rounded-2xl transition-all -mt-5"
+                  className="relative flex flex-col items-center justify-center py-1.5 px-3 text-primary-600 active:scale-95 transition-transform"
                 >
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg transition-all bg-primary-600 shadow-primary-200 hover:bg-primary-700 active:scale-95">
-                    <Icon size={24} className="text-white" />
+                  <div className="relative w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
+                    <Icon size={20} strokeWidth={2} />
                   </div>
-                  <span className="text-[8px] font-bold mt-1 text-primary-600">Scan</span>
+                  <span className="text-[10px] font-semibold mt-0.5 text-primary-600">Scan</span>
                 </button>
               );
             }
@@ -300,20 +295,20 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
               <Link
                 key={item.path}
                 to={item.path}
-                className={`relative flex flex-col items-center justify-center py-2 px-3 rounded-2xl transition-all ${
+                className={`relative flex flex-col items-center justify-center py-1.5 px-3 transition-colors ${
                   active ? 'text-primary-600' : 'text-slate-400'
                 }`}
               >
-                <div className={`relative p-1 rounded-xl transition-all ${active ? 'bg-primary-50' : ''}`}>
-                  <Icon size={20} strokeWidth={active ? 2.5 : 2} />
+                <div className="relative">
+                  <Icon size={20} strokeWidth={active ? 2.5 : 1.8} />
                   {item.badge && item.badge > 0 ? (
-                    <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 bg-rose-500 rounded-full text-[7px] font-black text-white flex items-center justify-center border border-white">
+                    <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-0.5 bg-rose-500 rounded-full text-[9px] font-bold text-white flex items-center justify-center">
                       {item.badge > 9 ? '9+' : item.badge}
                     </span>
                   ) : null}
                 </div>
-                <span className={`text-[9px] font-bold mt-0.5 transition-all ${
-                  active ? 'text-primary-600 font-black' : 'text-slate-400'
+                <span className={`text-[10px] mt-0.5 ${
+                  active ? 'text-primary-600 font-semibold' : 'text-slate-400 font-medium'
                 }`}>
                   {item.label}
                 </span>

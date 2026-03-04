@@ -120,22 +120,22 @@ const StudentNotifications = () => {
   return (
     <div className="animate-fade-in">
       {/* Header */}
-      <div className="bg-gradient-to-br from-rose-50 via-pink-50/30 to-white px-4 sm:px-6 pt-8 pb-10">
+      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 pt-6 pb-5">
         <div className="max-w-3xl mx-auto">
-          <div className="flex items-center gap-3 mb-2">
+          <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-10 h-10 rounded-xl bg-primary-100 text-primary-600 flex items-center justify-center">
-                <MessageSquare size={20} />
+              <div className="w-9 h-9 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center">
+                <MessageSquare size={18} />
               </div>
               {unreadThreads.length > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-rose-500 rounded-full text-[8px] font-black text-white flex items-center justify-center border-2 border-rose-50">
+                <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-rose-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center">
                   {unreadThreads.length > 9 ? '9+' : unreadThreads.length}
                 </span>
               )}
             </div>
             <div>
-              <h1 className="text-2xl font-black text-slate-900 tracking-tight">Chat</h1>
-              <p className="text-xs text-slate-400 font-medium">
+              <h1 className="text-lg font-bold text-slate-900">Chat</h1>
+              <p className="text-sm text-slate-500">
                 {unreadThreads.length > 0 ? `${unreadThreads.length} unread message${unreadThreads.length > 1 ? 's' : ''}` : 'You\'re all caught up!'}
               </p>
             </div>
@@ -143,32 +143,30 @@ const StudentNotifications = () => {
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 -mt-4">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-5">
         {loading ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white rounded-2xl border border-slate-100 p-5 animate-pulse">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-slate-200/60" />
+              <div key={i} className="bg-white rounded-xl border border-slate-200 p-4 animate-pulse">
+                <div className="flex items-start gap-3.5">
+                  <div className="w-9 h-9 rounded-lg bg-slate-200" />
                   <div className="flex-1 space-y-2">
-                    <div className="w-32 h-4 rounded bg-slate-200/60" />
-                    <div className="w-full h-3 rounded bg-slate-200/60" />
-                    <div className="w-20 h-3 rounded bg-slate-200/60" />
+                    <div className="w-32 h-4 rounded bg-slate-200" />
+                    <div className="w-full h-3 rounded bg-slate-200" />
+                    <div className="w-20 h-3 rounded bg-slate-200" />
                   </div>
                 </div>
               </div>
             ))}
           </div>
         ) : unreadThreads.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
-            <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <MessageSquare size={28} className="text-slate-200" />
-            </div>
-            <p className="text-sm font-bold text-slate-400 mb-1">No new messages</p>
-            <p className="text-xs text-slate-300">When your teacher replies to your questions, they'll appear here</p>
+          <div className="text-center py-14 bg-white rounded-xl border border-slate-200">
+            <MessageSquare size={28} className="text-slate-300 mx-auto mb-3" />
+            <p className="text-sm font-medium text-slate-500 mb-1">No new messages</p>
+            <p className="text-xs text-slate-400">When your teacher replies, they'll appear here</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {unreadThreads.map((thread) => {
               const lastMsg = getLastMessage(thread);
               const fromTeacher = lastMsg ? isTeacherMessage(lastMsg, thread) : false;
@@ -176,23 +174,23 @@ const StudentNotifications = () => {
                 <button
                   key={thread.id}
                   onClick={() => handleNotificationClick(thread)}
-                  className="w-full text-left bg-white rounded-2xl border border-slate-100 hover:border-primary-200 hover:shadow-lg hover:shadow-primary-50 transition-all p-5 group"
+                  className="w-full text-left bg-white rounded-xl border border-slate-200 hover:border-primary-300 hover:shadow-sm transition-all p-4 group"
                 >
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-primary-100 text-primary-600 flex items-center justify-center flex-shrink-0 group-hover:bg-primary-600 group-hover:text-white transition-colors mt-0.5">
+                  <div className="flex items-start gap-3.5">
+                    <div className="w-9 h-9 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center flex-shrink-0 group-hover:bg-primary-600 group-hover:text-white transition-colors">
                       <MessageSquare size={16} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <span className="text-sm font-black text-slate-900 truncate">
+                      <div className="flex items-center justify-between gap-2 mb-0.5">
+                        <span className="text-sm font-semibold text-slate-900 truncate">
                           {thread.lecture?.title || 'Lecture'}
                         </span>
-                        <span className="text-[10px] font-bold text-slate-300 flex-shrink-0 flex items-center gap-1">
-                          <Clock size={10} />
+                        <span className="text-xs text-slate-400 flex-shrink-0 flex items-center gap-1">
+                          <Clock size={11} />
                           {fmtRelative(thread.updated_at)}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500 font-medium truncate leading-relaxed mb-2">
+                      <p className="text-xs text-slate-500 truncate leading-relaxed mb-2">
                         {lastMsg
                           ? `${fromTeacher ? 'Teacher replied' : 'You'}: "${lastMsg.message_text.substring(0, 80)}${lastMsg.message_text.length > 80 ? '...' : ''}"`
                           : `Your question: "${thread.question_text.substring(0, 80)}${thread.question_text.length > 80 ? '...' : ''}"`
@@ -200,8 +198,8 @@ const StudentNotifications = () => {
                       </p>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
-                          <div className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse" />
-                          <span className="text-[9px] font-black text-rose-500 uppercase tracking-widest">New Reply</span>
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse" />
+                          <span className="text-xs font-medium text-primary-600">New reply</span>
                         </div>
                         <ChevronRight size={14} className="text-slate-300 group-hover:text-primary-500 transition-colors" />
                       </div>

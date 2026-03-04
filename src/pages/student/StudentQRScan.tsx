@@ -100,33 +100,33 @@ const StudentQRScan = () => {
   return (
     <div className="animate-fade-in">
       {/* Header */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-primary-900 px-4 sm:px-6 pt-8 pb-14 text-center">
+      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 pt-6 pb-5 text-center">
         <div className="max-w-md mx-auto">
-          <div className="w-16 h-16 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center mx-auto mb-4 border border-white/10">
-            <QrCode size={28} className="text-white" />
+          <div className="w-10 h-10 rounded-lg bg-primary-50 text-primary-600 flex items-center justify-center mx-auto mb-3">
+            <QrCode size={20} />
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight mb-1">QR Attendance</h1>
-          <p className="text-sm text-slate-400 font-medium">Scan the QR code shown by your teacher</p>
+          <h1 className="text-lg font-bold text-slate-900 mb-0.5">QR Attendance</h1>
+          <p className="text-sm text-slate-500">Scan the QR code shown by your teacher</p>
         </div>
       </div>
 
-      <div className="max-w-md mx-auto px-4 sm:px-6 -mt-8">
-        <div className="bg-white rounded-2xl border border-slate-100 shadow-xl overflow-hidden">
+      <div className="max-w-md mx-auto px-4 sm:px-6 pt-5">
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           {/* Scanner Area */}
           {(status === 'idle' || status === 'scanning') && (
-            <div className="p-6">
+            <div className="p-5">
               {!scanning ? (
-                <div className="text-center py-12">
-                  <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center">
-                    <Camera size={36} className="text-slate-300" />
+                <div className="text-center py-10">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-slate-50 border border-dashed border-slate-200 flex items-center justify-center">
+                    <Camera size={28} className="text-slate-300" />
                   </div>
-                  <p className="text-sm font-bold text-slate-500 mb-1">Ready to scan</p>
-                  <p className="text-xs text-slate-400 mb-8">Point your camera at the QR code</p>
+                  <p className="text-sm font-medium text-slate-600 mb-1">Ready to scan</p>
+                  <p className="text-xs text-slate-400 mb-6">Point your camera at the QR code</p>
                   <button
                     onClick={startScanner}
-                    className="w-full py-4 bg-slate-900 text-white font-bold rounded-xl text-sm transition-all active:scale-[0.98] hover:bg-primary-600 flex items-center justify-center gap-2 shadow-lg"
+                    className="w-full py-3 bg-primary-600 text-white font-semibold rounded-lg text-sm transition-all active:scale-[0.98] hover:bg-primary-700 flex items-center justify-center gap-2"
                   >
-                    <Camera size={18} />
+                    <Camera size={16} />
                     Open Camera
                   </button>
                 </div>
@@ -135,11 +135,11 @@ const StudentQRScan = () => {
                   <div
                     id="qr-reader"
                     ref={containerRef}
-                    className="rounded-xl overflow-hidden bg-black aspect-square"
+                    className="rounded-lg overflow-hidden bg-black aspect-square"
                   />
                   <button
                     onClick={stopScanner}
-                    className="w-full mt-4 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl text-sm transition-all hover:bg-slate-200"
+                    className="w-full mt-3 py-2.5 bg-slate-100 text-slate-600 font-medium rounded-lg text-sm transition-all hover:bg-slate-200"
                   >
                     Cancel
                   </button>
@@ -151,24 +151,20 @@ const StudentQRScan = () => {
           {/* Processing */}
           {status === 'processing' && (
             <div className="p-10 text-center">
-              <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Loader2 className="animate-spin text-primary-600" size={28} />
-              </div>
-              <p className="text-sm font-bold text-slate-600">{message}</p>
+              <Loader2 className="animate-spin text-primary-600 mx-auto mb-3" size={28} />
+              <p className="text-sm text-slate-600">{message}</p>
             </div>
           )}
 
           {/* Success */}
           {status === 'success' && (
-            <div className="p-10 text-center">
-              <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <CheckCircle size={28} className="text-emerald-600" />
-              </div>
-              <h2 className="text-lg font-black text-slate-900 mb-2">Attendance Confirmed</h2>
-              <p className="text-sm font-medium text-emerald-600 mb-6">{message}</p>
+            <div className="p-8 text-center">
+              <CheckCircle size={32} className="text-emerald-500 mx-auto mb-3" />
+              <h2 className="text-lg font-bold text-slate-900 mb-1">Attendance Confirmed</h2>
+              <p className="text-sm text-emerald-600 mb-6">{message}</p>
               <button
                 onClick={() => navigate('/dashboard')}
-                className="w-full py-3.5 bg-slate-900 text-white font-bold rounded-xl text-sm transition-all active:scale-[0.98] hover:bg-primary-600"
+                className="w-full py-3 bg-primary-600 text-white font-semibold rounded-lg text-sm transition-all active:scale-[0.98] hover:bg-primary-700"
               >
                 Back to Home
               </button>
@@ -177,15 +173,13 @@ const StudentQRScan = () => {
 
           {/* Error */}
           {status === 'error' && (
-            <div className="p-10 text-center">
-              <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <XCircle size={28} className="text-rose-600" />
-              </div>
-              <h2 className="text-lg font-black text-slate-900 mb-2">Scan Failed</h2>
-              <p className="text-sm font-medium text-rose-500 mb-6">{message}</p>
+            <div className="p-8 text-center">
+              <XCircle size={32} className="text-rose-500 mx-auto mb-3" />
+              <h2 className="text-lg font-bold text-slate-900 mb-1">Scan Failed</h2>
+              <p className="text-sm text-rose-500 mb-6">{message}</p>
               <button
                 onClick={reset}
-                className="w-full py-3.5 bg-slate-900 text-white font-bold rounded-xl text-sm transition-all active:scale-[0.98] hover:bg-primary-600 flex items-center justify-center gap-2"
+                className="w-full py-3 bg-primary-600 text-white font-semibold rounded-lg text-sm transition-all active:scale-[0.98] hover:bg-primary-700 flex items-center justify-center gap-2"
               >
                 <RefreshCw size={16} />
                 Try Again
@@ -195,9 +189,9 @@ const StudentQRScan = () => {
         </div>
 
         {/* Tips */}
-        <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
-          <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Tips</div>
-          <ul className="space-y-2 text-xs text-slate-500 font-medium">
+        <div className="mt-4 p-4 bg-white rounded-xl border border-slate-200">
+          <div className="text-xs font-semibold text-slate-700 mb-2">Tips</div>
+          <ul className="space-y-1.5 text-xs text-slate-500">
             <li className="flex items-start gap-2">
               <span className="text-primary-500 mt-0.5">1.</span>
               Ask your teacher to display the attendance QR code

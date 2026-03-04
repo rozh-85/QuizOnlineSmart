@@ -14,11 +14,11 @@ const ICON_MAP: Record<string, typeof BookOpen> = {
   manual: Megaphone,
 };
 
-const COLOR_MAP: Record<string, { gradient: string; badge: string; badgeText: string }> = {
-  lecture: { gradient: 'from-primary-500 to-primary-600', badge: 'bg-primary-100 text-primary-700', badgeText: 'New Lecture' },
-  material: { gradient: 'from-emerald-500 to-emerald-600', badge: 'bg-emerald-100 text-emerald-700', badgeText: 'New Materials' },
-  question: { gradient: 'from-violet-500 to-violet-600', badge: 'bg-violet-100 text-violet-700', badgeText: 'New Questions' },
-  manual: { gradient: 'from-amber-500 to-orange-500', badge: 'bg-amber-100 text-amber-700', badgeText: 'Announcement' },
+const COLOR_MAP: Record<string, { iconBg: string; iconText: string; badge: string; badgeText: string }> = {
+  lecture: { iconBg: 'bg-primary-50', iconText: 'text-primary-600', badge: 'bg-primary-100 text-primary-700', badgeText: 'New Lecture' },
+  material: { iconBg: 'bg-emerald-50', iconText: 'text-emerald-600', badge: 'bg-emerald-100 text-emerald-700', badgeText: 'New Materials' },
+  question: { iconBg: 'bg-violet-50', iconText: 'text-violet-600', badge: 'bg-violet-100 text-violet-700', badgeText: 'New Questions' },
+  manual: { iconBg: 'bg-amber-50', iconText: 'text-amber-600', badge: 'bg-amber-100 text-amber-700', badgeText: 'Announcement' },
 };
 
 // Group published items by (itemType, lectureId, same publishedAt batch)
@@ -112,46 +112,44 @@ const StudentNews = () => {
   return (
     <div className="animate-fade-in">
       {/* Header */}
-      <div className="bg-gradient-to-br from-amber-50 via-orange-50/50 to-white px-4 sm:px-6 pt-8 pb-10">
+      <div className="bg-white border-b border-slate-200 px-4 sm:px-6 pt-6 pb-5">
         <div className="max-w-3xl mx-auto">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
-              <Sparkles size={20} />
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+              <Sparkles size={18} />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-slate-900 tracking-tight">What's New</h1>
-              <p className="text-xs text-slate-400 font-medium">Latest updates from your teacher</p>
+              <h1 className="text-lg font-bold text-slate-900">What's New</h1>
+              <p className="text-sm text-slate-500">Latest updates from your teacher</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 -mt-4">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-5">
         {/* Search */}
-        <div className="relative mb-6">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+        <div className="relative mb-5">
+          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             placeholder="Search updates..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 bg-white rounded-xl border border-slate-200 text-sm font-medium text-slate-700 placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-300 transition-all shadow-sm"
+            className="w-full pl-10 pr-4 py-2.5 bg-white rounded-lg border border-slate-200 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-300 transition-all"
           />
         </div>
 
         {/* Timeline */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           {loading ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 className="animate-spin text-slate-400" size={28} />
+              <Loader2 className="animate-spin text-slate-400" size={24} />
             </div>
           ) : filteredGroups.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
-              <div className="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Sparkles size={24} className="text-amber-300" />
-              </div>
-              <p className="text-slate-400 font-bold text-sm">No updates yet</p>
-              <p className="text-slate-300 text-xs mt-1">Check back soon!</p>
+            <div className="text-center py-14 bg-white rounded-xl border border-slate-200">
+              <Sparkles size={28} className="text-amber-300 mx-auto mb-3" />
+              <p className="text-sm font-medium text-slate-500">No updates yet</p>
+              <p className="text-xs text-slate-400 mt-1">Check back soon!</p>
             </div>
           ) : (
             filteredGroups.map((group, idx) => {
@@ -163,32 +161,32 @@ const StudentNews = () => {
 
               // ── Shared header badges ──
               const headerBadges = (
-                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                   {idx === 0 && (
-                    <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[9px] font-black uppercase tracking-wider rounded-md">Latest</span>
+                    <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-semibold rounded">Latest</span>
                   )}
-                  <span className={`px-2 py-0.5 ${colors.badge} text-[9px] font-black uppercase tracking-wider rounded-md`}>
+                  <span className={`px-1.5 py-0.5 ${colors.badge} text-[10px] font-semibold rounded`}>
                     {colors.badgeText}
                   </span>
                   {group.items.length > 1 && (
-                    <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[9px] font-black rounded-md">
+                    <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-medium rounded">
                       ×{group.items.length}
                     </span>
                   )}
-                  <span className="text-[10px] font-bold text-slate-300 flex items-center gap-1">
-                    <Clock size={10} />
+                  <span className="text-xs text-slate-400 flex items-center gap-1 ml-1">
+                    <Clock size={11} />
                     {fmtRelative(group.publishedAt)}
                   </span>
                 </div>
               );
 
               const footer = (
-                <div className="mt-4 pt-3 border-t border-slate-50 text-[10px] font-bold text-slate-300">
+                <div className="mt-3 pt-3 border-t border-slate-100 text-xs text-slate-400">
                   Published {fmtDate(group.publishedAt)}
                 </div>
               );
 
-              // ── QUESTION card: expandable preview with full Q&A, NOT clickable ──
+              // ── QUESTION card ──
               if (group.itemType === 'question') {
                 const previewCount = 2;
                 const hasMore = group.items.length > previewCount;
@@ -197,26 +195,25 @@ const StudentNews = () => {
                 return (
                   <div
                     key={group.key}
-                    className="group block bg-white rounded-2xl border border-violet-100 hover:border-violet-200 hover:shadow-lg hover:shadow-violet-50 transition-all p-5 sm:p-6"
+                    className="bg-white rounded-xl border border-slate-200 hover:border-violet-200 transition-all p-5"
                   >
-                    <div className="flex items-start gap-4">
-                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colors.gradient} text-white flex items-center justify-center flex-shrink-0 shadow-md`}>
-                        <Icon size={20} />
+                    <div className="flex items-start gap-3.5">
+                      <div className={`w-9 h-9 rounded-lg ${colors.iconBg} ${colors.iconText} flex items-center justify-center flex-shrink-0`}>
+                        <Icon size={16} />
                       </div>
                       <div className="flex-1 min-w-0">
                         {headerBadges}
-                        <h3 className="text-base font-black text-slate-900 tracking-tight mb-3 truncate">
+                        <h3 className="text-sm font-semibold text-slate-900 truncate">
                           {lectureName}
                         </h3>
                       </div>
                     </div>
 
-                    {/* Question previews — questions only, no answers */}
-                    <div className="mt-3 space-y-2">
+                    <div className="mt-3 space-y-1.5">
                       {visibleItems.map((item, qi) => (
-                        <div key={item.id} className="rounded-xl bg-violet-50/60 border border-violet-100/80 px-3.5 py-2.5">
-                          <p className="text-xs font-bold text-slate-700 leading-relaxed">
-                            <span className="text-violet-400 font-black mr-1.5">Q{qi + 1}.</span>
+                        <div key={item.id} className="rounded-lg bg-violet-50 px-3 py-2">
+                          <p className="text-xs text-slate-700 leading-relaxed">
+                            <span className="text-violet-500 font-semibold mr-1.5">Q{qi + 1}.</span>
                             {item.title}
                           </p>
                         </div>
@@ -226,7 +223,7 @@ const StudentNews = () => {
                     {hasMore && (
                       <button
                         onClick={() => toggleExpand(group.key)}
-                        className="flex items-center gap-1.5 mt-3 text-[11px] font-bold text-violet-600 hover:text-violet-700 transition-colors"
+                        className="flex items-center gap-1 mt-2.5 text-xs font-medium text-violet-600 hover:text-violet-700 transition-colors"
                       >
                         {isExpanded ? (
                           <>Show less <ChevronUp size={14} /></>
@@ -240,36 +237,36 @@ const StudentNews = () => {
                 );
               }
 
-              // ── MATERIAL card: navigates to the lecture's materials section ──
+              // ── MATERIAL card ──
               if (group.itemType === 'material') {
                 const linkTo = group.lectureId ? `/quiz?lectureId=${group.lectureId}&scrollTo=materials` : '/dashboard';
                 return (
                   <Link
                     key={group.key}
                     to={linkTo}
-                    className="group block bg-white rounded-2xl border border-emerald-100 hover:border-emerald-200 hover:shadow-lg hover:shadow-emerald-50 transition-all p-5 sm:p-6"
+                    className="group block bg-white rounded-xl border border-slate-200 hover:border-emerald-300 hover:shadow-sm transition-all p-5"
                   >
-                    <div className="flex items-start gap-4">
-                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colors.gradient} text-white flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-105 transition-transform`}>
-                        <Icon size={20} />
+                    <div className="flex items-start gap-3.5">
+                      <div className={`w-9 h-9 rounded-lg ${colors.iconBg} ${colors.iconText} flex items-center justify-center flex-shrink-0`}>
+                        <Icon size={16} />
                       </div>
                       <div className="flex-1 min-w-0">
                         {headerBadges}
-                        <h3 className="text-base font-black text-slate-900 tracking-tight group-hover:text-emerald-600 transition-colors mb-1 truncate">
+                        <h3 className="text-sm font-semibold text-slate-900 group-hover:text-emerald-600 transition-colors truncate">
                           {lectureName}
                         </h3>
                         <div className="space-y-0.5 mt-1">
                           {group.items.slice(0, 3).map(item => (
-                            <p key={item.id} className="text-xs text-slate-400 font-medium truncate">
+                            <p key={item.id} className="text-xs text-slate-500 truncate">
                               {item.title}
                             </p>
                           ))}
                           {group.items.length > 3 && (
-                            <p className="text-xs text-slate-300 font-bold">+{group.items.length - 3} more</p>
+                            <p className="text-xs text-slate-400">+{group.items.length - 3} more</p>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 mt-3 text-[10px] font-black text-emerald-600 uppercase tracking-wider group-hover:gap-3 transition-all">
-                          View Materials <ArrowRight size={12} />
+                        <div className="flex items-center gap-1.5 mt-2.5 text-xs font-medium text-emerald-600 group-hover:gap-2 transition-all">
+                          View Materials <ArrowRight size={13} />
                         </div>
                       </div>
                     </div>
@@ -278,31 +275,31 @@ const StudentNews = () => {
                 );
               }
 
-              // ── LECTURE card: navigates to dashboard with highlighted lecture card ──
+              // ── LECTURE card ──
               if (group.itemType === 'lecture') {
                 const linkTo = group.lectureId ? `/dashboard?highlight=${group.lectureId}` : '/dashboard';
                 return (
                   <Link
                     key={group.key}
                     to={linkTo}
-                    className="group block bg-white rounded-2xl border border-primary-100 hover:border-primary-200 hover:shadow-lg hover:shadow-primary-50 transition-all p-5 sm:p-6"
+                    className="group block bg-white rounded-xl border border-slate-200 hover:border-primary-300 hover:shadow-sm transition-all p-5"
                   >
-                    <div className="flex items-start gap-4">
-                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colors.gradient} text-white flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-105 transition-transform`}>
-                        <Icon size={20} />
+                    <div className="flex items-start gap-3.5">
+                      <div className={`w-9 h-9 rounded-lg ${colors.iconBg} ${colors.iconText} flex items-center justify-center flex-shrink-0`}>
+                        <Icon size={16} />
                       </div>
                       <div className="flex-1 min-w-0">
                         {headerBadges}
-                        <h3 className="text-base font-black text-slate-900 tracking-tight group-hover:text-primary-600 transition-colors mb-1 truncate">
+                        <h3 className="text-sm font-semibold text-slate-900 group-hover:text-primary-600 transition-colors truncate">
                           {lectureName}
                         </h3>
                         {lecture?.description && (
-                          <p className="text-xs text-slate-400 font-medium mt-1 line-clamp-2">
+                          <p className="text-xs text-slate-500 mt-1 line-clamp-2">
                             {lecture.description}
                           </p>
                         )}
-                        <div className="flex items-center gap-2 mt-3 text-[10px] font-black text-primary-600 uppercase tracking-wider group-hover:gap-3 transition-all">
-                          View Lecture <ArrowRight size={12} />
+                        <div className="flex items-center gap-1.5 mt-2.5 text-xs font-medium text-primary-600 group-hover:gap-2 transition-all">
+                          View Lecture <ArrowRight size={13} />
                         </div>
                       </div>
                     </div>
@@ -311,28 +308,28 @@ const StudentNews = () => {
                 );
               }
 
-              // ── MANUAL card: non-navigable announcement ──
+              // ── MANUAL card: announcement ──
               return (
                 <div
                   key={group.key}
-                  className="group block bg-white rounded-2xl border border-amber-100 hover:border-amber-200 hover:shadow-lg hover:shadow-amber-50 transition-all p-5 sm:p-6"
+                  className="bg-white rounded-xl border border-slate-200 p-5"
                 >
-                  <div className="flex items-start gap-4">
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${colors.gradient} text-white flex items-center justify-center flex-shrink-0 shadow-md`}>
-                      <Icon size={20} />
+                  <div className="flex items-start gap-3.5">
+                    <div className={`w-9 h-9 rounded-lg ${colors.iconBg} ${colors.iconText} flex items-center justify-center flex-shrink-0`}>
+                      <Icon size={16} />
                     </div>
                     <div className="flex-1 min-w-0">
                       {headerBadges}
-                      <h3 className="text-base font-black text-slate-900 tracking-tight mb-1">
+                      <h3 className="text-sm font-semibold text-slate-900 mb-1">
                         {group.items[0]?.title}
                       </h3>
                       {group.items[0]?.description && (
-                        <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                        <p className="text-sm text-slate-500 leading-relaxed">
                           {group.items[0].description}
                         </p>
                       )}
                       {lectureName !== 'General' && (
-                        <p className="text-[10px] text-slate-300 font-bold mt-2">Related to: {lectureName}</p>
+                        <p className="text-xs text-slate-400 mt-2">Related to: {lectureName}</p>
                       )}
                     </div>
                   </div>

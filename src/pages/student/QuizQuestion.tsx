@@ -126,24 +126,24 @@ const QuizQuestion = () => {
 
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-6 sm:py-8">
+    <div className="max-w-3xl mx-auto px-4 py-5 sm:py-8">
       {/* Exit Confirmation Modal */}
       {showExitConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowExitConfirm(false)} />
-          <div className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm animate-scale-in">
-            <h3 className="text-lg font-black text-slate-900 mb-2">Leave Quiz?</h3>
-            <p className="text-sm text-slate-500 font-medium mb-6">Your progress will be lost. You've answered {state.currentIndex} of {questions.length} questions.</p>
+          <div className="relative bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm animate-scale-in">
+            <h3 className="text-lg font-bold text-slate-900 mb-2">Leave Quiz?</h3>
+            <p className="text-sm text-slate-500 mb-6">Your progress will be lost. You've answered {state.currentIndex} of {questions.length} questions.</p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowExitConfirm(false)}
-                className="flex-1 py-3 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                className="flex-1 py-2.5 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleExit}
-                className="flex-1 py-3 rounded-xl bg-rose-500 text-white text-sm font-bold hover:bg-rose-600 transition-colors shadow-sm"
+                className="flex-1 py-2.5 rounded-lg bg-rose-500 text-white text-sm font-medium hover:bg-rose-600 transition-colors"
               >
                 Leave Quiz
               </button>
@@ -152,54 +152,55 @@ const QuizQuestion = () => {
         </div>
       )}
 
-      {/* Breadcrumb & Progress */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
+      {/* Progress Header */}
+      <div className="mb-5">
+        <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowExitConfirm(true)}
-              className="w-9 h-9 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-600 hover:text-primary-600 hover:border-primary-300 hover:shadow-md transition-all shadow-sm"
+              className="w-8 h-8 flex items-center justify-center rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-primary-600 hover:border-primary-300 transition-all"
             >
-              <ArrowLeft size={18} />
+              <ArrowLeft size={16} />
             </button>
-            <span className="text-[10px] font-black uppercase tracking-widest text-primary-600 line-clamp-1">
-              {lecture?.title || 'General Quiz'} {sectionName ? `• ${sectionName}` : ''}
+            <span className="text-xs font-medium text-slate-500 line-clamp-1">
+              {lecture?.title || 'General Quiz'} {sectionName ? `· ${sectionName}` : ''}
             </span>
           </div>
-          <span className="text-[10px] font-black uppercase tracking-widest text-primary-600 whitespace-nowrap">
-            {Math.round(((state.currentIndex + 1) / questions.length) * 100)}% Complete
+          <span className="text-xs font-medium text-slate-500">
+            {state.currentIndex + 1} / {questions.length}
           </span>
         </div>
-        <div className="h-2 rounded-full bg-slate-100 overflow-hidden shadow-inner flex items-center">
+        <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
           <div 
-            className="h-full bg-gradient-to-r from-primary-500 to-primary-600 transition-all duration-500 shadow-sm"
+            className="h-full bg-primary-500 rounded-full transition-all duration-500"
             style={{ width: `${((state.currentIndex + 1) / questions.length) * 100}%` }}
           />
         </div>
-        <div className="mt-3 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[9px] font-black uppercase tracking-widest ${
-              currentQuestion.difficulty === 'easy' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
-              currentQuestion.difficulty === 'hard' ? 'bg-rose-50 border-rose-100 text-rose-600' :
-              'bg-amber-50 border-amber-100 text-amber-600'
-            }`}>
-              <Gauge size={10} />
-              {currentQuestion.difficulty || 'Medium'}
-            </div>
-            <div className="text-[11px] font-bold text-slate-400 uppercase tracking-tight">Question {state.currentIndex + 1} of {questions.length}</div>
+        <div className="mt-2 flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            {currentQuestion.difficulty && (
+              <span className={`flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium ${
+                currentQuestion.difficulty === 'easy' ? 'bg-emerald-50 text-emerald-600' :
+                currentQuestion.difficulty === 'hard' ? 'bg-rose-50 text-rose-600' :
+                'bg-amber-50 text-amber-600'
+              }`}>
+                <Gauge size={11} />
+                {currentQuestion.difficulty}
+              </span>
+            )}
           </div>
           {state.isAnswered && (
-            <div className={`text-[11px] font-black uppercase tracking-widest ${isCorrect ? 'text-emerald-500' : 'text-rose-500'}`}>
+            <span className={`text-xs font-semibold ${isCorrect ? 'text-emerald-600' : 'text-rose-500'}`}>
               {isCorrect ? 'Correct!' : 'Incorrect'}
-            </div>
+            </span>
           )}
         </div>
       </div>
 
       <div className={`transition-all duration-300 ${isTransitioning ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'}`}>
-        <Card className="mb-6 p-6 sm:p-10">
+        <Card className="mb-4 p-4 sm:p-6">
           {/* Question Text */}
-          <h2 className="text-xl sm:text-2xl font-black leading-snug text-slate-900 tracking-tight mb-8 whitespace-pre-wrap">
+          <h2 className="text-base sm:text-lg font-semibold leading-relaxed text-slate-900 mb-5 whitespace-pre-wrap">
             {currentQuestion.type === 'blank' && currentQuestion.text?.includes('_____') ? (
               currentQuestion.text.split('_____').map((part, i, arr) => (
                 <span key={i}>
@@ -210,13 +211,13 @@ const QuizQuestion = () => {
                       autoFocus
                       disabled={state.isAnswered}
                       className={`
-                        inline-block px-4 py-1.5 mx-1 rounded-xl border-4 text-lg font-black transition-all outline-none align-middle
-                        min-w-[120px] max-w-[200px] text-center
+                        inline-block px-3 py-1 mx-1 rounded-lg border-2 text-base font-semibold transition-all outline-none align-middle
+                        min-w-[100px] max-w-[180px] text-center
                         ${state.isAnswered 
                             ? (isCorrect 
-                                ? 'bg-emerald-50 border-emerald-500 text-emerald-700' 
-                                : 'bg-rose-50 border-rose-500 text-rose-700')
-                            : 'bg-slate-50 border-slate-100 focus:border-primary-500 focus:bg-white text-slate-900 shadow-inner'}
+                                ? 'bg-emerald-50 border-emerald-400 text-emerald-700' 
+                                : 'bg-rose-50 border-rose-400 text-rose-700')
+                            : 'bg-slate-50 border-slate-200 focus:border-primary-500 focus:bg-white text-slate-900'}
                       `}
                       value={state.isAnswered ? (state.selectedAnswer as string) : undefined}
                       onKeyDown={(e) => {
@@ -233,34 +234,35 @@ const QuizQuestion = () => {
 
           {/* Multiple Choice Options */}
           {currentQuestion.type === 'multiple-choice' && (
-            <div className="space-y-3 mb-8">
+            <div className="space-y-2 mb-4">
               {currentQuestion.options.map((option, index) => {
                 const isSelected = index === state.selectedAnswer;
                 const isCorrectOpt = index === currentQuestion.correctIndex;
                 
-                let borderColor = 'border-slate-100';
+                let borderColor = 'border-slate-200';
                 let bgColor = 'bg-white';
-                let textColor = 'text-slate-600';
-                let statusLabel = null;
+                let textColor = 'text-slate-700';
+                let statusIcon = null;
 
                 if (state.isAnswered) {
                   if (isCorrectOpt) {
-                    borderColor = 'border-emerald-500';
-                    bgColor = 'bg-emerald-50/30';
-                    textColor = 'text-emerald-700';
-                    statusLabel = 'Correct Answer';
+                    borderColor = 'border-emerald-400';
+                    bgColor = 'bg-emerald-50';
+                    textColor = 'text-emerald-800';
+                    statusIcon = <CheckCircle size={16} className="text-emerald-500 flex-shrink-0" />;
                   } else if (isSelected && !isCorrect) {
-                    borderColor = 'border-error-500';
-                    bgColor = 'bg-error-50/30';
-                    textColor = 'text-error-600';
-                    statusLabel = 'Incorrect';
+                    borderColor = 'border-rose-400';
+                    bgColor = 'bg-rose-50';
+                    textColor = 'text-rose-700';
+                    statusIcon = <X size={16} className="text-rose-500 flex-shrink-0" />;
                   } else {
-                    bgColor = 'bg-slate-50/50';
+                    bgColor = 'bg-slate-50';
                     textColor = 'text-slate-400';
+                    borderColor = 'border-slate-100';
                   }
                 } else {
-                  borderColor = 'border-slate-100 hover:border-primary-300';
-                  bgColor = 'bg-white hover:bg-primary-50/10';
+                  borderColor = 'border-slate-200 hover:border-primary-300';
+                  bgColor = 'bg-white hover:bg-slate-50';
                 }
 
                 return (
@@ -269,41 +271,35 @@ const QuizQuestion = () => {
                     onClick={() => handleAnswerSubmit(index)}
                     disabled={state.isAnswered}
                     className={`
-                      w-full text-left p-4 sm:p-5 rounded-2xl border-2 font-bold text-sm sm:text-base
-                      transition-smooth flex items-center justify-between
+                      w-full text-left px-3.5 py-3 rounded-xl border-2 font-medium text-sm
+                      transition-all flex items-center justify-between gap-3
                       ${borderColor} ${bgColor} ${textColor}
-                      ${!state.isAnswered ? 'cursor-pointer hover:border-primary-400 hover:-translate-y-0.5' : ''}
-                      ${state.isAnswered && isCorrectOpt ? 'scale-[1.02] shadow-xl shadow-emerald-100 border-emerald-500 animate-success-glow' : ''}
+                      ${!state.isAnswered ? 'cursor-pointer active:scale-[0.99]' : ''}
+                      ${state.isAnswered && isCorrectOpt ? 'animate-success-glow' : ''}
                       ${state.isAnswered && isSelected && !isCorrect ? 'animate-shake' : ''}
                     `}
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                       <span className={`
-                        w-9 h-9 rounded-xl flex items-center justify-center font-black flex-shrink-0 transition-colors
-                        ${state.isAnswered && isCorrectOpt ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' : 'bg-slate-100 text-slate-500'}
+                        w-8 h-8 rounded-lg flex items-center justify-center font-semibold text-sm flex-shrink-0 transition-colors
+                        ${state.isAnswered && isCorrectOpt ? 'bg-emerald-500 text-white' : 
+                          state.isAnswered && isSelected && !isCorrect ? 'bg-rose-500 text-white' : 
+                          'bg-slate-100 text-slate-500'}
                       `}>
                         {String.fromCharCode(65 + index)}
                       </span>
-                      <span className="leading-tight">{option}</span>
+                      <span className="leading-snug">{option}</span>
                     </div>
-                    
-                    {statusLabel && (
-                      <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${
-                        isCorrectOpt ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
-                      } shadow-md animate-scale-in`}>
-                        <span className="text-[10px] font-black uppercase tracking-widest">{statusLabel}</span>
-                        {isCorrectOpt ? <CheckCircle size={14} className="fill-white/20" /> : <X size={14} className="fill-white/20" />}
-                      </div>
-                    )}
+                    {statusIcon}
                   </button>
                 );
               })}
             </div>
           )}
 
-          {/* True / False Options - Simple & User-Friendly */}
+          {/* True / False Options */}
           {currentQuestion.type === 'true-false' && (
-            <div className="flex flex-col sm:flex-row gap-3 mb-8">
+            <div className="flex flex-col sm:flex-row gap-2.5 mb-4">
               {[0, 1].map((index) => {
                 const label = index === 0 ? 'True' : 'False';
                 const isSelected = index === state.selectedAnswer;
@@ -311,25 +307,25 @@ const QuizQuestion = () => {
                 
                 let borderColor = 'border-slate-200';
                 let bgColor = 'bg-white';
-                let textColor = 'text-slate-600';
+                let textColor = 'text-slate-700';
 
                 if (state.isAnswered) {
                   if (isSelected) {
-                    borderColor = isCorrect ? 'border-emerald-500' : 'border-rose-500';
-                    bgColor = isCorrect ? 'bg-emerald-500 text-white shadow-md' : 'bg-rose-500 text-white shadow-md';
+                    borderColor = isCorrect ? 'border-emerald-400' : 'border-rose-400';
+                    bgColor = isCorrect ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white';
                     textColor = 'text-white';
                   } else if (isCorrectOpt) {
-                    borderColor = 'border-emerald-500';
-                    bgColor = 'bg-emerald-50 text-emerald-600';
+                    borderColor = 'border-emerald-400';
+                    bgColor = 'bg-emerald-50';
                     textColor = 'text-emerald-700';
                   } else {
-                    bgColor = 'bg-slate-50/50';
+                    bgColor = 'bg-slate-50';
                     textColor = 'text-slate-300';
                     borderColor = 'border-slate-100';
                   }
                 } else {
-                  borderColor = 'border-slate-200 hover:border-primary-400';
-                  bgColor = 'bg-white hover:bg-primary-50/10';
+                  borderColor = 'border-slate-200 hover:border-primary-300';
+                  bgColor = 'bg-white hover:bg-slate-50';
                   textColor = 'text-slate-700';
                 }
 
@@ -339,15 +335,14 @@ const QuizQuestion = () => {
                     onClick={() => handleAnswerSubmit(index)}
                     disabled={state.isAnswered}
                     className={`
-                      flex-1 py-4 px-6 rounded-2xl border-2 font-bold text-base transition-all flex items-center justify-center gap-3
+                      flex-1 py-3 px-5 rounded-xl border-2 font-semibold text-sm transition-all flex items-center justify-center gap-2
                       ${borderColor} ${bgColor} ${textColor}
-                      ${!state.isAnswered ? 'hover:shadow-sm' : ''}
                       ${state.isAnswered && isCorrectOpt ? 'animate-success-glow' : ''}
                       ${state.isAnswered && isSelected && !isCorrect ? 'animate-shake' : ''}
                     `}
                   >
-                    {state.isAnswered && isCorrectOpt ? <CheckCircle size={18} /> : 
-                     state.isAnswered && isSelected && !isCorrect ? <X size={18} /> : null}
+                    {state.isAnswered && isCorrectOpt ? <CheckCircle size={16} /> : 
+                     state.isAnswered && isSelected && !isCorrect ? <X size={16} /> : null}
                     {label}
                   </button>
                 );
@@ -355,66 +350,58 @@ const QuizQuestion = () => {
             </div>
           )}
 
-          {/* Fill in the Blank (Standalone) - Clean & Centered */}
+          {/* Fill in the Blank (Standalone) */}
           {currentQuestion.type === 'blank' && !currentQuestion.text.includes('_____') && (
-            <div className="mb-8 max-w-md mx-auto">
-              <div className="relative">
-                <input
-                  type="text"
-                  autoFocus
-                  placeholder="Type your answer..."
-                  disabled={state.isAnswered}
-                  className={`
-                    w-full px-6 py-4 rounded-2xl border-2 text-lg font-bold transition-all outline-none text-center
-                    ${state.isAnswered 
-                        ? (isCorrect 
-                            ? 'bg-emerald-50 border-emerald-500 text-emerald-700' 
-                            : 'bg-rose-50 border-rose-500 text-rose-700')
-                        : 'bg-slate-50 border-slate-200 focus:border-primary-500 focus:bg-white text-slate-900 shadow-inner'}
-                  `}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !state.isAnswered && e.currentTarget.value.trim()) {
-                      handleAnswerSubmit(e.currentTarget.value.trim());
-                    }
-                  }}
-                />
-                {!state.isAnswered && (
-                  <p className="mt-3 text-[10px] text-slate-400 font-bold uppercase tracking-widest text-center">
-                    Press Enter to submit
-                  </p>
-                )}
-              </div>
+            <div className="mb-6 max-w-md mx-auto">
+              <input
+                type="text"
+                autoFocus
+                placeholder="Type your answer..."
+                disabled={state.isAnswered}
+                className={`
+                  w-full px-5 py-3.5 rounded-xl border-2 text-base font-medium transition-all outline-none text-center
+                  ${state.isAnswered 
+                      ? (isCorrect 
+                          ? 'bg-emerald-50 border-emerald-400 text-emerald-700' 
+                          : 'bg-rose-50 border-rose-400 text-rose-700')
+                      : 'bg-white border-slate-200 focus:border-primary-500 text-slate-900'}
+                `}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !state.isAnswered && e.currentTarget.value.trim()) {
+                    handleAnswerSubmit(e.currentTarget.value.trim());
+                  }
+                }}
+              />
+              {!state.isAnswered && (
+                <p className="mt-2 text-xs text-slate-400 text-center">Press Enter to submit</p>
+              )}
             </div>
           )}
 
           {/* Correct Answer reveal for failed blanks */}
           {currentQuestion.type === 'blank' && state.isAnswered && !isCorrect && (
-            <div className="mt-4 mb-8 p-5 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-between animate-slide-up">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white">
-                  <CheckCircle size={18} />
-                </div>
-                <div>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 block leading-none mb-1">Correct Answer</span>
-                  <span className="text-lg font-black text-emerald-700 leading-none">{currentQuestion.correctAnswer || 'None set'}</span>
-                </div>
+            <div className="mt-3 mb-6 p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-3 animate-slide-up">
+              <CheckCircle size={18} className="text-emerald-500 flex-shrink-0" />
+              <div>
+                <div className="text-xs text-emerald-600 font-medium mb-0.5">Correct answer</div>
+                <div className="text-base font-semibold text-emerald-700">{currentQuestion.correctAnswer || 'None set'}</div>
               </div>
             </div>
           )}
 
           {/* Fallback for unknown/legacy types if somehow triggered */}
           {!['multiple-choice', 'true-false', 'blank'].includes(currentQuestion.type) && (
-            <div className="p-8 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-               <p className="text-slate-500 font-bold">This question format is not supported.</p>
+            <div className="p-6 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+               <p className="text-sm text-slate-500">This question format is not supported.</p>
             </div>
           )}
 
           {/* Explanation */}
           {state.isAnswered && currentQuestion.explanation && (
-            <div className="animate-fade-in mt-6 pt-5 border-t border-slate-100">
-              <div className="flex items-start gap-3 px-4 py-3 rounded-xl bg-primary-50/70 border border-primary-100">
-                <Lightbulb size={16} className="text-primary-600 mt-0.5 flex-shrink-0" />
-                <p className="text-sm text-slate-700 leading-relaxed font-medium">
+            <div className="animate-fade-in mt-5 pt-4 border-t border-slate-100">
+              <div className="flex items-start gap-2.5 p-3.5 rounded-lg bg-primary-50 border border-primary-100">
+                <Lightbulb size={15} className="text-primary-600 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-slate-700 leading-relaxed">
                   {currentQuestion.explanation}
                 </p>
               </div>
@@ -423,20 +410,19 @@ const QuizQuestion = () => {
         </Card>
 
         {/* Action Bar */}
-        <div className="flex items-center justify-between pt-4">
-          <button className="flex items-center gap-2 text-slate-400 hover:text-rose-500 transition-colors">
-            <Flag size={18} />
-            <span className="text-xs font-bold uppercase tracking-wider">Report Issue</span>
+        <div className="flex items-center justify-between">
+          <button className="flex items-center gap-1.5 text-slate-400 hover:text-rose-500 transition-colors">
+            <Flag size={15} />
+            <span className="text-xs font-medium">Report</span>
           </button>
           
           <Button 
             onClick={handleNext} 
             disabled={!state.isAnswered}
-            size="lg"
-            className="px-10 h-14 rounded-xl shadow-lg shadow-primary-200"
+            className="px-5 h-10 rounded-lg text-sm font-semibold"
           >
             {isLastQuestion ? 'View Summary' : 'Next Question'}
-            <ArrowRight size={20} className="ml-2" />
+            <ArrowRight size={16} className="ml-1" />
           </Button>
         </div>
       </div>
