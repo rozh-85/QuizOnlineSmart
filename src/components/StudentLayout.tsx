@@ -101,6 +101,13 @@ const StudentLayout = ({ children, unreadCount = 0, unreadNewsCount = 0 }: Stude
     return () => { stopQrScanner(); };
   }, [stopQrScanner]);
 
+  // Allow any child component (e.g. HeroBanner) to open the QR overlay via a custom event
+  useEffect(() => {
+    const handler = () => openQrOverlay();
+    window.addEventListener('qr:open', handler);
+    return () => window.removeEventListener('qr:open', handler);
+  }, [openQrOverlay]);
+
   const handleLogout = async () => {
     try {
       await authApi.signOut();
