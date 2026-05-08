@@ -22,6 +22,7 @@ export const ROUTES = {
 
   // Admin / Teacher
   ADMIN: '/admin',
+  ADMIN_USERS: '/admin/users',
   ADMIN_CLASSES: '/admin/classes',
   ADMIN_STUDENTS: '/admin/students',
   ADMIN_LECTURES: '/admin/lectures',

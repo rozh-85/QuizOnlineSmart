@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase';
 import type { Profile } from '../types/database';
 import { serialIdToEmail } from '../utils/serial';
+import { userApi } from './userApi';
 
 // =====================================================
 // STUDENTS API
@@ -37,7 +38,22 @@ export const studentApi = {
   async createStudent(fullName: string, serialId: string, pin: string) {
     const email = serialIdToEmail(serialId);
     console.log('[Student Create] Name:', fullName, '| Email:', email, '| PIN:', pin);
-    
+
+    try {
+      return await userApi.create({
+        email,
+        password: pin,
+        fullName,
+        role: 'student',
+        serialId: serialId.replace(/[^a-zA-Z0-9]/g, '').toLowerCase(),
+        pin,
+      });
+    } catch (managedError: any) {
+      if (!managedError.message?.includes('create_managed_account')) {
+        throw managedError;
+      }
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password: pin,
@@ -95,10 +111,6 @@ export const studentApi = {
   },
 
   async deleteStudent(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', id);
-    if (error) throw error;
+    await userApi.delete(id);
   }
 };

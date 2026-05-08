@@ -20,7 +20,7 @@ const SplashScreen = ({ defaultMode = 'student' }: { defaultMode?: 'student' | '
 
         if (user) {
           const profile = await authApi.getProfile(user.id);
-          if (profile?.role === 'teacher' || profile?.role === 'admin') {
+          if (profile?.role === 'root' || profile?.role === 'teacher' || profile?.role === 'admin') {
             navigate('/admin', { replace: true });
           } else {
             navigate('/dashboard', { replace: true });
