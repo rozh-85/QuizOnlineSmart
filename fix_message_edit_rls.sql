@@ -20,11 +20,11 @@ FOR DELETE USING (sender_id = auth.uid());
 DROP POLICY IF EXISTS "Teachers can update messages" ON public.lecture_question_messages;
 CREATE POLICY "Teachers can update messages" ON public.lecture_question_messages 
 FOR UPDATE USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('teacher', 'admin'))
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('root', 'teacher', 'admin'))
 );
 
 DROP POLICY IF EXISTS "Teachers can delete messages" ON public.lecture_question_messages;
 CREATE POLICY "Teachers can delete messages" ON public.lecture_question_messages 
 FOR DELETE USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('teacher', 'admin'))
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('root', 'teacher', 'admin'))
 );

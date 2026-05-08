@@ -61,7 +61,7 @@ const Login = ({ mode }: LoginProps) => {
           if (password === 'admin123') {
             result = {
               user: { id: 'prototype-admin', email },
-              profile: { role: 'admin', full_name: 'Administrator' }
+              profile: { role: email.toLowerCase().startsWith('root') ? 'root' : 'admin', full_name: 'Administrator' }
             };
             localStorage.setItem('sb-prototype-auth-token', JSON.stringify({ access_token: 'prototype' }));
           } else {
@@ -72,7 +72,7 @@ const Login = ({ mode }: LoginProps) => {
 
       toast.success(t('auth.loginSuccessful'));
       
-      if (result.profile.role === 'teacher' || result.profile.role === 'admin') {
+      if (result.profile.role === 'root' || result.profile.role === 'teacher' || result.profile.role === 'admin') {
         navigate('/admin', { replace: true });
       } else {
         navigate('/dashboard', { replace: true });

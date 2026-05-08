@@ -59,7 +59,7 @@ FOR INSERT WITH CHECK (
 DROP POLICY IF EXISTS "Teachers manage all questions" ON public.lecture_questions;
 CREATE POLICY "Teachers manage all questions" ON public.lecture_questions 
 FOR ALL USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('teacher', 'admin'))
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('root', 'teacher', 'admin'))
 );
 
 -- Messages Policies
@@ -70,7 +70,7 @@ FOR SELECT USING (
         SELECT 1 FROM lecture_questions 
         WHERE id = question_id AND (student_id = auth.uid() OR is_published = true)
     ) OR EXISTS (
-        SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('teacher', 'admin')
+        SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('root', 'teacher', 'admin')
     )
 );
 
@@ -81,7 +81,7 @@ FOR INSERT WITH CHECK (
         SELECT 1 FROM lecture_questions 
         WHERE id = question_id AND student_id = auth.uid()
     ) OR EXISTS (
-        SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('teacher', 'admin')
+        SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('root', 'teacher', 'admin')
     )
 );
 

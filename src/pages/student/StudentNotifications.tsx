@@ -92,7 +92,7 @@ const StudentNotifications = () => {
   const isTeacherMessage = (msg: any, thread: any) => {
     if (thread.student_id && msg.sender_id && msg.sender_id !== thread.student_id) return true;
     const role = msg.sender?.role || msg.profiles?.role;
-    return role === 'teacher' || role === 'admin';
+    return role === 'root' || role === 'teacher' || role === 'admin';
   };
 
   const handleNotificationClick = async (thread: any) => {

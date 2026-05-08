@@ -2,6 +2,8 @@ export { authApi } from './authApi';
 export { attendanceApi } from './attendanceApi';
 export { classApi } from './classApi';
 export { studentApi } from './studentApi';
+export { userApi } from './userApi';
+export type { ManagedRole, ManagedUserInput, ManagedUserUpdate } from './userApi';
 export { lectureApi } from './lectureApi';
 export { questionApi } from './questionApi';
 export { materialApi } from './materialApi';

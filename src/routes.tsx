@@ -11,6 +11,7 @@ const AIGenerator = lazy(() => import('./pages/teacher/AIGenerator'));
 const ExamBuilder = lazy(() => import('./pages/teacher/ExamBuilder'));
 const Attendance = lazy(() => import('./pages/teacher/Attendance'));
 const Reports = lazy(() => import('./pages/teacher/Reports'));
+const UserManager = lazy(() => import('./pages/teacher/UserManager'));
 const LectureManager = lazy(() => import('./pages/teacher/LectureManager'));
 const MaterialsManager = lazy(() => import('./pages/teacher/MaterialsManager'));
 const QAManager = lazy(() => import('./pages/teacher/QAManager'));
@@ -27,7 +28,7 @@ const QuizQuestion = lazy(() => import('./pages/student/QuizQuestion'));
 const QuizResults = lazy(() => import('./pages/student/QuizResults'));
 
 // ── Route type definitions ──────────────────────────────
-type Role = 'teacher' | 'student' | 'admin';
+type Role = 'root' | 'teacher' | 'student' | 'admin';
 
 export interface AppRoute {
   path: string;
@@ -57,19 +58,20 @@ export const studentRoutes: AppRoute[] = [
 
 // ── Admin/Teacher routes (wrapped in AdminLayout) ───────
 export const adminRoutes: AppRoute[] = [
-  { path: ROUTES.ADMIN, element: <TeacherDashboard />, roles: ['teacher', 'admin'] },
-  { path: ROUTES.ADMIN_CLASSES, element: <ClassManager />, roles: ['teacher', 'admin'] },
-  { path: ROUTES.ADMIN_STUDENTS, element: <StudentManager />, roles: ['teacher', 'admin'] },
-  { path: ROUTES.ADMIN_LECTURES, element: <LectureManager />, roles: ['teacher', 'admin'] },
-  { path: ROUTES.ADMIN_MATERIALS, element: <MaterialsManager />, roles: ['teacher', 'admin'] },
-  { path: ROUTES.ADMIN_QA, element: <QAManager />, roles: ['teacher', 'admin'] },
-  { path: ROUTES.ADMIN_NEW_QUESTION, element: <QuestionEditor />, roles: ['teacher', 'admin'] },
-  { path: ROUTES.ADMIN_EDIT_QUESTION, element: <QuestionEditor />, roles: ['teacher', 'admin'] },
-  { path: ROUTES.ADMIN_AI_GENERATOR, element: <AIGenerator />, roles: ['teacher', 'admin'] },
-  { path: ROUTES.ADMIN_EXAM_BUILDER, element: <ExamBuilder />, roles: ['teacher', 'admin'] },
-  { path: ROUTES.ADMIN_ATTENDANCE, element: <Attendance />, roles: ['teacher', 'admin'] },
-  { path: ROUTES.ADMIN_REPORTS, element: <Reports />, roles: ['teacher', 'admin'] },
-  { path: ROUTES.ADMIN_WHATS_NEW, element: <WhatsNewPublisher />, roles: ['teacher', 'admin'] },
+  { path: ROUTES.ADMIN, element: <TeacherDashboard />, roles: ['root', 'teacher', 'admin'] },
+  { path: ROUTES.ADMIN_USERS, element: <UserManager />, roles: ['root', 'admin'] },
+  { path: ROUTES.ADMIN_CLASSES, element: <ClassManager />, roles: ['root', 'teacher', 'admin'] },
+  { path: ROUTES.ADMIN_STUDENTS, element: <StudentManager />, roles: ['root', 'teacher', 'admin'] },
+  { path: ROUTES.ADMIN_LECTURES, element: <LectureManager />, roles: ['root', 'teacher', 'admin'] },
+  { path: ROUTES.ADMIN_MATERIALS, element: <MaterialsManager />, roles: ['root', 'teacher', 'admin'] },
+  { path: ROUTES.ADMIN_QA, element: <QAManager />, roles: ['root', 'teacher', 'admin'] },
+  { path: ROUTES.ADMIN_NEW_QUESTION, element: <QuestionEditor />, roles: ['root', 'teacher', 'admin'] },
+  { path: ROUTES.ADMIN_EDIT_QUESTION, element: <QuestionEditor />, roles: ['root', 'teacher', 'admin'] },
+  { path: ROUTES.ADMIN_AI_GENERATOR, element: <AIGenerator />, roles: ['root', 'teacher', 'admin'] },
+  { path: ROUTES.ADMIN_EXAM_BUILDER, element: <ExamBuilder />, roles: ['root', 'teacher', 'admin'] },
+  { path: ROUTES.ADMIN_ATTENDANCE, element: <Attendance />, roles: ['root', 'teacher', 'admin'] },
+  { path: ROUTES.ADMIN_REPORTS, element: <Reports />, roles: ['root', 'teacher', 'admin'] },
+  { path: ROUTES.ADMIN_WHATS_NEW, element: <WhatsNewPublisher />, roles: ['root', 'teacher', 'admin'] },
 ];
 
 // ── Public routes (no layout wrapper) ───────────────────

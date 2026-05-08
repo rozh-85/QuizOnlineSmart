@@ -86,10 +86,10 @@ DROP POLICY IF EXISTS "Teachers manage attendance sessions" ON public.attendance
 CREATE POLICY "Teachers manage attendance sessions" ON public.attendance_sessions
 FOR ALL
 USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('teacher', 'admin'))
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('root', 'teacher', 'admin'))
 )
 WITH CHECK (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('teacher', 'admin'))
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('root', 'teacher', 'admin'))
 );
 
 -- Students can only view sessions for classes they belong to
@@ -108,10 +108,10 @@ DROP POLICY IF EXISTS "Teachers manage attendance records" ON public.attendance_
 CREATE POLICY "Teachers manage attendance records" ON public.attendance_records
 FOR ALL
 USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('teacher', 'admin'))
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('root', 'teacher', 'admin'))
 )
 WITH CHECK (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('teacher', 'admin'))
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('root', 'teacher', 'admin'))
 );
 
 -- Students can view their own attendance records
@@ -136,10 +136,10 @@ DROP POLICY IF EXISTS "Teachers manage tokens" ON public.attendance_tokens;
 CREATE POLICY "Teachers manage tokens" ON public.attendance_tokens
 FOR ALL
 USING (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('teacher', 'admin'))
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('root', 'teacher', 'admin'))
 )
 WITH CHECK (
-    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('teacher', 'admin'))
+    EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role IN ('root', 'teacher', 'admin'))
 );
 
 -- Students can read tokens (needed for verification)

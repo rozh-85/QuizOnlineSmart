@@ -6,7 +6,7 @@ export type Profile = {
   id: string;
   email: string;
   full_name: string | null;
-  role: 'teacher' | 'student' | 'admin';
+  role: 'root' | 'teacher' | 'student' | 'admin';
   serial_id: string | null;
   last_fingerprint: string | null;
   device_lock_active: boolean;

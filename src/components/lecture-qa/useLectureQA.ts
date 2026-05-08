@@ -44,7 +44,7 @@ export function useLectureQA({ lectureId, isAdminView = false, initialThreadId }
 
   // Precise mentor detection
   const isMentor = isAdminView || (profile
-    ? (profile.role === 'teacher' || profile.role === 'admin')
+    ? (profile.role === 'root' || profile.role === 'teacher' || profile.role === 'admin')
     : localStorage.getItem('teacher_auth') === 'true');
 
   /* ── data helpers ── */

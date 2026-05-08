@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   GraduationCap, 
@@ -32,9 +32,26 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentRole, setCurrentRole] = useState<string | null>(null);
   const { unreadCount } = useTeacherUnreadCount({ channelPrefix: 'admin-layout' });
 
   const { t } = useTranslation();
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const user = await authApi.getCurrentUser();
+        if (!user) return;
+
+        const profile = await authApi.getProfile(user.id);
+        setCurrentRole(profile?.role || null);
+      } catch {
+        setCurrentRole(null);
+      }
+    };
+
+    loadProfile();
+  }, []);
 
   const handleLogout = async () => {
     Object.keys(localStorage).forEach(key => {
@@ -55,6 +72,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
   const mainMenuItems = [
     { path: '/admin', icon: LayoutDashboard, label: t('nav.dashboard') },
+    ...(currentRole === 'root' || currentRole === 'admin'
+      ? [{ path: '/admin/users', icon: Users, label: 'Users' }]
+      : []),
     { path: '/admin/classes', icon: BookOpen, label: t('nav.classes') },
     { path: '/admin/students', icon: Users, label: t('nav.students') },
     { path: '/admin/lectures', icon: GraduationCap, label: t('nav.lectures') },
@@ -84,7 +104,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               </div>
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-slate-900">{t('common.appName')}</span>
-                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">{t('common.adminPanel')}</span>
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">
+                  {currentRole === 'root' ? 'Root Console' : t('common.adminPanel')}
+                </span>
               </div>
             </Link>
             <button
