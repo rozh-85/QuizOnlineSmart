@@ -8,6 +8,7 @@ import {
   Alert,
   ActivityIndicator,
   RefreshControl,
+  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../constants/app';
@@ -21,6 +22,10 @@ const ProfileScreen = ({ navigation }: any) => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<'all' | 'present' | 'removed'>('all');
+  const [showFilters, setShowFilters] = useState(false);
+  const [lectureFilter, setLectureFilter] = useState<string>('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   const fetchRecords = async () => {
     if (!user) return;
@@ -69,10 +74,40 @@ const ProfileScreen = ({ navigation }: any) => {
   const presentCount = records.filter(r => r.status === 'present').length;
   const attendanceRate = records.length > 0 ? Math.round((presentCount / records.length) * 100) : 0;
 
+  const uniqueLectures = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const r of records) {
+      const title = r.session?.lecture?.title;
+      if (title) {
+        const id = r.session.lecture.id || title;
+        if (!map.has(id)) map.set(id, title);
+      }
+    }
+    return Array.from(map.entries());
+  }, [records]);
+
+  const hasActiveFilters = lectureFilter !== 'all' || dateFrom !== '' || dateTo !== '';
+
   const filteredRecords = useMemo(() => {
-    if (filter === 'all') return records;
-    return records.filter(r => r.status === filter);
-  }, [records, filter]);
+    return records.filter(r => {
+      if (filter !== 'all' && r.status !== filter) return false;
+      if (lectureFilter !== 'all') {
+        const title = r.session?.lecture?.title || '';
+        if (title !== lectureFilter) return false;
+      }
+      const recordDate = r.session?.session_date || r.time_joined;
+      if (recordDate) {
+        const d = new Date(recordDate);
+        if (dateFrom && d < new Date(dateFrom)) return false;
+        if (dateTo) {
+          const to = new Date(dateTo);
+          to.setHours(23, 59, 59, 999);
+          if (d > to) return false;
+        }
+      }
+      return true;
+    });
+  }, [records, filter, lectureFilter, dateFrom, dateTo]);
 
   return (
     <ScrollView
@@ -123,9 +158,108 @@ const ProfileScreen = ({ navigation }: any) => {
           </View>
         </View>
 
-        {/* Filter Tabs */}
-        <View style={styles.filterRow}>
+        {/* Filter Header */}
+        <View style={styles.filterHeaderRow}>
           <Text style={styles.sectionTitle}>Attendance History</Text>
+          <TouchableOpacity
+            style={[
+              styles.filterToggleBtn,
+              (showFilters || hasActiveFilters) && styles.filterToggleBtnActive,
+            ]}
+            onPress={() => setShowFilters(!showFilters)}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name="filter"
+              size={13}
+              color={(showFilters || hasActiveFilters) ? COLORS.primary[600] : COLORS.slate[500]}
+            />
+            <Text style={[
+              styles.filterToggleText,
+              (showFilters || hasActiveFilters) && styles.filterToggleTextActive,
+            ]}>
+              Filters
+            </Text>
+            {hasActiveFilters && <View style={styles.filterDot} />}
+          </TouchableOpacity>
+        </View>
+
+        {/* Expandable Filter Panel */}
+        {showFilters && (
+          <View style={styles.filterPanel}>
+            {/* Lecture Filter */}
+            <View style={styles.filterField}>
+              <Text style={styles.filterLabel}>Lecture</Text>
+              <View style={styles.filterPickerWrap}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <TouchableOpacity
+                    style={[styles.filterChip, lectureFilter === 'all' && styles.filterChipActive]}
+                    onPress={() => setLectureFilter('all')}
+                  >
+                    <Text style={[styles.filterChipText, lectureFilter === 'all' && styles.filterChipTextActive]}>
+                      All Lectures
+                    </Text>
+                  </TouchableOpacity>
+                  {uniqueLectures.map(([id, title]) => (
+                    <TouchableOpacity
+                      key={id}
+                      style={[styles.filterChip, lectureFilter === title && styles.filterChipActive]}
+                      onPress={() => setLectureFilter(title)}
+                    >
+                      <Text
+                        style={[styles.filterChipText, lectureFilter === title && styles.filterChipTextActive]}
+                        numberOfLines={1}
+                      >
+                        {title}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            </View>
+
+            {/* Date Range */}
+            <View style={styles.filterDateRow}>
+              <View style={styles.filterDateField}>
+                <Text style={styles.filterLabel}>From</Text>
+                <TextInput
+                  style={styles.filterDateInput}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={COLORS.slate[400]}
+                  value={dateFrom}
+                  onChangeText={setDateFrom}
+                  keyboardType="default"
+                />
+              </View>
+              <View style={styles.filterDateField}>
+                <Text style={styles.filterLabel}>To</Text>
+                <TextInput
+                  style={styles.filterDateInput}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={COLORS.slate[400]}
+                  value={dateTo}
+                  onChangeText={setDateTo}
+                  keyboardType="default"
+                />
+              </View>
+            </View>
+
+            {/* Clear Filters */}
+            {hasActiveFilters && (
+              <TouchableOpacity
+                style={styles.clearFiltersBtn}
+                onPress={() => { setLectureFilter('all'); setDateFrom(''); setDateTo(''); }}
+                activeOpacity={0.6}
+              >
+                <Ionicons name="close" size={13} color={COLORS.rose[500]} />
+                <Text style={styles.clearFiltersText}>Clear filters</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
+        {/* Status Filter Tabs */}
+        <View style={styles.filterRow}>
           <View style={styles.filterTabs}>
             {(['all', 'present', 'removed'] as const).map(f => (
               <TouchableOpacity
@@ -285,8 +419,82 @@ const styles = StyleSheet.create({
   },
   statValue: { fontSize: 20, fontWeight: '700', color: COLORS.slate[900] },
   statLabel: { fontSize: 12, color: COLORS.slate[500], fontWeight: '500', marginTop: 2 },
+  filterHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  filterToggleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.slate[200],
+    backgroundColor: COLORS.white,
+  },
+  filterToggleBtnActive: {
+    backgroundColor: COLORS.primary[50],
+    borderColor: COLORS.primary[200],
+  },
+  filterToggleText: { fontSize: 12, fontWeight: '500', color: COLORS.slate[500] },
+  filterToggleTextActive: { color: COLORS.primary[600] },
+  filterDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: COLORS.primary[500],
+  },
+  filterPanel: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.slate[200],
+    padding: 14,
+    marginBottom: 12,
+    gap: 12,
+  },
+  filterField: {},
+  filterLabel: { fontSize: 12, fontWeight: '500', color: COLORS.slate[500], marginBottom: 6 },
+  filterPickerWrap: { flexDirection: 'row' },
+  filterChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.slate[200],
+    marginRight: 6,
+  },
+  filterChipActive: {
+    backgroundColor: COLORS.primary[50],
+    borderColor: COLORS.primary[200],
+  },
+  filterChipText: { fontSize: 12, fontWeight: '500', color: COLORS.slate[500] },
+  filterChipTextActive: { color: COLORS.primary[600] },
+  filterDateRow: { flexDirection: 'row', gap: 8 },
+  filterDateField: { flex: 1 },
+  filterDateInput: {
+    borderWidth: 1,
+    borderColor: COLORS.slate[200],
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 13,
+    color: COLORS.slate[700],
+    backgroundColor: COLORS.white,
+  },
+  clearFiltersBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  clearFiltersText: { fontSize: 12, fontWeight: '500', color: COLORS.rose[500] },
   filterRow: { marginBottom: 12 },
-  sectionTitle: { fontSize: 14, fontWeight: '600', color: COLORS.slate[900], marginBottom: 12 },
+  sectionTitle: { fontSize: 14, fontWeight: '600', color: COLORS.slate[900] },
   filterTabs: { flexDirection: 'row', gap: 6 },
   filterTab: {
     paddingHorizontal: 12,

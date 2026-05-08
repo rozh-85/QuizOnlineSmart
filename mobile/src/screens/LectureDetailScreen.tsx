@@ -130,41 +130,134 @@ const LectureDetailScreen = ({ route, navigation }: any) => {
     );
   }
 
-  const renderOverview = () => (
-    <View style={styles.tabContent}>
-      <Text style={styles.lectureTitle}>{lecture.title}</Text>
-      {lecture.description ? (
-        <Text style={styles.lectureDesc}>{lecture.description}</Text>
-      ) : null}
+  const renderOverview = () => {
+    const totalQuestions = questions.length;
+    const estimatedMin = Math.ceil(totalQuestions * 0.5);
 
-      {lecture.sections?.length > 0 && (
-        <View style={styles.sectionBlock}>
-          <Text style={styles.blockTitle}>Sections</Text>
-          {lecture.sections.map((section: string, idx: number) => (
-            <View key={idx} style={styles.sectionItem}>
-              <View style={styles.sectionDot} />
-              <Text style={styles.sectionText}>{section}</Text>
+    return (
+      <View style={styles.tabContent}>
+        {/* ── Chapter Overview Card (matches web QuizStart) ── */}
+        <View style={styles.overviewCard}>
+          <View style={styles.overviewCardTop}>
+            <View style={styles.overviewIcon}>
+              <Ionicons name="book-outline" size={20} color={COLORS.primary[600]} />
             </View>
-          ))}
-        </View>
-      )}
+            <View style={{ flex: 1 }}>
+              <Text style={styles.lectureTitle}>{lecture.title}</Text>
+              {lecture.description ? (
+                <Text style={styles.lectureDesc}>{lecture.description}</Text>
+              ) : null}
+            </View>
+          </View>
 
-      <View style={styles.overviewStats}>
-        <View style={styles.overviewStat}>
-          <Ionicons name="help-circle" size={16} color={COLORS.violet[500]} />
-          <Text style={styles.overviewStatText}>{questions.length} Questions</Text>
+          {/* Stats row */}
+          <View style={styles.overviewStatsRow}>
+            <View style={styles.overviewStatItem}>
+              <Text style={styles.overviewStatValue}>{totalQuestions}</Text>
+              <Text style={styles.overviewStatLabel}>Questions</Text>
+            </View>
+            <View style={styles.overviewStatDivider} />
+            <View style={styles.overviewStatItem}>
+              <Text style={styles.overviewStatValue}>~{estimatedMin}m</Text>
+              <Text style={styles.overviewStatLabel}>Duration</Text>
+            </View>
+          </View>
+
+          {/* Start Quiz button */}
+          <TouchableOpacity
+            style={styles.startQuizBtn}
+            activeOpacity={0.8}
+            onPress={() => setActiveTab('questions')}
+          >
+            <Ionicons name="play" size={15} color={COLORS.white} />
+            <Text style={styles.startQuizBtnText}>Start Quiz</Text>
+          </TouchableOpacity>
         </View>
-        <View style={styles.overviewStat}>
-          <Ionicons name="document-text" size={16} color={COLORS.emerald[500]} />
-          <Text style={styles.overviewStatText}>{materials.length} Materials</Text>
-        </View>
-        <View style={styles.overviewStat}>
-          <Ionicons name="chatbubbles" size={16} color={COLORS.primary[500]} />
-          <Text style={styles.overviewStatText}>{qaThreads.length} Chats</Text>
-        </View>
+
+        {/* ── Sections Grid ── */}
+        {lecture.sections?.length > 0 && (
+          <View style={styles.sectionBlock}>
+            <Text style={styles.blockTitle}>Sections</Text>
+            {lecture.sections.map((section: string, idx: number) => {
+              const sectionQCount = questions.filter(q => q.sectionId === section).length;
+              return (
+                <TouchableOpacity
+                  key={idx}
+                  style={styles.sectionCard}
+                  activeOpacity={0.7}
+                  onPress={() => setActiveTab('questions')}
+                >
+                  <View style={styles.sectionCardIcon}>
+                    <Ionicons name="book-outline" size={16} color={COLORS.slate[400]} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.sectionCardTitle}>{section}</Text>
+                    <Text style={styles.sectionCardSub}>{sectionQCount} questions</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
+
+        {/* ── Learning Materials ── */}
+        {materials.length > 0 && (
+          <View style={styles.materialsBlock}>
+            <View style={styles.materialsHeader}>
+              <View style={styles.materialsHeaderIcon}>
+                <Ionicons name="document-text" size={20} color={COLORS.primary[600]} />
+              </View>
+              <View>
+                <Text style={styles.materialsHeaderTitle}>Learning Materials</Text>
+                <Text style={styles.materialsHeaderSub}>Study these notes before starting the quiz</Text>
+              </View>
+            </View>
+            {materials.map(material => (
+              <TouchableOpacity
+                key={material.id}
+                style={styles.materialCard}
+                onPress={() => {
+                  if (material.fileUrl) Linking.openURL(material.fileUrl);
+                }}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.materialIcon, {
+                  backgroundColor: material.fileType === 'pdf' ? COLORS.rose[50] :
+                    material.fileType === 'word' ? COLORS.primary[50] : COLORS.emerald[50],
+                }]}>
+                  <Ionicons
+                    name={material.fileType === 'pdf' ? 'document' : material.fileType === 'word' ? 'document-text' : 'create'}
+                    size={18}
+                    color={material.fileType === 'pdf' ? COLORS.rose[500] :
+                      material.fileType === 'word' ? COLORS.primary[500] : COLORS.emerald[500]}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.materialTitle} numberOfLines={1}>{material.title}</Text>
+                  <Text style={styles.materialType}>
+                    {material.fileType === 'note' ? 'LECTURE NOTE' : material.fileType.toUpperCase()}
+                  </Text>
+                  {material.fileType === 'note' && material.content ? (
+                    <View style={styles.noteContent}>
+                      <Text style={styles.noteContentText} numberOfLines={4}>{material.content}</Text>
+                    </View>
+                  ) : material.fileUrl ? (
+                    <View style={styles.materialLink}>
+                      <Ionicons name="link" size={14} color={COLORS.primary[600]} />
+                      <Text style={styles.materialLinkText} numberOfLines={1}>
+                        {material.fileName || 'Open Document'}
+                      </Text>
+                      <Ionicons name="chevron-forward" size={14} color={COLORS.primary[600]} />
+                    </View>
+                  ) : null}
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </View>
-    </View>
-  );
+    );
+  };
 
   const renderMaterials = () => (
     <View style={styles.tabContent}>
@@ -464,27 +557,113 @@ const styles = StyleSheet.create({
   tabActive: { borderBottomColor: COLORS.primary[600] },
   tabLabel: { fontSize: 12, fontWeight: '600', color: COLORS.slate[400] },
   tabLabelActive: { color: COLORS.primary[600] },
-  tabContent: { padding: 16, gap: 12 },
-  lectureTitle: { fontSize: 22, fontWeight: '900', color: COLORS.slate[900] },
-  lectureDesc: { fontSize: 14, color: COLORS.slate[500], lineHeight: 21, marginTop: 4 },
-  sectionBlock: { marginTop: 16 },
-  blockTitle: { fontSize: 14, fontWeight: '700', color: COLORS.slate[900], marginBottom: 10 },
-  sectionItem: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
-  sectionDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: COLORS.primary[400] },
-  sectionText: { fontSize: 14, color: COLORS.slate[700] },
-  overviewStats: { flexDirection: 'row', gap: 12, marginTop: 20 },
-  overviewStat: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+  tabContent: { padding: 16, gap: 16 },
+  // Chapter overview card
+  overviewCard: {
     backgroundColor: COLORS.white,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.slate[200],
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    padding: 20,
   },
-  overviewStatText: { fontSize: 12, fontWeight: '600', color: COLORS.slate[600] },
+  overviewCardTop: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 16,
+    marginBottom: 20,
+  },
+  overviewIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    backgroundColor: COLORS.primary[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lectureTitle: { fontSize: 20, fontWeight: '700', color: COLORS.slate[900], marginBottom: 4 },
+  lectureDesc: { fontSize: 14, color: COLORS.slate[500], lineHeight: 21 },
+  overviewStatsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 20,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.slate[100],
+    marginBottom: 20,
+  },
+  overviewStatItem: { alignItems: 'center' },
+  overviewStatValue: { fontSize: 18, fontWeight: '700', color: COLORS.slate[900] },
+  overviewStatLabel: { fontSize: 12, color: COLORS.slate[500], marginTop: 2 },
+  overviewStatDivider: { width: 1, height: 28, backgroundColor: COLORS.slate[200] },
+  startQuizBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: COLORS.primary[600],
+    borderRadius: 8,
+    height: 44,
+    width: '100%',
+  },
+  startQuizBtnText: { fontSize: 14, fontWeight: '600', color: COLORS.white },
+  // Sections
+  sectionBlock: { gap: 12 },
+  blockTitle: { fontSize: 14, fontWeight: '600', color: COLORS.slate[900] },
+  sectionCard: {
+    backgroundColor: COLORS.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: COLORS.slate[200],
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  sectionCardIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: COLORS.slate[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sectionCardTitle: { fontSize: 14, fontWeight: '500', color: COLORS.slate[800] },
+  sectionCardSub: { fontSize: 12, color: COLORS.slate[400], marginTop: 2 },
+  // Materials section
+  materialsBlock: { gap: 12 },
+  materialsHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 4 },
+  materialsHeaderIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: COLORS.primary[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  materialsHeaderTitle: { fontSize: 18, fontWeight: '800', color: COLORS.slate[900] },
+  materialsHeaderSub: { fontSize: 13, fontWeight: '500', color: COLORS.slate[500] },
+  noteContent: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.slate[100],
+  },
+  noteContentText: { fontSize: 14, color: COLORS.slate[600], lineHeight: 20, fontWeight: '500' },
+  materialLink: {
+    marginTop: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: COLORS.white,
+    borderWidth: 1,
+    borderColor: COLORS.slate[100],
+  },
+  materialLinkText: { flex: 1, fontSize: 14, fontWeight: '700', color: COLORS.primary[600] },
   emptyCard: {
     backgroundColor: COLORS.white,
     borderRadius: 12,

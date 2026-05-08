@@ -47,6 +47,15 @@ const NewsScreen = ({ navigation }: any) => {
   const [newsGroups, setNewsGroups] = useState<NewsGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set());
+
+  const toggleExpand = (key: string) => {
+    setExpandedKeys(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
 
   const fetchNews = useCallback(async () => {
     try {
@@ -146,6 +155,10 @@ const NewsScreen = ({ navigation }: any) => {
             const colors = COLOR_MAP[group.itemType] || COLOR_MAP.lecture;
             const iconName = ICON_MAP[group.itemType] || 'book-outline';
             const lectureName = getLectureName(group.lectureId);
+            const isExpanded = expandedKeys.has(group.key);
+            const previewCount = 2;
+            const hasMore = group.items.length > previewCount;
+            const visibleItems = isExpanded ? group.items : group.items.slice(0, previewCount);
 
             return (
               <TouchableOpacity
@@ -180,11 +193,56 @@ const NewsScreen = ({ navigation }: any) => {
                       )}
                     </View>
                     <Text style={styles.newsTitle} numberOfLines={1}>{lectureName}</Text>
-                    {group.items.slice(0, 2).map(item => (
-                      <Text key={item.id} style={styles.newsItemText} numberOfLines={1}>{item.title}</Text>
-                    ))}
-                    {group.items.length > 2 && (
-                      <Text style={styles.moreText}>+{group.items.length - 2} more</Text>
+
+                    {group.itemType === 'question' ? (
+                      <View style={styles.questionList}>
+                        {visibleItems.map((item, qi) => (
+                          <View key={item.id} style={styles.questionRow}>
+                            <Text style={styles.questionRowText} numberOfLines={2}>
+                              <Text style={styles.questionNumber}>Q{qi + 1}. </Text>
+                              {item.title}
+                            </Text>
+                          </View>
+                        ))}
+                        {hasMore && (
+                          <TouchableOpacity
+                            style={styles.expandBtn}
+                            onPress={(e) => { e.stopPropagation?.(); toggleExpand(group.key); }}
+                            activeOpacity={0.6}
+                          >
+                            <Text style={styles.expandBtnText}>
+                              {isExpanded ? 'Show less' : `See all ${group.items.length} questions`}
+                            </Text>
+                            <Ionicons
+                              name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                              size={14}
+                              color={COLORS.violet[600]}
+                            />
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    ) : (
+                      <>
+                        {visibleItems.map(item => (
+                          <Text key={item.id} style={styles.newsItemText} numberOfLines={1}>{item.title}</Text>
+                        ))}
+                        {hasMore && (
+                          <TouchableOpacity
+                            style={styles.expandBtn}
+                            onPress={(e) => { e.stopPropagation?.(); toggleExpand(group.key); }}
+                            activeOpacity={0.6}
+                          >
+                            <Text style={[styles.expandBtnText, { color: colors.text }]}>
+                              {isExpanded ? 'Show less' : `See all ${group.items.length} items`}
+                            </Text>
+                            <Ionicons
+                              name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                              size={14}
+                              color={colors.text}
+                            />
+                          </TouchableOpacity>
+                        )}
+                      </>
                     )}
                   </View>
                 </View>
@@ -277,6 +335,22 @@ const styles = StyleSheet.create({
   newsTitle: { fontSize: 14, fontWeight: '600', color: COLORS.slate[900] },
   newsItemText: { fontSize: 12, color: COLORS.slate[500], marginTop: 2 },
   moreText: { fontSize: 11, color: COLORS.slate[400], marginTop: 2 },
+  questionList: { gap: 6, marginTop: 4 },
+  questionRow: {
+    backgroundColor: COLORS.violet[50],
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  questionRowText: { fontSize: 12, color: COLORS.slate[700], lineHeight: 18 },
+  questionNumber: { color: COLORS.violet[500], fontWeight: '600' },
+  expandBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 8,
+  },
+  expandBtnText: { fontSize: 12, fontWeight: '500', color: COLORS.violet[600] },
   newsFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
