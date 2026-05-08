@@ -4,6 +4,7 @@ import { Mail, Lock, ArrowRight, Hash } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { authApi } from '../api/authApi';
 import { getDeviceFingerprint } from '../utils/device';
+import { clearAuthSessionStorage, getPrototypeAuthSession, setPrototypeAuthSession } from '../utils/authSession';
 import toast from 'react-hot-toast';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { ROUTES } from '../constants/routes';
@@ -33,7 +34,7 @@ const Login = ({ mode }: LoginProps) => {
 
     const redirectExistingSession = async () => {
       try {
-        if (localStorage.getItem('sb-prototype-auth-token')) {
+        if (getPrototypeAuthSession()) {
           navigate(ROUTES.ADMIN, { replace: true });
           return;
         }
@@ -44,7 +45,11 @@ const Login = ({ mode }: LoginProps) => {
         const profile = await authApi.getProfile(user.id);
         if (!isMounted) return;
 
-        navigate(isStaffRole(profile?.role) ? ROUTES.ADMIN : ROUTES.DASHBOARD, { replace: true });
+        if (isStaffRole(profile?.role)) {
+          navigate(ROUTES.ADMIN, { replace: true });
+        } else if (mode === 'student') {
+          navigate(ROUTES.DASHBOARD, { replace: true });
+        }
       } catch {
         // Stay on the login page if the saved session cannot be resolved.
       }
@@ -55,7 +60,7 @@ const Login = ({ mode }: LoginProps) => {
     return () => {
       isMounted = false;
     };
-  }, [navigate]);
+  }, [mode, navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -70,6 +75,7 @@ const Login = ({ mode }: LoginProps) => {
       let result;
 
       if (mode === 'student') {
+        clearAuthSessionStorage();
         // Strip domain if user entered full email (e.g. ki232@kimya.com → ki232)
         let rawSerial = formData.serialId.trim();
         if (rawSerial.includes('@')) {
@@ -87,17 +93,21 @@ const Login = ({ mode }: LoginProps) => {
         if (!email || !password) {
           throw new Error(t('auth.enterBothEmailPassword'));
         }
-        
+
+        clearAuthSessionStorage();
+
         try {
           result = await authApi.signIn(email, password, fingerprint);
         } catch (authError: any) {
           // Prototype fallback: any email with password 'admin123'
           if (password === 'admin123') {
+            const role = email.toLowerCase().startsWith('root') ? 'root' : 'admin';
             result = {
               user: { id: 'prototype-admin', email },
-              profile: { role: email.toLowerCase().startsWith('root') ? 'root' : 'admin', full_name: 'Administrator' }
+              profile: { role, full_name: 'Administrator' }
             };
-            localStorage.setItem('sb-prototype-auth-token', JSON.stringify({ access_token: 'prototype' }));
+            clearAuthSessionStorage();
+            setPrototypeAuthSession(email, role);
           } else {
             throw authError;
           }
@@ -108,7 +118,8 @@ const Login = ({ mode }: LoginProps) => {
       const isStaff = isStaffRole(role);
 
       if (mode === 'teacher' && !isStaff) {
-        await authApi.signOut();
+        await authApi.signOut().catch(() => undefined);
+        clearAuthSessionStorage();
         throw new Error('This is a student account. Please use a teacher, admin, or root account.');
       }
 
