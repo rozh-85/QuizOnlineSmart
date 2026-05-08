@@ -167,7 +167,7 @@ const LectureDetailScreen = ({ route, navigation }: any) => {
           <TouchableOpacity
             style={styles.startQuizBtn}
             activeOpacity={0.8}
-            onPress={() => setActiveTab('questions')}
+            onPress={() => navigation.navigate('Quiz', { lectureId })}
           >
             <Ionicons name="play" size={15} color={COLORS.white} />
             <Text style={styles.startQuizBtnText}>Start Quiz</Text>
@@ -185,7 +185,7 @@ const LectureDetailScreen = ({ route, navigation }: any) => {
                   key={idx}
                   style={styles.sectionCard}
                   activeOpacity={0.7}
-                  onPress={() => setActiveTab('questions')}
+                  onPress={() => navigation.navigate('Quiz', { lectureId, section })}
                 >
                   <View style={styles.sectionCardIcon}>
                     <Ionicons name="book-outline" size={16} color={COLORS.slate[400]} />

@@ -15,6 +15,8 @@ import QRScanScreen from '../screens/QRScanScreen';
 import ChatScreen from '../screens/ChatScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import LectureDetailScreen from '../screens/LectureDetailScreen';
+import QuizScreen from '../screens/QuizScreen';
+import QuizResultsScreen from '../screens/QuizResultsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -130,6 +132,23 @@ const AppNavigator = () => {
           headerShadowVisible: false,
           headerBackTitle: 'Back',
         })}
+      />
+      <Stack.Screen
+        name="Quiz"
+        component={QuizScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="QuizResults"
+        component={QuizResultsScreen}
+        options={{
+          headerShown: true,
+          headerTitle: 'Quiz Results',
+          headerTintColor: COLORS.primary[600],
+          headerStyle: { backgroundColor: COLORS.white },
+          headerShadowVisible: false,
+          headerBackTitle: 'Back',
+        }}
       />
     </Stack.Navigator>
   );
