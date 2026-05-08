@@ -23,6 +23,7 @@ import { authApi } from '../api/authApi';
 import { useTeacherUnreadCount } from '../hooks/useUnreadCount';
 import { ROUTES } from '../constants/routes';
 import LanguageSwitcher from './LanguageSwitcher';
+import { clearAuthSessionStorage, getPrototypeAuthSession } from '../utils/authSession';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -40,6 +41,12 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   useEffect(() => {
     const loadProfile = async () => {
       try {
+        const prototypeSession = getPrototypeAuthSession();
+        if (prototypeSession) {
+          setCurrentRole(prototypeSession.role);
+          return;
+        }
+
         const user = await authApi.getCurrentUser();
         if (!user) return;
 
@@ -54,18 +61,15 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   }, []);
 
   const handleLogout = async () => {
-    Object.keys(localStorage).forEach(key => {
-      if (key.startsWith('sb-')) localStorage.removeItem(key);
-    });
-    localStorage.removeItem('teacher_auth');
+    clearAuthSessionStorage();
     try {
       await authApi.signOut();
-      toast.success(t('auth.loggedOut'));
-      navigate(ROUTES.ADMIN_LOGIN, { replace: true });
     } catch (error) {
       console.error('Logout error:', error);
-      toast.error(t('auth.failedToLogout'));
     }
+
+    toast.success(t('auth.loggedOut'));
+    navigate(ROUTES.ADMIN_LOGIN, { replace: true });
   };
 
   const isActive = (path: string) => location.pathname === path;
