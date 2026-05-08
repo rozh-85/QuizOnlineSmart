@@ -4,6 +4,11 @@ import { authApi } from '../api/authApi';
 import { ROUTES } from '../constants/routes';
 
 type Role = 'root' | 'teacher' | 'student' | 'admin';
+const STAFF_ROLES: Role[] = ['root', 'teacher', 'admin'];
+
+const isStaffRole = (role: Role | null): boolean => {
+  return !!role && STAFF_ROLES.includes(role);
+};
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -48,15 +53,20 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
     checkRole();
   }, [hasToken]);
 
+  const isAdminRoute = allowedRoles?.some((allowedRole) => STAFF_ROLES.includes(allowedRole));
+
   if (!hasToken) {
-    const isAdminRoute = allowedRoles?.includes('root') || allowedRoles?.includes('teacher') || allowedRoles?.includes('admin');
     return <Navigate to={isAdminRoute ? ROUTES.ADMIN_LOGIN : ROUTES.LOGIN} replace />;
   }
 
   if (checkingRole) return null;
 
   if (allowedRoles?.length && (!role || !allowedRoles.includes(role))) {
-    return <Navigate to={role === 'student' ? ROUTES.DASHBOARD : ROUTES.ADMIN_LOGIN} replace />;
+    if (isAdminRoute) {
+      return <Navigate to={ROUTES.ADMIN_LOGIN} replace />;
+    }
+
+    return <Navigate to={isStaffRole(role) ? ROUTES.ADMIN : ROUTES.LOGIN} replace />;
   }
 
   return <>{children}</>;

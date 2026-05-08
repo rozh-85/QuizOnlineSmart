@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, ArrowRight, Hash } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -6,10 +6,15 @@ import { authApi } from '../api/authApi';
 import { getDeviceFingerprint } from '../utils/device';
 import toast from 'react-hot-toast';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import { ROUTES } from '../constants/routes';
 
 interface LoginProps {
   mode: 'student' | 'teacher';
 }
+
+const isStaffRole = (role?: string | null) => {
+  return role === 'root' || role === 'teacher' || role === 'admin';
+};
 
 const Login = ({ mode }: LoginProps) => {
   const [loading, setLoading] = useState(false);
@@ -22,6 +27,35 @@ const Login = ({ mode }: LoginProps) => {
     email: '',
     password: ''
   });
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const redirectExistingSession = async () => {
+      try {
+        if (localStorage.getItem('sb-prototype-auth-token')) {
+          navigate(ROUTES.ADMIN, { replace: true });
+          return;
+        }
+
+        const user = await authApi.getCurrentUser();
+        if (!user) return;
+
+        const profile = await authApi.getProfile(user.id);
+        if (!isMounted) return;
+
+        navigate(isStaffRole(profile?.role) ? ROUTES.ADMIN : ROUTES.DASHBOARD, { replace: true });
+      } catch {
+        // Stay on the login page if the saved session cannot be resolved.
+      }
+    };
+
+    redirectExistingSession();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [navigate]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -70,12 +104,20 @@ const Login = ({ mode }: LoginProps) => {
         }
       }
 
+      const role = result.profile.role;
+      const isStaff = isStaffRole(role);
+
+      if (mode === 'teacher' && !isStaff) {
+        await authApi.signOut();
+        throw new Error('This is a student account. Please use a teacher, admin, or root account.');
+      }
+
       toast.success(t('auth.loginSuccessful'));
-      
-      if (result.profile.role === 'root' || result.profile.role === 'teacher' || result.profile.role === 'admin') {
-        navigate('/admin', { replace: true });
+
+      if (isStaff) {
+        navigate(ROUTES.ADMIN, { replace: true });
       } else {
-        navigate('/dashboard', { replace: true });
+        navigate(ROUTES.DASHBOARD, { replace: true });
       }
     } catch (error: any) {
       console.error('Login error:', error);
