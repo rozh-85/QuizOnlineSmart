@@ -487,14 +487,14 @@ const styles = StyleSheet.create({
   overviewStatText: { fontSize: 12, fontWeight: '600', color: COLORS.slate[600] },
   emptyCard: {
     backgroundColor: COLORS.white,
-    borderRadius: 16,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: COLORS.slate[200],
     alignItems: 'center',
     paddingVertical: 40,
     gap: 8,
   },
-  emptyTitle: { fontSize: 14, fontWeight: '600', color: COLORS.slate[500] },
+  emptyTitle: { fontSize: 14, fontWeight: '500', color: COLORS.slate[500] },
   emptySub: { fontSize: 12, color: COLORS.slate[400] },
   materialCard: {
     backgroundColor: COLORS.white,

@@ -136,8 +136,8 @@ const QRScanScreen = ({ navigation }: any) => {
 
       {status === 'processing' && (
         <View style={styles.resultContainer}>
-          <View style={[styles.resultIcon, { backgroundColor: COLORS.primary[50] }]}>
-            <ActivityIndicator size="large" color={COLORS.primary[600]} />
+          <View style={[styles.resultIcon, { backgroundColor: 'rgba(255,255,255,0.10)' }]}>
+            <ActivityIndicator size="large" color={COLORS.white} />
           </View>
           <Text style={styles.resultTitle}>Processing...</Text>
           <Text style={styles.resultMessage}>{message}</Text>
@@ -146,29 +146,29 @@ const QRScanScreen = ({ navigation }: any) => {
 
       {status === 'success' && (
         <View style={styles.resultContainer}>
-          <View style={[styles.resultIcon, { backgroundColor: COLORS.emerald[50] }]}>
-            <Ionicons name="checkmark-circle" size={48} color={COLORS.emerald[500]} />
+          <View style={[styles.resultIcon, { backgroundColor: 'rgba(16,185,129,0.20)' }]}>
+            <Ionicons name="checkmark-circle" size={24} color={COLORS.emerald[400]} />
           </View>
           <Text style={styles.resultTitle}>Attendance Confirmed!</Text>
-          <Text style={[styles.resultMessage, { color: COLORS.emerald[600] }]}>{message}</Text>
+          <Text style={[styles.resultMessage, { color: COLORS.emerald[400] }]}>{message}</Text>
           <TouchableOpacity
             style={styles.primaryBtn}
             onPress={() => navigation.navigate('Home')}
           >
-            <Text style={styles.primaryBtnText}>Back to Home</Text>
+            <Text style={styles.primaryBtnText}>Done</Text>
           </TouchableOpacity>
         </View>
       )}
 
       {status === 'error' && (
         <View style={styles.resultContainer}>
-          <View style={[styles.resultIcon, { backgroundColor: COLORS.rose[50] }]}>
-            <Ionicons name="close-circle" size={48} color={COLORS.rose[500]} />
+          <View style={[styles.resultIcon, { backgroundColor: 'rgba(244,63,94,0.20)' }]}>
+            <Ionicons name="close-circle" size={24} color={COLORS.rose[400]} />
           </View>
           <Text style={styles.resultTitle}>Scan Failed</Text>
-          <Text style={[styles.resultMessage, { color: COLORS.rose[500] }]}>{message}</Text>
+          <Text style={[styles.resultMessage, { color: COLORS.rose[400] }]}>{message}</Text>
           <TouchableOpacity style={styles.primaryBtn} onPress={reset}>
-            <Ionicons name="refresh" size={18} color={COLORS.white} />
+            <Ionicons name="refresh" size={16} color={COLORS.slate[900]} />
             <Text style={styles.primaryBtnText}>Try Again</Text>
           </TouchableOpacity>
         </View>
@@ -237,46 +237,48 @@ const styles = StyleSheet.create({
   cornerBR: { bottom: 0, right: 0, borderBottomWidth: 3, borderRightWidth: 3, borderBottomRightRadius: 8 },
   resultContainer: {
     flex: 1,
-    backgroundColor: COLORS.slate[50],
+    backgroundColor: 'rgba(0,0,0,0.95)',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 32,
+    padding: 24,
   },
   resultIcon: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   resultTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: COLORS.slate[900],
-    marginBottom: 8,
+    fontSize: 18,
+    fontWeight: '700',
+    color: COLORS.white,
+    marginBottom: 4,
   },
   resultMessage: {
     fontSize: 14,
-    color: COLORS.slate[500],
+    color: 'rgba(255,255,255,0.80)',
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: 24,
     lineHeight: 20,
   },
   primaryBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLORS.primary[600],
-    borderRadius: 12,
-    height: 50,
+    backgroundColor: COLORS.white,
+    borderRadius: 8,
+    height: 48,
     paddingHorizontal: 32,
     gap: 8,
+    width: '100%',
+    maxWidth: 280,
   },
   primaryBtnText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.white,
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLORS.slate[900],
   },
   permissionCard: {
     backgroundColor: COLORS.white,
