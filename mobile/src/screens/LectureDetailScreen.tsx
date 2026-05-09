@@ -12,8 +12,11 @@ import {
   FlatList,
   Linking,
   Alert,
+  Image,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { COLORS } from '../constants/app';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
@@ -55,10 +58,57 @@ const LectureDetailScreen = ({ route, navigation }: any) => {
   const [sending, setSending] = useState(false);
   const [loadingChat, setLoadingChat] = useState(false);
   const [messageError, setMessageError] = useState<string | null>(null);
+  const [selectedImages, setSelectedImages] = useState<ImagePicker.ImagePickerAsset[]>([]);
+  const [viewingImageUrl, setViewingImageUrl] = useState<string | null>(null);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState('');
   const scrollRef = useRef<ScrollView>(null);
   const initialThreadOpenedRef = useRef(false);
   const messageRequestRef = useRef(0);
   const loadingRequestRef = useRef(0);
+
+  const parseImageUrls = useCallback((imageUrl: string | null | undefined) => {
+    if (!imageUrl) return [];
+    try {
+      if (imageUrl.startsWith('[')) {
+        const parsed = JSON.parse(imageUrl);
+        return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+      }
+    } catch { /* fall through to single URL */ }
+    return [imageUrl];
+  }, []);
+
+  const clearComposer = useCallback(() => {
+    setNewMessage('');
+    setSelectedImages([]);
+  }, []);
+
+  const handlePickImages = useCallback(async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permission needed', 'Please allow photo access to upload images.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsMultipleSelection: true,
+        selectionLimit: 4,
+        quality: 0.8,
+      });
+
+      if (!result.canceled) {
+        setSelectedImages(prev => [...prev, ...result.assets].slice(0, 4));
+      }
+    } catch (e: any) {
+      Alert.alert('Error', e?.message || 'Could not open image picker.');
+    }
+  }, []);
+
+  const removeSelectedImage = useCallback((index: number) => {
+    setSelectedImages(prev => prev.filter((_, idx) => idx !== index));
+  }, []);
 
   const loadMessagesForThread = useCallback(async (questionId: string, showLoading = false) => {
     const requestId = ++messageRequestRef.current;
@@ -164,11 +214,22 @@ const LectureDetailScreen = ({ route, navigation }: any) => {
   }, [selectedThread?.id, loadMessagesForThread, user?.id]);
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedThread || sending) return;
+    if ((!newMessage.trim() && selectedImages.length === 0) || !selectedThread || sending) return;
     setSending(true);
     try {
-      await lectureQAApi.sendMessage(selectedThread.id, newMessage.trim(), false);
-      setNewMessage('');
+      const imageUrls: string[] = [];
+      for (const image of selectedImages) {
+        imageUrls.push(await lectureQAApi.uploadChatImage(image));
+      }
+
+      const text = newMessage.trim() || 'Photo';
+      await lectureQAApi.sendMessage(
+        selectedThread.id,
+        text,
+        false,
+        imageUrls.length > 0 ? imageUrls : undefined
+      );
+      clearComposer();
       await loadMessagesForThread(selectedThread.id);
       setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 200);
     } catch (e: any) {
@@ -176,6 +237,60 @@ const LectureDetailScreen = ({ route, navigation }: any) => {
     } finally {
       setSending(false);
     }
+  };
+
+  const startEditMessage = (message: any) => {
+    if (message.sender_id !== user?.id) return;
+    setEditingMessageId(message.id);
+    setEditingText(message.message_text === 'Photo' ? '' : message.message_text);
+  };
+
+  const cancelEditMessage = () => {
+    setEditingMessageId(null);
+    setEditingText('');
+  };
+
+  const saveEditMessage = async (messageId: string) => {
+    const nextText = editingText.trim();
+    if (!nextText) {
+      Alert.alert('Error', 'Message cannot be empty.');
+      return;
+    }
+
+    const previous = messages;
+    setMessages(prev => prev.map(msg =>
+      msg.id === messageId ? { ...msg, message_text: nextText } : msg
+    ));
+    cancelEditMessage();
+
+    try {
+      await lectureQAApi.editMessage(messageId, nextText);
+      if (selectedThread) await loadMessagesForThread(selectedThread.id);
+    } catch (e: any) {
+      setMessages(previous);
+      Alert.alert('Error', e?.message || 'Failed to edit message.');
+    }
+  };
+
+  const confirmDeleteMessage = (messageId: string) => {
+    Alert.alert('Delete message', 'Delete this message?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          const previous = messages;
+          setMessages(prev => prev.filter(msg => msg.id !== messageId));
+          try {
+            await lectureQAApi.deleteMessage(messageId);
+            if (selectedThread) await loadMessagesForThread(selectedThread.id);
+          } catch (e: any) {
+            setMessages(previous);
+            Alert.alert('Error', e?.message || 'Failed to delete message.');
+          }
+        },
+      },
+    ]);
   };
 
   const handleAskQuestion = async () => {
@@ -438,6 +553,8 @@ const LectureDetailScreen = ({ route, navigation }: any) => {
               setSelectedThread(null);
               setMessages([]);
               setMessageError(null);
+              setSelectedImages([]);
+              cancelEditMessage();
             }}
           >
             <Ionicons name="arrow-back" size={20} color={COLORS.primary[600]} />
@@ -477,20 +594,86 @@ const LectureDetailScreen = ({ route, navigation }: any) => {
 
                 {messages.map(msg => {
                   const isMe = msg.sender_id === user?.id;
+                  const imageUrls = parseImageUrls(msg.image_url);
+                  const isEditing = editingMessageId === msg.id;
+                  const showText = msg.message_text && !(msg.message_text === 'Photo' && imageUrls.length > 0);
                   return (
-                    <View key={msg.id} style={[styles.msgBubble, isMe ? styles.msgMe : styles.msgOther]}>
+                    <TouchableOpacity
+                      key={msg.id}
+                      activeOpacity={0.9}
+                      onLongPress={() => isMe && startEditMessage(msg)}
+                      style={[styles.msgBubble, isMe ? styles.msgMe : styles.msgOther]}
+                    >
                       {!isMe && (
                         <Text style={styles.senderName}>
                           {msg.sender?.full_name || 'Teacher'}
                         </Text>
                       )}
-                      <Text style={[styles.msgText, isMe ? styles.msgTextMe : styles.msgTextOther]}>
-                        {msg.message_text}
-                      </Text>
+
+                      {imageUrls.length > 0 ? (
+                        <View style={imageUrls.length > 1 ? styles.msgImageGrid : undefined}>
+                          {imageUrls.map((url: string, idx: number) => (
+                            <TouchableOpacity
+                              key={`${url}-${idx}`}
+                              activeOpacity={0.85}
+                              onPress={() => setViewingImageUrl(url)}
+                            >
+                              <Image
+                                source={{ uri: url }}
+                                style={imageUrls.length > 1 ? styles.msgImageSmall : styles.msgImage}
+                              />
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                      ) : null}
+
+                      {isEditing ? (
+                        <View style={styles.editBox}>
+                          <TextInput
+                            style={[styles.editInput, isMe && styles.editInputMe]}
+                            value={editingText}
+                            onChangeText={setEditingText}
+                            placeholder="Edit message..."
+                            placeholderTextColor={isMe ? 'rgba(255,255,255,0.6)' : COLORS.slate[400]}
+                            multiline
+                            autoFocus
+                          />
+                          <View style={styles.editActions}>
+                            <TouchableOpacity style={styles.editActionBtn} onPress={cancelEditMessage}>
+                              <Text style={[styles.editActionText, isMe && styles.editActionTextMe]}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.editActionBtn} onPress={() => saveEditMessage(msg.id)}>
+                              <Text style={[styles.editActionText, isMe && styles.editActionTextMe]}>Save</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      ) : showText ? (
+                        <Text style={[styles.msgText, isMe ? styles.msgTextMe : styles.msgTextOther]}>
+                          {msg.message_text}
+                        </Text>
+                      ) : null}
+
                       <Text style={[styles.bubbleTime, isMe && { color: 'rgba(255,255,255,0.6)' }]}>
                         {formatRelativeTime(msg.created_at)}
                       </Text>
-                    </View>
+
+                      {isMe && !isEditing ? (
+                        <View style={styles.messageActions}>
+                          <TouchableOpacity
+                            style={styles.messageActionBtn}
+                            onPress={() => startEditMessage(msg)}
+                          >
+                            <Ionicons name="create-outline" size={14} color={COLORS.white} />
+                          </TouchableOpacity>
+                          <TouchableOpacity
+                            style={styles.messageActionBtn}
+                            onPress={() => confirmDeleteMessage(msg.id)}
+                          >
+                            <Ionicons name="trash-outline" size={14} color={COLORS.white} />
+                          </TouchableOpacity>
+                        </View>
+                      ) : null}
+                    </TouchableOpacity>
                   );
                 })}
               </ScrollView>
@@ -498,27 +681,56 @@ const LectureDetailScreen = ({ route, navigation }: any) => {
           )}
 
           {/* Message Input */}
-          <View style={styles.inputBar}>
-            <TextInput
-              style={styles.msgInput}
-              placeholder="Type a message..."
-              placeholderTextColor={COLORS.slate[400]}
-              value={newMessage}
-              onChangeText={setNewMessage}
-              multiline
-              maxLength={1000}
-            />
-            <TouchableOpacity
-              style={[styles.sendBtn, (!newMessage.trim() || sending) && { opacity: 0.5 }]}
-              onPress={handleSendMessage}
-              disabled={!newMessage.trim() || sending}
-            >
-              {sending ? (
-                <ActivityIndicator size="small" color={COLORS.white} />
-              ) : (
-                <Ionicons name="send" size={18} color={COLORS.white} />
-              )}
-            </TouchableOpacity>
+          <View style={styles.composer}>
+            {selectedImages.length > 0 ? (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.selectedImagesRow}
+              >
+                {selectedImages.map((image, idx) => (
+                  <View key={`${image.uri}-${idx}`} style={styles.selectedImageWrap}>
+                    <Image source={{ uri: image.uri }} style={styles.selectedImage} />
+                    <TouchableOpacity
+                      style={styles.removeImageBtn}
+                      onPress={() => removeSelectedImage(idx)}
+                    >
+                      <Ionicons name="close" size={12} color={COLORS.white} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+            ) : null}
+
+            <View style={styles.inputBar}>
+              <TouchableOpacity
+                style={styles.attachBtn}
+                onPress={handlePickImages}
+                disabled={sending}
+              >
+                <Ionicons name="image-outline" size={20} color={COLORS.primary[600]} />
+              </TouchableOpacity>
+              <TextInput
+                style={styles.msgInput}
+                placeholder="Type a message..."
+                placeholderTextColor={COLORS.slate[400]}
+                value={newMessage}
+                onChangeText={setNewMessage}
+                multiline
+                maxLength={1000}
+              />
+              <TouchableOpacity
+                style={[styles.sendBtn, ((!newMessage.trim() && selectedImages.length === 0) || sending) && { opacity: 0.5 }]}
+                onPress={handleSendMessage}
+                disabled={(!newMessage.trim() && selectedImages.length === 0) || sending}
+              >
+                {sending ? (
+                  <ActivityIndicator size="small" color={COLORS.white} />
+                ) : (
+                  <Ionicons name="send" size={18} color={COLORS.white} />
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         </KeyboardAvoidingView>
       );
@@ -604,7 +816,12 @@ const LectureDetailScreen = ({ route, navigation }: any) => {
           <TouchableOpacity
             key={tab.key}
             style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-            onPress={() => { setActiveTab(tab.key); setSelectedThread(null); }}
+            onPress={() => {
+              setActiveTab(tab.key);
+              setSelectedThread(null);
+              setSelectedImages([]);
+              cancelEditMessage();
+            }}
           >
             <Ionicons
               name={tab.icon as any}
@@ -628,6 +845,23 @@ const LectureDetailScreen = ({ route, navigation }: any) => {
           {activeTab === 'questions' && renderQuestions()}
         </ScrollView>
       )}
+
+      <Modal
+        visible={!!viewingImageUrl}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setViewingImageUrl(null)}
+      >
+        <TouchableOpacity
+          style={styles.imageModal}
+          activeOpacity={1}
+          onPress={() => setViewingImageUrl(null)}
+        >
+          {viewingImageUrl ? (
+            <Image source={{ uri: viewingImageUrl }} style={styles.imageModalPhoto} />
+          ) : null}
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
@@ -875,6 +1109,18 @@ const styles = StyleSheet.create({
   },
   threadHeaderTitle: { flex: 1, fontSize: 14, fontWeight: '600', color: COLORS.slate[900] },
   messagesContainer: { flex: 1, backgroundColor: COLORS.slate[50] },
+  imageModal: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  imageModalPhoto: {
+    width: '100%',
+    height: '85%',
+    resizeMode: 'contain',
+  },
   chatError: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -916,14 +1162,108 @@ const styles = StyleSheet.create({
   msgText: { fontSize: 14, lineHeight: 20 },
   msgTextMe: { color: COLORS.white },
   msgTextOther: { color: COLORS.slate[900] },
+  msgImageGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 8,
+  },
+  msgImage: {
+    width: 210,
+    height: 150,
+    borderRadius: 10,
+    marginBottom: 8,
+    backgroundColor: COLORS.slate[200],
+  },
+  msgImageSmall: {
+    width: 96,
+    height: 96,
+    borderRadius: 8,
+    backgroundColor: COLORS.slate[200],
+  },
+  messageActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 6,
+    marginTop: 8,
+  },
+  messageActionBtn: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editBox: { gap: 8, minWidth: 180 },
+  editInput: {
+    minHeight: 38,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.slate[200],
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 13,
+    color: COLORS.slate[900],
+  },
+  editInputMe: {
+    backgroundColor: 'rgba(255,255,255,0.16)',
+    borderColor: 'rgba(255,255,255,0.25)',
+    color: COLORS.white,
+  },
+  editActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 8,
+  },
+  editActionBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  editActionText: { fontSize: 11, fontWeight: '700', color: COLORS.primary[600] },
+  editActionTextMe: { color: COLORS.white },
+  composer: {
+    backgroundColor: COLORS.white,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.slate[200],
+  },
+  selectedImagesRow: { paddingHorizontal: 10, paddingTop: 10, gap: 8 },
+  selectedImageWrap: { position: 'relative' },
+  selectedImage: {
+    width: 58,
+    height: 58,
+    borderRadius: 8,
+    backgroundColor: COLORS.slate[100],
+  },
+  removeImageBtn: {
+    position: 'absolute',
+    top: -6,
+    right: -6,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: COLORS.rose[500],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   inputBar: {
     flexDirection: 'row',
     alignItems: 'flex-end',
     backgroundColor: COLORS.white,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.slate[200],
     padding: 10,
     gap: 8,
+  },
+  attachBtn: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: COLORS.primary[50],
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.primary[100],
   },
   msgInput: {
     flex: 1,

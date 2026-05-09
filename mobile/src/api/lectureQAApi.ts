@@ -1,10 +1,27 @@
 import { supabase } from '../lib/supabase';
 import type { LectureQuestion, LectureQuestionMessage } from '../types/database';
 import { authApi } from './authApi';
+import { File as ExpoFile } from 'expo-file-system';
 
 // =====================================================
 // LECTURE Q&A API
 // =====================================================
+
+type ChatImageUpload = {
+  uri: string;
+  fileName?: string | null;
+  mimeType?: string | null;
+  file?: any;
+};
+
+const getImageExtension = (fileName?: string | null, mimeType?: string | null) => {
+  const fromName = fileName?.split('.').pop()?.toLowerCase();
+  if (fromName && /^[a-z0-9]+$/.test(fromName)) return fromName;
+  if (mimeType?.includes('png')) return 'png';
+  if (mimeType?.includes('webp')) return 'webp';
+  if (mimeType?.includes('gif')) return 'gif';
+  return 'jpg';
+};
 
 export const lectureQAApi = {
   async getQuestionsByLecture(lectureId: string): Promise<LectureQuestion[]> {
@@ -57,17 +74,51 @@ export const lectureQAApi = {
     return data;
   },
 
-  async sendMessage(questionId: string, text: string, isTeacher = false): Promise<LectureQuestionMessage> {
+  async uploadChatImage(image: ChatImageUpload): Promise<string> {
+    const ext = getImageExtension(image.fileName, image.mimeType);
+    const path = `chat/${Math.random().toString(36).substring(2)}-${Date.now()}.${ext}`;
+    const contentType = image.mimeType || `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+
+    const body = image.file || new ExpoFile(image.uri);
+
+    const { error } = await supabase.storage
+      .from('materials')
+      .upload(path, body, {
+        cacheControl: '3600',
+        contentType,
+        upsert: false,
+      });
+
+    if (error) throw error;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('materials')
+      .getPublicUrl(path);
+
+    if (!publicUrl) {
+      throw new Error('Image uploaded but no public URL was returned.');
+    }
+
+    return publicUrl;
+  },
+
+  async sendMessage(questionId: string, text: string, isTeacher = false, imageUrls?: string[]): Promise<LectureQuestionMessage> {
     const user = await authApi.getCurrentUser();
+
+    const insertData: any = {
+      question_id: questionId,
+      sender_id: user?.id || null,
+      message_text: text,
+      is_from_teacher: isTeacher,
+    };
+
+    if (imageUrls && imageUrls.length > 0) {
+      insertData.image_url = imageUrls.length === 1 ? imageUrls[0] : JSON.stringify(imageUrls);
+    }
 
     const { data, error } = await supabase
       .from('lecture_question_messages')
-      .insert([{
-        question_id: questionId,
-        sender_id: user?.id || null,
-        message_text: text,
-        is_from_teacher: isTeacher,
-      }])
+      .insert([insertData])
       .select()
       .single();
 
@@ -86,6 +137,40 @@ export const lectureQAApi = {
     }
 
     return data;
+  },
+
+  async editMessage(messageId: string, newText: string): Promise<void> {
+    const user = await authApi.getCurrentUser();
+    if (!user) throw new Error('You must be signed in to edit messages.');
+
+    const { data, error } = await supabase
+      .from('lecture_question_messages')
+      .update({ message_text: newText })
+      .eq('id', messageId)
+      .eq('sender_id', user.id)
+      .select('id');
+
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      throw new Error('You can only edit your own messages.');
+    }
+  },
+
+  async deleteMessage(messageId: string): Promise<void> {
+    const user = await authApi.getCurrentUser();
+    if (!user) throw new Error('You must be signed in to delete messages.');
+
+    const { data, error } = await supabase
+      .from('lecture_question_messages')
+      .delete()
+      .eq('id', messageId)
+      .eq('sender_id', user.id)
+      .select('id');
+
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      throw new Error('You can only delete your own messages.');
+    }
   },
 
   async markAsRead(questionId: string, forStudent = false): Promise<void> {
