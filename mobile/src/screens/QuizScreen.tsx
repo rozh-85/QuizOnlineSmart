@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   TextInput,
   Animated,
-  Alert,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../constants/app';
@@ -45,6 +45,7 @@ const QuizScreen = ({ route, navigation }: any) => {
     score: 0,
     answers: [],
   });
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
@@ -106,15 +107,24 @@ const QuizScreen = ({ route, navigation }: any) => {
     }, 150);
   };
 
+  const leaveQuiz = () => {
+    setShowExitConfirm(false);
+
+    if (navigation.canGoBack?.()) {
+      navigation.goBack();
+      return;
+    }
+
+    if (lectureId) {
+      navigation.replace('LectureDetail', { lectureId });
+      return;
+    }
+
+    navigation.navigate('MainTabs');
+  };
+
   const handleExit = () => {
-    Alert.alert(
-      'Leave Quiz',
-      `You've answered ${state.answers.length} of ${questions.length} questions. Your progress will be lost.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Leave', style: 'destructive', onPress: () => navigation.goBack() },
-      ]
-    );
+    setShowExitConfirm(true);
   };
 
   if (!currentQuestion || questions.length === 0) {
@@ -201,10 +211,10 @@ const QuizScreen = ({ route, navigation }: any) => {
             if (isAnswered) {
               if (isCorrectOption) {
                 optionStyle = { ...styles.tfOption, ...styles.optionCorrectBg };
-                textStyle = { ...styles.tfText, color: COLORS.emerald[700] };
+                textStyle = { ...styles.tfText, color: COLORS.emerald[600] };
               } else if (isSelected && !isCorrectOption) {
                 optionStyle = { ...styles.tfOption, ...styles.optionWrongBg };
-                textStyle = { ...styles.tfText, color: COLORS.rose[700] };
+                textStyle = { ...styles.tfText, color: COLORS.rose[600] };
               } else {
                 optionStyle = { ...styles.tfOption, ...styles.optionFaded };
               }
@@ -378,6 +388,38 @@ const QuizScreen = ({ route, navigation }: any) => {
           </TouchableOpacity>
         )}
       </View>
+
+      <Modal
+        visible={showExitConfirm}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowExitConfirm(false)}
+      >
+        <View style={styles.exitModalOverlay}>
+          <View style={styles.exitModalCard}>
+            <Text style={styles.exitModalTitle}>Leave Quiz?</Text>
+            <Text style={styles.exitModalMessage}>
+              Your progress will be lost. You've answered {state.answers.length} of {questions.length} questions.
+            </Text>
+            <View style={styles.exitModalActions}>
+              <TouchableOpacity
+                style={styles.exitCancelBtn}
+                onPress={() => setShowExitConfirm(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.exitCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.exitLeaveBtn}
+                onPress={leaveQuiz}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.exitLeaveText}>Leave Quiz</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -559,7 +601,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginTop: 16,
   },
-  correctRevealText: { fontSize: 13, fontWeight: '600', color: COLORS.emerald[700] },
+  correctRevealText: { fontSize: 13, fontWeight: '600', color: COLORS.emerald[600] },
 
   // Explanation
   explanationBox: {
@@ -610,6 +652,45 @@ const styles = StyleSheet.create({
   },
   nextBtnText: { fontSize: 14, fontWeight: '600', color: COLORS.white },
   btnDisabled: { opacity: 0.4 },
+
+  // Exit confirmation
+  exitModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15,23,42,0.72)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+  },
+  exitModalCard: {
+    width: '100%',
+    maxWidth: 340,
+    backgroundColor: COLORS.white,
+    borderRadius: 10,
+    padding: 18,
+  },
+  exitModalTitle: { fontSize: 14, fontWeight: '800', color: COLORS.slate[900], marginBottom: 8 },
+  exitModalMessage: { fontSize: 12, fontWeight: '500', color: COLORS.slate[500], lineHeight: 18 },
+  exitModalActions: { flexDirection: 'row', gap: 8, marginTop: 18 },
+  exitCancelBtn: {
+    flex: 1,
+    height: 36,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: COLORS.slate[200],
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.white,
+  },
+  exitLeaveBtn: {
+    flex: 1,
+    height: 36,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: COLORS.rose[500],
+  },
+  exitCancelText: { fontSize: 12, fontWeight: '700', color: COLORS.slate[600] },
+  exitLeaveText: { fontSize: 12, fontWeight: '800', color: COLORS.white },
 });
 
 export default QuizScreen;

@@ -287,11 +287,18 @@ const LectureDetailScreen = ({ route, navigation }: any) => {
                   material.fileType === 'word' ? COLORS.primary[500] : COLORS.emerald[500]}
               />
             </View>
-            <View style={{ flex: 1 }}>
+            <View style={styles.materialBody}>
               <Text style={styles.materialTitle} numberOfLines={1}>{material.title}</Text>
-              <Text style={styles.materialType}>{material.fileType.toUpperCase()}</Text>
+              <Text style={styles.materialType}>
+                {material.fileType === 'note' ? 'LECTURE NOTE' : material.fileType.toUpperCase()}
+              </Text>
+              {material.fileType === 'note' && material.content ? (
+                <View style={styles.noteContent}>
+                  <Text style={styles.noteContentText} numberOfLines={6}>{material.content}</Text>
+                </View>
+              ) : null}
             </View>
-            {material.fileUrl && (
+            {material.fileType !== 'note' && material.fileUrl && (
               <Ionicons name="download-outline" size={18} color={COLORS.slate[400]} />
             )}
           </TouchableOpacity>
@@ -692,6 +699,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  materialBody: { flex: 1, minWidth: 0 },
   materialTitle: { fontSize: 14, fontWeight: '600', color: COLORS.slate[900] },
   materialType: { fontSize: 11, color: COLORS.slate[400], marginTop: 2, fontWeight: '500' },
   questionCard: {
