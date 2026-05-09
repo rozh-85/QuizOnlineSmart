@@ -85,16 +85,15 @@ const ChatScreen = ({ navigation }: any) => {
     return false;
   };
 
-  const handleNotificationClick = async (thread: any) => {
-    try {
-      await lectureQAApi.markAsRead(thread.id, true);
-      setUnreadThreads(prev => prev.filter(t => t.id !== thread.id));
-    } catch (e) {
-      console.error('Failed to mark as read:', e);
-    }
+  const handleNotificationClick = (thread: any) => {
+    setUnreadThreads(prev => prev.filter(t => t.id !== thread.id));
     navigation.navigate('LectureDetail', {
       lectureId: thread.lecture_id,
       threadId: thread.id,
+    });
+
+    lectureQAApi.markAsRead(thread.id, true).catch(e => {
+      console.error('Failed to mark as read:', e);
     });
   };
 

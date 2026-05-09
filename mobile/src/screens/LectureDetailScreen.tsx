@@ -22,6 +22,20 @@ import { subscribeToLectureQuestions, subscribeToQuestionMessages } from '../ser
 import { formatRelativeTime } from '../utils/format';
 
 type Tab = 'overview' | 'materials' | 'questions' | 'chat';
+const MESSAGE_LOAD_TIMEOUT_MS = 15000;
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error('Message loading timed out. Tap to retry.'));
+    }, timeoutMs);
+
+    promise
+      .then(resolve)
+      .catch(reject)
+      .finally(() => clearTimeout(timer));
+  });
+}
 
 const LectureDetailScreen = ({ route, navigation }: any) => {
   const { lectureId, threadId } = route.params;
@@ -40,20 +54,83 @@ const LectureDetailScreen = ({ route, navigation }: any) => {
   const [newQuestion, setNewQuestion] = useState('');
   const [sending, setSending] = useState(false);
   const [loadingChat, setLoadingChat] = useState(false);
+  const [messageError, setMessageError] = useState<string | null>(null);
   const scrollRef = useRef<ScrollView>(null);
+  const initialThreadOpenedRef = useRef(false);
+  const messageRequestRef = useRef(0);
+  const loadingRequestRef = useRef(0);
+
+  const loadMessagesForThread = useCallback(async (questionId: string, showLoading = false) => {
+    const requestId = ++messageRequestRef.current;
+
+    if (showLoading) {
+      loadingRequestRef.current = requestId;
+      setLoadingChat(true);
+      setMessageError(null);
+    }
+
+    try {
+      const msgs = await withTimeout(
+        lectureQAApi.getMessagesByQuestion(questionId),
+        MESSAGE_LOAD_TIMEOUT_MS
+      );
+
+      if (messageRequestRef.current === requestId) {
+        setMessages(msgs);
+        setMessageError(null);
+        setLoadingChat(false);
+        loadingRequestRef.current = 0;
+      }
+    } catch (e: any) {
+      console.error('Error loading messages:', e);
+      if (messageRequestRef.current === requestId || loadingRequestRef.current === requestId) {
+        setMessageError(e?.message || 'Could not load chat messages.');
+      }
+    } finally {
+      if (loadingRequestRef.current === requestId && showLoading) {
+        setLoadingChat(false);
+        loadingRequestRef.current = 0;
+      }
+    }
+  }, []);
+
+  const openThread = useCallback((thread: any) => {
+    setSelectedThread(thread);
+    setMessages([]);
+    loadMessagesForThread(thread.id, true);
+
+    // Mark as read in the background so a slow update cannot keep the spinner up.
+    if (user && thread.student_id === user.id && !thread.is_read_by_student) {
+      setQaThreads(prev => prev.map(t =>
+        t.id === thread.id ? { ...t, is_read_by_student: true } : t
+      ));
+      lectureQAApi.markAsRead(thread.id, true).catch(e => {
+        console.error('Error marking thread as read:', e);
+      });
+    }
+  }, [loadMessagesForThread, user?.id]);
 
   // Fetch Q&A threads
   const fetchThreads = useCallback(async () => {
     try {
       const threads = await lectureQAApi.getQuestionsByLecture(lectureId);
       setQaThreads(threads);
-      if (threadId) {
+
+      // When opened from the chat notification tab, select that thread once.
+      if (threadId && !initialThreadOpenedRef.current) {
         const target = threads.find((t: any) => t.id === threadId);
-        if (target) openThread(target);
+        if (target) {
+          initialThreadOpenedRef.current = true;
+          openThread(target);
+        }
       }
     } catch (e) {
       console.error('Error fetching threads:', e);
     }
+  }, [lectureId, threadId, openThread]);
+
+  useEffect(() => {
+    initialThreadOpenedRef.current = false;
   }, [lectureId, threadId]);
 
   useEffect(() => {
@@ -62,34 +139,29 @@ const LectureDetailScreen = ({ route, navigation }: any) => {
     return () => { sub.unsubscribe(); };
   }, [lectureId, fetchThreads]);
 
-  const openThread = async (thread: any) => {
-    setSelectedThread(thread);
-    setLoadingChat(true);
-    try {
-      const msgs = await lectureQAApi.getMessagesByQuestion(thread.id);
-      setMessages(msgs);
-      // Mark as read for student
-      if (user && thread.student_id === user.id && !thread.is_read_by_student) {
-        await lectureQAApi.markAsRead(thread.id, true);
-      }
-    } catch (e) {
-      console.error('Error loading messages:', e);
-    } finally {
-      setLoadingChat(false);
-    }
-  };
-
   // Subscribe to message updates for selected thread
   useEffect(() => {
     if (!selectedThread) return;
-    const sub = subscribeToQuestionMessages(selectedThread.id, async () => {
-      try {
-        const msgs = await lectureQAApi.getMessagesByQuestion(selectedThread.id);
-        setMessages(msgs);
-      } catch { /* ignore */ }
+    const sub = subscribeToQuestionMessages(selectedThread.id, (payload: any) => {
+      loadMessagesForThread(selectedThread.id);
+
+      const isMyMessage = payload?.new?.sender_id === user?.id;
+      if (payload?.eventType === 'INSERT' && !isMyMessage) {
+        lectureQAApi.markAsRead(selectedThread.id, true).catch(e => {
+          console.error('Error marking new message as read:', e);
+        });
+      }
     });
-    return () => { sub.unsubscribe(); };
-  }, [selectedThread?.id]);
+
+    const pollInterval = setInterval(() => {
+      loadMessagesForThread(selectedThread.id);
+    }, 5000);
+
+    return () => {
+      sub.unsubscribe();
+      clearInterval(pollInterval);
+    };
+  }, [selectedThread?.id, loadMessagesForThread, user?.id]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedThread || sending) return;
@@ -97,8 +169,7 @@ const LectureDetailScreen = ({ route, navigation }: any) => {
     try {
       await lectureQAApi.sendMessage(selectedThread.id, newMessage.trim(), false);
       setNewMessage('');
-      const msgs = await lectureQAApi.getMessagesByQuestion(selectedThread.id);
-      setMessages(msgs);
+      await loadMessagesForThread(selectedThread.id);
       setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 200);
     } catch (e: any) {
       Alert.alert('Error', e.message || 'Failed to send message');
@@ -361,7 +432,14 @@ const LectureDetailScreen = ({ route, navigation }: any) => {
           keyboardVerticalOffset={100}
         >
           {/* Thread Header */}
-          <TouchableOpacity style={styles.threadHeader} onPress={() => setSelectedThread(null)}>
+          <TouchableOpacity
+            style={styles.threadHeader}
+            onPress={() => {
+              setSelectedThread(null);
+              setMessages([]);
+              setMessageError(null);
+            }}
+          >
             <Ionicons name="arrow-back" size={20} color={COLORS.primary[600]} />
             <Text style={styles.threadHeaderTitle} numberOfLines={1}>
               {selectedThread.question_text.substring(0, 50)}...
@@ -373,37 +451,50 @@ const LectureDetailScreen = ({ route, navigation }: any) => {
               <ActivityIndicator size="large" color={COLORS.primary[500]} />
             </View>
           ) : (
-            <ScrollView
-              ref={scrollRef}
-              style={styles.messagesContainer}
-              contentContainerStyle={{ padding: 16, gap: 8 }}
-              onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
-            >
-              {/* Original question */}
-              <View style={styles.questionBubble}>
-                <Text style={styles.questionBubbleText}>{selectedThread.question_text}</Text>
-                <Text style={styles.bubbleTime}>{formatRelativeTime(selectedThread.created_at)}</Text>
-              </View>
+            <View style={{ flex: 1 }}>
+              {messageError ? (
+                <TouchableOpacity
+                  style={styles.chatError}
+                  activeOpacity={0.8}
+                  onPress={() => loadMessagesForThread(selectedThread.id, true)}
+                >
+                  <Ionicons name="refresh" size={16} color={COLORS.rose[500]} />
+                  <Text style={styles.chatErrorText}>{messageError}</Text>
+                </TouchableOpacity>
+              ) : null}
 
-              {messages.map(msg => {
-                const isMe = msg.sender_id === user?.id;
-                return (
-                  <View key={msg.id} style={[styles.msgBubble, isMe ? styles.msgMe : styles.msgOther]}>
-                    {!isMe && (
-                      <Text style={styles.senderName}>
-                        {msg.sender?.full_name || 'Teacher'}
+              <ScrollView
+                ref={scrollRef}
+                style={styles.messagesContainer}
+                contentContainerStyle={{ padding: 16, gap: 8 }}
+                onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
+              >
+                {/* Original question */}
+                <View style={styles.questionBubble}>
+                  <Text style={styles.questionBubbleText}>{selectedThread.question_text}</Text>
+                  <Text style={styles.bubbleTime}>{formatRelativeTime(selectedThread.created_at)}</Text>
+                </View>
+
+                {messages.map(msg => {
+                  const isMe = msg.sender_id === user?.id;
+                  return (
+                    <View key={msg.id} style={[styles.msgBubble, isMe ? styles.msgMe : styles.msgOther]}>
+                      {!isMe && (
+                        <Text style={styles.senderName}>
+                          {msg.sender?.full_name || 'Teacher'}
+                        </Text>
+                      )}
+                      <Text style={[styles.msgText, isMe ? styles.msgTextMe : styles.msgTextOther]}>
+                        {msg.message_text}
                       </Text>
-                    )}
-                    <Text style={[styles.msgText, isMe ? styles.msgTextMe : styles.msgTextOther]}>
-                      {msg.message_text}
-                    </Text>
-                    <Text style={[styles.bubbleTime, isMe && { color: 'rgba(255,255,255,0.6)' }]}>
-                      {formatRelativeTime(msg.created_at)}
-                    </Text>
-                  </View>
-                );
-              })}
-            </ScrollView>
+                      <Text style={[styles.bubbleTime, isMe && { color: 'rgba(255,255,255,0.6)' }]}>
+                        {formatRelativeTime(msg.created_at)}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </ScrollView>
+            </View>
           )}
 
           {/* Message Input */}
@@ -784,6 +875,17 @@ const styles = StyleSheet.create({
   },
   threadHeaderTitle: { flex: 1, fontSize: 14, fontWeight: '600', color: COLORS.slate[900] },
   messagesContainer: { flex: 1, backgroundColor: COLORS.slate[50] },
+  chatError: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: COLORS.rose[50],
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.rose[400],
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  chatErrorText: { flex: 1, fontSize: 12, fontWeight: '600', color: COLORS.rose[600] },
   questionBubble: {
     backgroundColor: COLORS.violet[50],
     borderRadius: 14,
